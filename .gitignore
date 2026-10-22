@@ -53,3 +53,17 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Large binaries and archives
+*.zip
+*.tar
+*.tar.gz
+scripts/extracted_ref/

@@ -8,14 +8,39 @@ import { ClerkProvider, Show, SignIn, SignUp, useAuth, useClerk, useUser } from 
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { useArchiveClient, useConvertQuotation, useCreateClient, useCreateDocument, useGetClient, useGetClients, useGetDashboardSummary, useGetDocument, useGetDocuments, useRecordPayment, useUpdateClient, useUpdateDocument, getGetClientQueryKey, getGetClientsQueryKey, getGetDashboardSummaryQueryKey, getGetDocumentQueryKey, getGetDocumentsQueryKey, type Client, type ClientInput, type DocumentInput, type SalesDocument } from '@workspace/api-client-react';
-import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, BriefcaseBusiness, Building2, Check, ChevronRight, CircleAlert, Clock3, FileCheck2, FilePlus2, FileText, FolderOpen, LayoutDashboard, LoaderCircle, LogIn, LogOut, Menu, Pencil, Plus, Printer, ReceiptText, Search, ShieldCheck, UserRound, Users, X } from 'lucide-react';
+import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, BriefcaseBusiness, Building2, Check, ChevronRight, CircleAlert, Clock3, FileCheck2, FilePlus2, FileText, FolderOpen, LayoutDashboard, LoaderCircle, LogIn, LogOut, Menu, Pencil, Plus, Printer, ReceiptText, Search, ShieldCheck, Sparkles, Tag, UserRound, Users, X } from 'lucide-react';
+import collageLogo from './assets/collage-logo.png';
 
 const queryClient = new QueryClient({ defaultOptions:{queries:{retry:1,refetchOnWindowFocus:false}} });
-const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+const rawClerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+const clerkPubKey = rawClerkKey ? publishableKeyFromHost(window.location.hostname, rawClerkKey) : '';
+const hasClerk = Boolean(clerkPubKey);
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 function stripBase(path:string) { return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path; }
-if (!clerkPubKey) throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
+
+const mockUser = {
+  isLoaded: true as const,
+  isSignedIn: true as const,
+  user: {
+    firstName: 'Kojo',
+    lastName: 'Admin',
+    fullName: 'Kojo Admin',
+    primaryEmailAddress: { emailAddress: 'admin@collage.com.gh' },
+  },
+};
+
+function useAppUser() {
+  const clerkResult = useUser();
+  if (hasClerk) return clerkResult;
+  return mockUser;
+}
+
+function useAppClerk() {
+  const clerkResult = useClerk();
+  if (hasClerk) return clerkResult;
+  return { signOut: async (_opts?: unknown) => { window.location.href = basePath || '/'; } };
+}
 const clerkAppearance = {
   theme: shadcn,
   cssLayerName: 'clerk',
@@ -59,11 +84,19 @@ const clerkAppearance = {
   },
 };
 const fmt = (n:number) => new Intl.NumberFormat('en-GH',{style:'currency',currency:'GHS',minimumFractionDigits:2}).format(Number.isFinite(n)?n:0);
-const dateFmt = (date?:string|null) => date ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(date)) : '—';
+const dateFmt = (date?:string|null) => date ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(date)) : '-';
 const today = () => new Date().toISOString().slice(0,10);
 
-function Brand({inverse=false}:{inverse?:boolean}) {
-  return inverse?<div className="rounded-lg bg-[#fffaf2] px-2.5 py-1.5"><img src={`${basePath}/collage-logo.png`} alt="Collage — Creating Results" className="h-auto w-[128px] object-contain"/></div>:<img src={`${basePath}/collage-logo.png`} alt="Collage — Creating Results" className="h-auto w-[150px] object-contain"/>;
+function Brand({inverse=false, className=""}:{inverse?:boolean, className?:string}) {
+  return inverse ? (
+    <div className={`inline-flex items-center rounded-xl bg-white px-3.5 py-1.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] ${className}`}>
+      <img src={collageLogo} alt="Collage · Creating Results" className="h-7 w-auto object-contain" />
+    </div>
+  ) : (
+    <div className={`inline-flex items-center transition-transform duration-200 hover:scale-[1.02] ${className}`}>
+      <img src={collageLogo} alt="Collage · Creating Results" className="h-8 md:h-9 w-auto object-contain" />
+    </div>
+  );
 }
 const nav = [
   {href:'/dashboard',label:'Overview',icon:LayoutDashboard},
@@ -71,11 +104,31 @@ const nav = [
   {href:'/quotations',label:'Quotations',icon:FileText},
   {href:'/invoices',label:'Invoices',icon:ReceiptText},
 ];
+function httpStatus(error: unknown): number | undefined {
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    return (error as { status?: number }).status;
+  }
+  return undefined;
+}
+
+function AccessPending({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="panel p-8 text-center max-w-md mx-auto my-12">
+      <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-amber-50 text-amber-600 mb-4">
+        <ShieldCheck size={24} />
+      </div>
+      <h3 className="text-lg font-bold text-slate-800">Access Pending</h3>
+      <p className="text-sm text-slate-500 mt-2 mb-6">Your account permissions are being synchronized. Please wait a moment or try again.</p>
+      <button className="btn btn-primary" onClick={onRetry}>Refresh Access</button>
+    </div>
+  );
+}
+
 function Shell({children}:{children:ReactNode}) {
-  const [location] = useLocation(); const [mobileOpen,setMobileOpen]=useState(false);const [accessPending,setAccessPending]=useState(false);const queryClient=useQueryClient();const {user,isLoaded}=useUser();const {signOut}=useClerk();
+  const [location] = useLocation(); const [mobileOpen,setMobileOpen]=useState(false);const [accessPending,setAccessPending]=useState(false);const queryClient=useQueryClient();const {user,isLoaded}=useAppUser();const {signOut}=useAppClerk();
   useEffect(()=>{
     const q=queryClient.getQueryCache().subscribe(event=>{if(event.query.state.status==='error'&&httpStatus(event.query.state.error)===403)setAccessPending(true)});
-    const m=queryClient.getMutationCache().subscribe(event=>{if(event.mutation.state.status==='error'&&httpStatus(event.mutation.state.error)===403)setAccessPending(true)});
+    const m=queryClient.getMutationCache().subscribe(event=>{if(event.mutation?.state?.status==='error'&&httpStatus(event.mutation?.state?.error)===403)setAccessPending(true)});
     return ()=>{q();m()};
   },[queryClient]);
   const page = nav.find(x=>location.startsWith(x.href))?.label ?? 'Overview';
@@ -87,7 +140,7 @@ function Shell({children}:{children:ReactNode}) {
       <nav className="space-y-1" aria-label="Main navigation">{nav.map(item=>{const Icon=item.icon;const active=location===item.href||location.startsWith(`${item.href}/`);return <Link key={item.href} href={item.href} data-testid={`link-${item.label.toLowerCase()}`} onClick={()=>setMobileOpen(false)} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors ${active?'bg-[#33343a] text-white shadow-inner':'text-[#aaa9a5] hover:bg-white/[.055] hover:text-white'}`}><Icon size={17} strokeWidth={1.8}/><span>{item.label}</span>{item.label==='Invoices'&&<span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#e53b50]"/>}</Link>})}</nav>
       <div className="mx-2 mb-3 mt-9 text-[10px] font-bold uppercase tracking-[.17em] text-[#77777b]">Your desk</div>
       <div className="mx-1 rounded-lg border border-white/[.08] bg-white/[.035] p-3.5"><div className="flex items-center gap-2 text-[11px] font-semibold text-[#eeece5]"><ShieldCheck size={14} className="text-[#de4859]"/>First things, in order</div><p className="mb-0 mt-2 text-[11px] leading-[1.65] text-[#aaa8a2]">Keep every brief, quote and payment connected to the right client.</p></div>
-      <div className="mt-auto border-t border-white/[.09] px-2 pt-4"><div className="flex items-center gap-3"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#393a3f] text-[11px] font-bold text-white">{user?.firstName?.slice(0,1)||'C'}{user?.lastName?.slice(0,1)||''}</div><div className="min-w-0"><div className="truncate text-[12px] font-semibold">{isLoaded?user?.fullName||user?.firstName||'Signed in':'Loading profile…'}</div><div className="truncate text-[10px] text-[#9b9994]">{user?.primaryEmailAddress?.emailAddress||'Collage workspace'}</div></div><button aria-label="Sign out" title="Sign out" onClick={()=>signOut({redirectUrl:basePath||'/'})} className="btn btn-quiet ml-auto !h-8 !min-h-8 !px-2 !text-[#aaa8a2] hover:!text-white"><LogOut size={16}/></button></div></div>
+      <div className="mt-auto border-t border-white/[.09] px-2 pt-4"><div className="flex items-center gap-3"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#393a3f] text-[11px] font-bold text-white">{user?.firstName?.slice(0,1)||'C'}{user?.lastName?.slice(0,1)||''}</div><div className="min-w-0"><div className="truncate text-[12px] font-semibold">{isLoaded?user?.fullName||user?.firstName||'Signed in':'Loading profile…'}</div><div className="truncate text-[10px] text-[#9b9994]">{user?.primaryEmailAddress?.emailAddress||'Collage workspace'}</div></div><button aria-label="Sign out" title="Sign out" onClick={()=>signOut({redirectUrl:'/'})} className="btn btn-quiet ml-auto !h-8 !min-h-8 !px-2 !text-[#aaa8a2] hover:!text-white"><LogOut size={16}/></button></div></div>
     </aside>
     <main className="min-w-0 flex-1">
       <header className="sticky top-0 z-20 flex h-[66px] items-center justify-between border-b border-[#e9e3dc] bg-[#f8f6f1]/95 px-4 backdrop-blur md:px-8">
@@ -98,14 +151,16 @@ function Shell({children}:{children:ReactNode}) {
     </main>
   </div>
 }
-function PageTitle({eyebrow,title,description,action}:{eyebrow?:string,title:string,description?:string,action?:ReactNode}) {return <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div>{eyebrow&&<div className="mb-2 text-[10px] font-bold uppercase tracking-[.17em] text-[#ae293c]">{eyebrow}</div>}<h1 className="m-0 font-[Manrope] text-[28px] font-bold tracking-[-.045em] text-[#25262b] md:text-[32px]">{title}</h1>{description&&<p className="mb-0 mt-1.5 text-[13px] text-[#817d78]">{description}</p>}</div>{action}</div>}
-function Alert({children}:{children:ReactNode}) {return <div role="alert" className="flex items-center gap-2 rounded-lg border border-[#f0d4d5] bg-[#fff5f3] p-3 text-[12px] text-[#9f2d3d]"><CircleAlert size={16}/>{children}</div>}
+function PageTitle({eyebrow,title,description,action}:{eyebrow?:string,title:string,description?:string,action?:ReactNode}) {
+  return <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div>{eyebrow&&<div className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#c61c2e]">{eyebrow}</div>}<h1 className="m-0 font-sans text-[28px] font-extrabold tracking-[-0.035em] text-[#1c1c21] md:text-[32px]">{title}</h1>{description&&<p className="mb-0 mt-1.5 text-[13px] text-[#736e67]">{description}</p>}</div>{action}</div>
+}
+function Alert({children}:{children:ReactNode}) {return <div role="alert" className="flex items-center gap-2 rounded-lg border border-[#f0d4d5] bg-[#fff5f3] p-3.5 text-[12px] text-[#9f2d3d]"><CircleAlert size={16}/>{children}</div>}
 function LoadingRows() {return <div className="space-y-3 p-5" aria-label="Loading"><div className="skeleton h-10 w-full"/><div className="skeleton h-12 w-full"/><div className="skeleton h-12 w-full"/><div className="skeleton h-12 w-full"/></div>}
-function Empty({icon:Icon=FolderOpen,title,detail,action}:{icon?:typeof FolderOpen,title:string,detail:string,action?:ReactNode}) {return <div className="grid min-h-[270px] place-items-center p-7 text-center"><div className="max-w-[330px]"><div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-[#f3ede6] text-[#9c7468]"><Icon size={21}/></div><h3 className="mb-1 mt-4 text-[15px] font-bold text-[#38383d]">{title}</h3><p className="mb-4 mt-0 text-[12px] leading-5 text-[#89847e]">{detail}</p>{action}</div></div>}
-function Status({value}:{value:string}) {const cls=value==='paid'||value==='accepted'||value==='active'?'bg-[#e8f2eb] text-[#487858]':value==='partially_paid'?'bg-[#fff2df] text-[#a36c22]':value==='issued'?'bg-[#fcebed] text-[#ad3446]':value==='declined'||value==='archived'||value==='cancelled'?'bg-[#f1efed] text-[#77716c]':'bg-[#f2eee7] text-[#83714e]';return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${cls}`}>{value.replaceAll('_',' ')}</span>}
-function Modal({title,subtitle,onClose,children,wide=false}:{title:string,subtitle?:string,onClose:()=>void,children:ReactNode,wide?:boolean}) {return <div className="scrim" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className={`dialog ${wide?'!w-[min(800px,100%)]':''}`} role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div className="flex items-start justify-between border-b border-[#eee8e0] px-5 py-4 md:px-6"><div><h2 id="dialog-title" className="m-0 font-[Manrope] text-[18px] font-bold tracking-[-.03em]">{title}</h2>{subtitle&&<p className="mb-0 mt-1 text-[12px] text-[#89847e]">{subtitle}</p>}</div><button onClick={onClose} className="btn btn-quiet !h-8 !min-h-8 !w-8 !px-0" aria-label="Close"><X size={17}/></button></div><div className="p-5 md:p-6">{children}</div></section></div>}
-function Input({label,...props}:{label:string}&InputHTMLAttributes<HTMLInputElement>) {return <label className="block"><span className="field-label">{label}</span><input className="field" {...props}/></label>}
-function Select({label,children,...props}:{label:string}&SelectHTMLAttributes<HTMLSelectElement>) {return <label className="block"><span className="field-label">{label}</span><select className="field" {...props}>{children}</select></label>}
+function Empty({icon:Icon=FolderOpen,title,detail,action}:{icon?:typeof FolderOpen,title:string,detail:string,action?:ReactNode}) {return <div className="grid min-h-[270px] place-items-center p-7 text-center"><div className="max-w-[340px]"><div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-[#f3ede6] text-[#9c7468]"><Icon size={21}/></div><h3 className="mb-1 mt-4 text-[15px] font-bold text-[#38383d]">{title}</h3><p className="mb-4 mt-0 text-[12px] leading-5 text-[#89847e]">{detail}</p>{action}</div></div>}
+function Status({value}:{value:string}) {const cls=value==='paid'||value==='accepted'||value==='active'?'bg-[#e8f2eb] text-[#3d6e4d]':value==='partially_paid'?'bg-[#fff2df] text-[#a36c22]':value==='issued'?'bg-[#fcebed] text-[#c61c2e]':value==='declined'||value==='archived'||value==='cancelled'?'bg-[#f1efed] text-[#77716c]':'bg-[#f2eee7] text-[#83714e]';return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${cls}`}>{value.replaceAll('_',' ')}</span>}
+function Modal({title,subtitle,onClose,children,wide=false}:{title:string,subtitle?:string,onClose:()=>void,children:ReactNode,wide?:boolean}) {return <div className="scrim" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className={`dialog ${wide?'!w-[min(800px,100%)]':''}`} role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div className="flex items-start justify-between border-b border-[#eee8e0] px-5 py-4 md:px-6"><div><h2 id="dialog-title" className="m-0 font-sans text-[18px] font-bold tracking-[-0.025em] text-[#1f1e24]">{title}</h2>{subtitle&&<p className="mb-0 mt-1 text-[12px] text-[#89847e]">{subtitle}</p>}</div><button onClick={onClose} className="btn btn-quiet !h-8 !min-h-8 !w-8 !px-0" aria-label="Close"><X size={17}/></button></div><div className="p-5 md:p-6">{children}</div></section></div>}
+function Input({label,hint,...props}:{label:string,hint?:string}&InputHTMLAttributes<HTMLInputElement>) {return <label className="block space-y-1.5"><span className="field-label flex items-center justify-between"><span>{label}</span>{hint&&<span className="text-[10px] font-normal normal-case text-[#918c86]">{hint}</span>}</span><input className="field" {...props}/></label>}
+function Select({label,children,...props}:{label:string}&SelectHTMLAttributes<HTMLSelectElement>) {return <label className="block space-y-1.5"><span className="field-label">{label}</span><select className="field" {...props}>{children}</select></label>}
 function ClientForm({client,onClose}:{client?:Client,onClose:()=>void}) {
   const qc=useQueryClient();const create=useCreateClient();const update=useUpdateClient();const busy=create.isPending||update.isPending;
   const [error,setError]=useState('');const [success,setSuccess]=useState(false);
@@ -121,13 +176,13 @@ function ClientList() {
   function archiveClient(c:Client){if(window.confirm(`Archive ${c.companyName}? You can still find archived records by using the status filter.`))archive.mutate({id:c.id},{onSuccess:()=>{qc.invalidateQueries({queryKey:getGetClientsQueryKey()});qc.invalidateQueries({queryKey:getGetClientQueryKey(c.id)})}})}
   return <><PageTitle eyebrow="Relationships" title="Clients" description="Keep every relationship and request close at hand." action={<button className="btn btn-primary" onClick={()=>{setEditing(undefined);setModal(true)}}><Plus size={16}/>Add client</button>}/>
     <div className="panel overflow-hidden"><div className="flex flex-col gap-3 border-b border-[#eee8e0] px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5"><div className="relative w-full max-w-[350px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a958e]"/><input aria-label="Search clients" data-testid="input-search-clients" className="field !pl-9" placeholder="Search company, contact, email…" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="flex items-center gap-2"><span className="text-[11px] text-[#86817b]">Show</span><select aria-label="Filter clients by status" className="field !h-9 !min-h-9 !w-auto py-1 text-[12px]" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">All clients</option><option value="active">Active</option><option value="lead">Leads</option><option value="archived">Archived</option></select><span className="ml-1 text-[11px] text-[#8b8580]">{query.data?.length??0} records</span></div></div>
-      {query.isLoading?<LoadingRows/>:query.isError?<div className="p-5"><Alert>Client records could not be loaded. <button className="ml-2 underline" onClick={()=>query.refetch()}>Try again</button></Alert></div>:clients.length===0?<Empty icon={Users} title={search?'No matching clients':'A good relationship starts here'} detail={search?'Try another name, contact or city.':'Add your first client to keep requests, quotes and invoices connected.'} action={!search&&<button className="btn btn-primary" onClick={()=>setModal(true)}><Plus size={15}/>Add first client</button>}/>:<div className="overflow-x-auto"><table className="w-full min-w-[720px] border-collapse text-left"><thead><tr className="border-b border-[#eee8e0] text-[10px] font-bold uppercase tracking-[.1em] text-[#99928b]"><th className="px-5 py-3">Company / contact</th><th className="px-4 py-3">Location</th><th className="px-4 py-3">Email & phone</th><th className="px-4 py-3">Status</th><th className="px-5 py-3 text-right">Actions</th></tr></thead><tbody>{clients.map(c=><tr key={c.id} className="table-row border-b border-[#f0ece6] last:border-0"><td className="px-5 py-4"><Link href={`/clients/${c.id}`} className="text-[13px] font-bold text-[#333338] hover:text-[#af273c]">{c.companyName}</Link><div className="mt-1 text-[11px] text-[#89847e]">{c.contactName||'No contact added'}</div></td><td className="px-4 py-4 text-[12px] text-[#68666a]">{[c.city,c.country].filter(Boolean).join(', ')||'—'}</td><td className="px-4 py-4 text-[12px] text-[#68666a]">{c.email&&<div>{c.email}</div>}<div className="mt-1 text-[#96918b]">{c.phone||'—'}</div></td><td className="px-4 py-4"><Status value={c.status}/></td><td className="px-5 py-4 text-right"><div className="inline-flex gap-1"><Link href={`/clients/${c.id}`} className="btn btn-quiet !h-8 !min-h-8 !px-2.5 text-[11px]">Open</Link><button aria-label={`Edit ${c.companyName}`} className="btn btn-quiet !h-8 !min-h-8 !px-2" onClick={()=>{setEditing(c);setModal(true)}}><Pencil size={14}/></button>{c.status!=='archived'&&<button aria-label={`Archive ${c.companyName}`} className="btn btn-quiet !h-8 !min-h-8 !px-2 text-[#a53b47]" disabled={archive.isPending} onClick={()=>archiveClient(c)}><X size={15}/></button>}</div></td></tr>)}</tbody></table></div>}</div>
+      {query.isLoading?<LoadingRows/>:query.isError?<div className="p-5"><Alert>Client records could not be loaded. <button className="ml-2 underline" onClick={()=>query.refetch()}>Try again</button></Alert></div>:clients.length===0?<Empty icon={Users} title={search?'No matching clients':'A good relationship starts here'} detail={search?'Try another name, contact or city.':'Add your first client to keep requests, quotes and invoices connected.'} action={!search&&<button className="btn btn-primary" onClick={()=>setModal(true)}><Plus size={15}/>Add first client</button>}/>:<div className="overflow-x-auto"><table className="w-full min-w-[720px] border-collapse text-left"><thead><tr className="border-b border-[#eee8e0] text-[10px] font-bold uppercase tracking-[.1em] text-[#99928b]"><th className="px-5 py-3">Company / contact</th><th className="px-4 py-3">Location</th><th className="px-4 py-3">Email & phone</th><th className="px-4 py-3">Status</th><th className="px-5 py-3 text-right">Actions</th></tr></thead><tbody>{clients.map(c=><tr key={c.id} className="table-row border-b border-[#f0ece6] last:border-0"><td className="px-5 py-4"><Link href={`/clients/${c.id}`} className="text-[13px] font-bold text-[#333338] hover:text-[#af273c]">{c.companyName}</Link><div className="mt-1 text-[11px] text-[#89847e]">{c.contactName||'No contact added'}</div></td><td className="px-4 py-4 text-[12px] text-[#68666a]">{[c.city,c.country].filter(Boolean).join(', ')||'-'}</td><td className="px-4 py-4 text-[12px] text-[#68666a]">{c.email&&<div>{c.email}</div>}<div className="mt-1 text-[#96918b]">{c.phone||'-'}</div></td><td className="px-4 py-4"><Status value={c.status}/></td><td className="px-5 py-4 text-right"><div className="inline-flex gap-1"><Link href={`/clients/${c.id}`} className="btn btn-quiet !h-8 !min-h-8 !px-2.5 text-[11px]">Open</Link><button aria-label={`Edit ${c.companyName}`} className="btn btn-quiet !h-8 !min-h-8 !px-2" onClick={()=>{setEditing(c);setModal(true)}}><Pencil size={14}/></button>{c.status!=='archived'&&<button aria-label={`Archive ${c.companyName}`} className="btn btn-quiet !h-8 !min-h-8 !px-2 text-[#a53b47]" disabled={archive.isPending} onClick={()=>archiveClient(c)}><X size={15}/></button>}</div></td></tr>)}</tbody></table></div>}</div>
     {modal&&<Modal title={editing?'Edit client':'Add a client'} subtitle="A single source of truth for every piece of work." onClose={()=>setModal(false)}><ClientForm client={editing} onClose={()=>setModal(false)}/></Modal>}
   </>
 }
 function ClientDetail() {
   const {id=''}=useParams<{id:string}>();const [edit,setEdit]=useState(false);const {data:client,isLoading,isError,refetch}=useGetClient(id,{query:{queryKey:getGetClientQueryKey(id)}});const docs=useGetDocuments(undefined,{query:{queryKey:getGetDocumentsQueryKey()}});const related=(docs.data||[]).filter(d=>d.clientId===id);
-  return <>{isLoading?<div className="panel"><LoadingRows/></div>:isError||!client?<><PageTitle title="Client record"/><div className="panel p-5"><Alert>Client details are unavailable. <button className="underline" onClick={()=>refetch()}>Try again</button></Alert></div></>:<><div className="mb-5"><Link href="/clients" className="btn btn-quiet !px-0 text-[12px]"><ArrowLeft size={15}/>All clients</Link></div><PageTitle eyebrow="Client record" title={client.companyName} description={[client.contactName,client.city,client.country].filter(Boolean).join(' · ')} action={<div className="flex gap-2"><button className="btn btn-secondary" onClick={()=>setEdit(true)}><Pencil size={15}/>Edit record</button><Status value={client.status}/></div>}/><div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]"><section className="panel p-5"><h2 className="m-0 text-[14px] font-bold">Contact details</h2><div className="mt-5 grid gap-4 sm:grid-cols-2">{[['Contact',client.contactName],['Email',client.email],['Phone',client.phone],['Address',client.address],['City',client.city],['Country',client.country]].map(([k,v])=><div key={k}><div className="field-label">{k}</div><div className="text-[13px] text-[#424147]">{v||'—'}</div></div>)}</div><div className="mt-6 border-t border-[#eee8e0] pt-4 text-[10px] text-[#98918a]">Added {dateFmt(client.createdAt)} · Updated {dateFmt(client.updatedAt)}</div></section><section className="panel overflow-hidden"><div className="flex items-center justify-between border-b border-[#eee8e0] p-5"><div><h2 className="m-0 text-[14px] font-bold">Sales documents</h2><p className="mb-0 mt-1 text-[11px] text-[#8a8580]">Quotes and invoices for this client</p></div><span className="mono text-[11px] text-[#88827b]">{related.length} records</span></div>{docs.isLoading?<LoadingRows/>:related.length?<div>{related.map(d=><DocRow key={d.id} doc={d}/>)}</div>:<Empty icon={FileText} title="No documents yet" detail="Quotes and invoices for this client will appear here."/ >}</section></div></>}{edit&&client&&<Modal title="Edit client" onClose={()=>setEdit(false)}><ClientForm client={client} onClose={()=>setEdit(false)}/></Modal>}</>
+  return <>{isLoading?<div className="panel"><LoadingRows/></div>:isError||!client?<><PageTitle title="Client record"/><div className="panel p-5"><Alert>Client details are unavailable. <button className="underline" onClick={()=>refetch()}>Try again</button></Alert></div></>:<><div className="mb-5"><Link href="/clients" className="btn btn-quiet !px-0 text-[12px]"><ArrowLeft size={15}/>All clients</Link></div><PageTitle eyebrow="Client record" title={client.companyName} description={[client.contactName,client.city,client.country].filter(Boolean).join(' · ')} action={<div className="flex gap-2"><button className="btn btn-secondary" onClick={()=>setEdit(true)}><Pencil size={15}/>Edit record</button><Status value={client.status}/></div>}/><div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]"><section className="panel p-5"><h2 className="m-0 text-[14px] font-bold">Contact details</h2><div className="mt-5 grid gap-4 sm:grid-cols-2">{[['Contact',client.contactName],['Email',client.email],['Phone',client.phone],['Address',client.address],['City',client.city],['Country',client.country]].map(([k,v])=><div key={k}><div className="field-label">{k}</div><div className="text-[13px] text-[#424147]">{v||'-'}</div></div>)}</div><div className="mt-6 border-t border-[#eee8e0] pt-4 text-[10px] text-[#98918a]">Added {dateFmt(client.createdAt)} · Updated {dateFmt(client.updatedAt)}</div></section><section className="panel overflow-hidden"><div className="flex items-center justify-between border-b border-[#eee8e0] p-5"><div><h2 className="m-0 text-[14px] font-bold">Sales documents</h2><p className="mb-0 mt-1 text-[11px] text-[#8a8580]">Quotes and invoices for this client</p></div><span className="mono text-[11px] text-[#88827b]">{related.length} records</span></div>{docs.isLoading?<LoadingRows/>:related.length?<div>{related.map(d=><DocRow key={d.id} doc={d}/>)}</div>:<Empty icon={FileText} title="No documents yet" detail="Quotes and invoices for this client will appear here."/ >}</section></div></>}{edit&&client&&<Modal title="Edit client" onClose={()=>setEdit(false)}><ClientForm client={client} onClose={()=>setEdit(false)}/></Modal>}</>
 }
 function DocRow({doc}:{doc:SalesDocument}) {return <Link href={`/${doc.kind==='quotation'?'quotations':'invoices'}/${doc.id}`} className="table-row flex items-center justify-between gap-4 border-b border-[#f0ece6] px-5 py-4 last:border-0"><div className="min-w-0"><div className="flex items-center gap-2"><span className="mono text-[11px] font-semibold text-[#a82b3e]">{doc.number}</span><Status value={doc.status}/></div><div className="mt-1 truncate text-[12px] font-semibold text-[#444248]">{doc.subject}</div></div><div className="shrink-0 text-right"><div className="mono text-[12px] font-semibold">{fmt(doc.total)}</div><div className="mt-1 text-[10px] text-[#928c85]">{dateFmt(doc.issueDate)}</div></div></Link>}
 function Dashboard() {
@@ -176,22 +231,362 @@ function DocumentDetail() {
   if(q.isLoading)return <div className="panel"><LoadingRows/></div>;
   if(q.isError||!doc)return <><PageTitle title="Document detail"/><div className="panel p-5"><Alert>Document could not be opened. <button className="underline" onClick={()=>q.refetch()}>Try again</button></Alert></div></>;
   return <><div className="no-print mb-4 flex items-center justify-between"><Link href={doc.kind==='quotation'?'/quotations':'/invoices'} className="btn btn-quiet !px-0 text-[12px]"><ArrowLeft size={15}/>Back to {doc.kind==='quotation'?'quotations':'invoices'}</Link><div className="flex gap-2"><button className="btn btn-secondary" onClick={()=>window.print()}><Printer size={15}/>Print</button>{doc.kind==='quotation'&&<button className="btn btn-secondary" disabled={convert.isPending||doc.status==='declined'||doc.status==='cancelled'} onClick={()=>{if(window.confirm(`Convert ${doc.number} into an invoice?`))convert.mutate({id},{onSuccess:(d)=>{qc.invalidateQueries({queryKey:getGetDocumentsQueryKey()});qc.invalidateQueries({queryKey:getGetDocumentQueryKey(id)});setFeedback(`Converted to invoice ${d.number}.`)},onError:()=>setFeedback('Could not convert this quotation.')})}}>{convert.isPending?<LoaderCircle size={15} className="animate-spin"/>:<ArrowRight size={15}/>}Convert to invoice</button>}{doc.kind==='quotation'&&doc.status!=='declined'&&doc.status!=='cancelled'&&<button className="btn btn-primary" onClick={()=>setEditOpen(true)}><Pencil size={14}/>Edit quote</button>}{doc.kind==='invoice'&&doc.balance>0&&<button className="btn btn-primary" onClick={()=>setPayOpen(true)}><Banknote size={15}/>Record payment</button>}</div></div>{feedback&&<div className="no-print mb-4"><div className="flex items-center justify-between rounded-lg border border-[#d8e6da] bg-[#f0f6f0] px-4 py-3 text-[12px] text-[#47714e]"><span>{feedback}</span><button aria-label="Dismiss message" onClick={()=>setFeedback('')}><X size={15}/></button></div></div>}
-    <article className="print-paper panel mx-auto max-w-[850px] px-5 py-7 md:px-12 md:py-10"><div className="flex flex-col justify-between gap-7 border-b border-[#e7e1d9] pb-7 sm:flex-row"><div><Brand/><div className="mt-5 text-[10px] leading-5 text-[#87817a]">Accra, Ghana<br/>Corporate marketing · events · rentals</div></div><div className="sm:text-right"><div className="mb-2 text-[11px] font-bold uppercase tracking-[.16em] text-[#a42b3d]">{doc.kind==='quotation'?'Quotation':'Invoice'}</div><div className="mono text-[17px] font-semibold text-[#333238]">{doc.number}</div><div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-[#77726c] sm:justify-end"><span>Issued {dateFmt(doc.issueDate)}</span>{doc.dueDate&&<span>Due {dateFmt(doc.dueDate)}</span>}</div><div className="mt-3"><Status value={doc.status}/></div></div></div>
-      <div className="grid gap-6 border-b border-[#e7e1d9] py-6 sm:grid-cols-2"><div><div className="field-label">Prepared for</div><div className="text-[14px] font-bold text-[#333238]">{doc.clientName}</div><div className="mt-1 text-[12px] text-[#77726c]">{doc.subject}</div></div><div className="sm:text-right"><div className="field-label">Attention</div><div className="text-[13px] font-semibold text-[#444147]">{doc.clientName}</div><div className="mt-1 text-[11px] text-[#87817a]">Thank you for the opportunity to work together.</div></div></div>
-      <div className="overflow-x-auto py-5"><table className="w-full min-w-[560px] text-left"><thead><tr className="border-b border-[#e7e1d9] text-[9px] font-bold uppercase tracking-[.1em] text-[#88827b]"><th className="pb-3">Description</th><th className="pb-3 text-right">Qty</th><th className="pb-3 text-right">Days</th><th className="pb-3 text-right">Unit price</th><th className="pb-3 text-right">Total</th></tr></thead><tbody>{doc.items.map((item,i)=><tr key={`${item.description}-${i}`} className="border-b border-[#f0ece6] text-[11px] text-[#4a474d]"><td className="py-3 pr-3 font-medium">{item.description}</td><td className="mono py-3 text-right">{item.quantity}</td><td className="mono py-3 text-right">{item.days}</td><td className="mono py-3 text-right">{fmt(item.unitPrice)}</td><td className="mono py-3 text-right font-semibold">{fmt(item.total)}</td></tr>)}</tbody></table></div>
-      <div className="ml-auto max-w-[320px] space-y-2.5 border-b border-[#e7e1d9] pb-5 text-[11px]"><MoneyRow label="Subtotal" value={doc.subtotal}/><MoneyRow label={`Discount (${doc.discountPercent}%)`} value={-doc.discountAmount}/><MoneyRow label={`GETFund (${doc.getfundRate}%)`} value={doc.getfundAmount}/><MoneyRow label={`NHIL (${doc.nhilRate}%)`} value={doc.nhilAmount}/><MoneyRow label={`VAT (${doc.vatRate}%)`} value={doc.vatAmount}/></div>
-      <div className="ml-auto flex max-w-[320px] items-end justify-between py-4"><span className="text-[12px] font-bold uppercase tracking-[.08em]">Amount due <span className="font-medium normal-case text-[#969089]">GHS</span></span><strong className="mono text-[22px] font-semibold tracking-[-.03em] text-[#a92b3e]">{fmt(doc.total)}</strong></div>
-      {doc.kind==='invoice'&&<div className="ml-auto max-w-[320px] space-y-2 border-t border-dashed border-[#e5ded6] pt-3 text-[11px]"><MoneyRow label="Paid to date" value={doc.amountPaid}/><MoneyRow label="Balance due" value={doc.balance} strong/></div>}
-      <div className="mt-7 grid gap-5 border-t border-[#e7e1d9] pt-5 sm:grid-cols-2"><div><div className="field-label">Payment terms</div><p className="m-0 text-[11px] leading-5 text-[#6f6a64]">{doc.paymentTerms||'As agreed with the client.'}</p></div><div><div className="field-label">{doc.kind==='quotation'?'Offer validity':'Payment due'}</div><p className="m-0 text-[11px] leading-5 text-[#6f6a64]">{doc.kind==='quotation'?`This quotation is valid for ${doc.validityDays} days from the issue date.`:dateFmt(doc.dueDate)}</p></div></div>
-      <div className="mt-9 border-t border-[#e7e1d9] pt-4 text-center text-[9px] tracking-wide text-[#aaa39a]">COLLAGE · CREATING RESULTS · GHANA</div>
+    <article className="print-paper panel mx-auto max-w-[850px] bg-white p-6 md:p-12 shadow-sm">
+      {/* Centered Collage Logo */}
+      <div className="text-center pb-2">
+        <img src={collageLogo} alt="Collage · Creating Results" className="mx-auto h-14 md:h-16 w-auto object-contain" />
+      </div>
+
+      {/* Red Document Title */}
+      <div className="mt-4 text-center">
+        <h1 className="text-2xl md:text-3xl font-extrabold uppercase tracking-wide text-[#c61c2e] m-0">
+          {doc.kind==='quotation'?'QUOTATION':'INVOICE'}
+        </h1>
+      </div>
+
+      {/* Date & Reference */}
+      <div className="mt-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-[#ece6de] pb-3 text-[12px]">
+        <div className="font-medium text-[#2d2c31]">
+          {new Date(doc.issueDate).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="mono font-semibold text-[#555]">{doc.kind==='quotation'?'Quotation':'Invoice'} No. <span className="text-[#c61c2e]">{doc.number}</span></span>
+          <Status value={doc.status}/>
+        </div>
+      </div>
+
+      {/* Red Banner: Client Details */}
+      <div className="mt-5">
+        <div className="inline-block bg-[#b71c1c] px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white rounded-sm">
+          Client Details
+        </div>
+        <div className="mt-2.5 text-[12px] leading-snug text-[#2f2e34]">
+          <div className="font-semibold text-[#1e1f23]">Attn: {doc.clientName}</div>
+          <div>{doc.clientName}</div>
+          <div className="text-[#777]">Accra, Ghana</div>
+        </div>
+      </div>
+
+      {/* Black Banner: Subject / Project Title */}
+      <div className="mt-5 bg-[#1f2024] px-4 py-2.5 text-[13px] font-extrabold uppercase tracking-wide text-white rounded-sm">
+        {doc.subject}
+      </div>
+
+      {/* Line Items Table */}
+      <div className="overflow-x-auto my-4">
+        <table className="w-full min-w-[560px] text-left border-collapse">
+          <thead>
+            <tr className="bg-[#a81a29] text-white text-[9px] font-bold uppercase tracking-[.08em]">
+              <th className="px-4 py-2.5">Item Description</th>
+              <th className="px-3 py-2.5 text-center">Qty</th>
+              <th className="px-3 py-2.5 text-center">Days</th>
+              <th className="px-3 py-2.5 text-right">Unit Price GHS</th>
+              <th className="px-4 py-2.5 text-right">Total Amount GHS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {doc.items.map((item,i)=>(
+              <tr key={`${item.description}-${i}`} className="border-b border-[#ece6de] text-[11px] even:bg-[#faf7f2]">
+                <td className="px-4 py-2.5 font-medium text-[#2e2d33]">{item.description}</td>
+                <td className="mono px-3 py-2.5 text-center text-[#555]">{item.quantity}</td>
+                <td className="mono px-3 py-2.5 text-center text-[#555]">{item.days}</td>
+                <td className="mono px-3 py-2.5 text-right text-[#555]">{fmt(item.unitPrice).replace('GHS ','')}</td>
+                <td className="mono px-4 py-2.5 text-right font-semibold text-[#1e1f23]">{fmt(item.total).replace('GHS ','')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Tax & Total Calculation */}
+      <div className="ml-auto max-w-[340px] space-y-1.5 border-t border-[#ece6de] pt-3 text-[11px]">
+        <MoneyRow label="Subtotal" value={doc.subtotal}/>
+        {doc.discountPercent > 0 && <MoneyRow label={`Less: Discount (${doc.discountPercent}%)`} value={-doc.discountAmount}/>}
+        <MoneyRow label="(i) Subtotal Before Tax" value={doc.subtotal - doc.discountAmount}/>
+        <MoneyRow label={`(ii) ${doc.getfundRate}% GETFund`} value={doc.getfundAmount}/>
+        <MoneyRow label={`(iii) ${doc.nhilRate}% NHIL`} value={doc.nhilAmount}/>
+        <MoneyRow label={`Add ${doc.vatRate}% VAT`} value={doc.vatAmount}/>
+      </div>
+
+      {/* Solid Black Banner: Total Payment Due */}
+      <div className="ml-auto max-w-[340px] mt-3 bg-[#1f2024] text-white px-4 py-2.5 flex items-center justify-between text-[12px] font-bold rounded-sm">
+        <span className="uppercase tracking-wider">Total Payment Due GHS</span>
+        <span className="mono text-[16px]">{fmt(doc.total).replace('GHS ','')}</span>
+      </div>
+
+      {doc.kind==='invoice' && (
+        <div className="ml-auto max-w-[340px] space-y-1.5 border-t border-dashed border-[#e5ded6] mt-3 pt-2 text-[11px]">
+          <MoneyRow label="Paid to date" value={doc.amountPaid}/>
+          <MoneyRow label="Balance due" value={doc.balance} strong/>
+        </div>
+      )}
+
+      {/* Payment Terms & Validity */}
+      <div className="mt-8 space-y-1 text-[11px]">
+        <div className="font-semibold text-[#222] italic">100% Down Payment</div>
+        <div className="text-[#666] italic">
+          {doc.kind==='quotation'
+            ? `Quotation is valid for ${doc.validityDays} days after Invoice Date`
+            : (doc.paymentTerms || 'Quotation is valid for 5 days after Invoice Date')}
+        </div>
+      </div>
+
+      {/* Authentic Collage Footer */}
+      <div className="mt-12 flex flex-wrap items-end justify-between border-t border-[#e2dcce] pt-6 text-[11px]">
+        <div className="text-[10px] text-[#7a756f] space-y-0.5">
+          <div className="font-bold uppercase tracking-wider text-[#1f2024]">Collage · Creating Results</div>
+          <div>Corporate marketing · events · advertising · rentals</div>
+          <div className="text-[#999]">Accra, Ghana</div>
+        </div>
+        <div className="text-right text-[10px] leading-tight text-[#444] space-y-0.5">
+          <div className="font-semibold text-[#1f2024]">+233 24 736 1133</div>
+          <div>collagenmosaic@gmail.com</div>
+          <div>sendit@collagenmosaic.com</div>
+          <div className="font-medium text-[#c61c2e]">www.collagenmosaic.com</div>
+        </div>
+      </div>
     </article>
     {payOpen&&<Modal title="Record a payment" subtitle={`Balance due ${fmt(doc.balance)} on ${doc.number}`} onClose={()=>setPayOpen(false)}><form onSubmit={record} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><Input label="Amount (GHS)" name="amount" type="number" min=".01" max={doc.balance} step=".01" required/><Input label="Payment date" name="paymentDate" type="date" defaultValue={today()} required/><Select label="Method" name="method"><option value="bank_transfer">Bank transfer</option><option value="mobile_money">Mobile money</option><option value="cash">Cash</option><option value="card">Card</option><option value="other">Other</option></Select><Input label="Reference" name="reference" placeholder="Transfer reference or note"/></div>{payment.isError&&<Alert>Payment could not be saved. Please try again.</Alert>}<div className="flex justify-end gap-2"><button type="button" className="btn btn-secondary" onClick={()=>setPayOpen(false)}>Cancel</button><button disabled={payment.isPending} className="btn btn-primary">{payment.isPending?<LoaderCircle size={15} className="animate-spin"/>:<Check size={15}/> }Record payment</button></div></form></Modal>}
     {editOpen&&<Modal title="Update quotation" subtitle="Refine the brief, scope or terms." wide onClose={()=>setEditOpen(false)}><DocumentForm kind="quotation" doc={doc} onClose={()=>setEditOpen(false)}/></Modal>}
   </>
 }
 function MoneyRow({label,value,strong=false}:{label:string,value:number,strong?:boolean}) {return <div className={`flex justify-between ${strong?'font-bold text-[#39373d]':'text-[#77726c]'}`}><span>{label}</span><span className="mono">{fmt(value)}</span></div>}
-function Welcome() {return <div className="min-h-[100dvh] overflow-hidden bg-[#f8f6f1]"><header className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-5 md:px-9"><Brand/><Link href="/sign-in" className="btn btn-secondary !rounded-full !px-5">Sign in <ArrowRight size={14}/></Link></header><main className="mx-auto max-w-[1200px] px-5 pb-14 pt-12 md:px-9 md:pt-20"><div className="grid items-center gap-14 lg:grid-cols-[1.1fr_.9fr]"><div className="slide-in"><div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#e7ded5] bg-white/60 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-[#8e6d68]"><span className="h-1.5 w-1.5 rounded-full bg-[#d52038]"/>Built for the work behind the work</div><h1 className="max-w-[660px] font-[Manrope] text-[44px] font-extrabold leading-[1.04] tracking-[-.065em] text-[#26262b] md:text-[66px]">From first brief<br/>to <span className="text-[#ce2238]">paid in full.</span></h1><p className="mt-6 max-w-[510px] text-[15px] leading-7 text-[#77716b]">Collage keeps your clients, quotations and invoices in one considered workspace—so the details that move a project forward stay together.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/sign-in" className="btn btn-primary !h-11 !px-6">Enter your workspace <ArrowRight size={16}/></Link><Link href="/sign-up" className="btn btn-secondary !h-11 !px-6">Create an account</Link></div><div className="mt-10 flex items-center gap-3 text-[11px] text-[#8e8882]"><ShieldCheck size={16} className="text-[#50815d]"/>A dependable desk for teams doing real work.</div></div><div className="relative mx-auto w-full max-w-[480px]"><div className="absolute -right-12 -top-14 h-48 w-48 rounded-full bg-[#f1d6d4]/70 blur-3xl"/><div className="relative rotate-[1deg] rounded-2xl border border-[#e5ded5] bg-white p-5 shadow-[0_24px_80px_rgba(42,32,25,.10)] md:p-7"><div className="flex items-center justify-between border-b border-[#eee8e0] pb-4"><div><div className="text-[10px] font-bold uppercase tracking-[.13em] text-[#9a938c]">Today at Collage</div><div className="mt-1 text-[15px] font-bold">The work, in good order.</div></div><div className="grid h-9 w-9 place-items-center rounded-lg bg-[#fbeded] text-[#b52d40]"><BriefcaseBusiness size={17}/></div></div><div className="mt-5 space-y-3">{[{name:'New brief received',desc:'Aster House · Festival launch',badge:'CLIENT',color:'text-[#766b5f] bg-[#f2eee7]'},{name:'Quotation sent',desc:'QTN-2602-014 · Brand activation',badge:'QUOTE',color:'text-[#aa3042] bg-[#fbeded]'},{name:'Payment recorded',desc:'GHS 8,450.00 · Bank transfer',badge:'PAID',color:'text-[#477950] bg-[#eaf2eb]'}].map(x=><div key={x.name} className="flex items-center gap-3 rounded-xl border border-[#eee9e2] p-3.5"><div className="grid h-8 w-8 place-items-center rounded-lg bg-[#f6f3ee] text-[#69645e]"><FileCheck2 size={15}/></div><div className="min-w-0 flex-1"><div className="text-[11px] font-bold">{x.name}</div><div className="mt-1 truncate text-[10px] text-[#969089]">{x.desc}</div></div><span className={`rounded-full px-2 py-1 text-[8px] font-bold ${x.color}`}>{x.badge}</span></div>)}</div><div className="mt-5 rounded-xl bg-[#27282d] p-4 text-white"><div className="flex justify-between text-[10px] text-[#c0bfbd]"><span>Invoice balance</span><span className="flex items-center gap-1 text-[#c5e1c8]"><ArrowDownRight size={12}/> updated</span></div><div className="mono mt-2 text-[24px] font-medium">GHS 12,840.50</div><div className="mt-4 h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full w-[68%] rounded-full bg-[#e0364a]"/></div></div></div></div></div></main><footer className="mx-auto flex max-w-[1200px] flex-col gap-2 border-t border-[#e8e2da] px-5 py-5 text-[10px] text-[#938d86] sm:flex-row sm:justify-between md:px-9"><span>Collage · Creating results</span><span>Corporate marketing · events · advertising · rentals</span></footer></div>}
-function AuthScreen({signup=false}:{signup?:boolean}) {return <div className="grid min-h-[100dvh] lg:grid-cols-[1fr_1fr]"><section className="flex flex-col justify-between bg-[#232429] p-7 text-[#f9f6ef] md:p-12"><Brand inverse/><div className="my-14 max-w-[490px]"><div className="mb-4 text-[10px] font-bold uppercase tracking-[.17em] text-[#de4354]">Your operations desk</div><h1 className="font-[Manrope] text-[36px] font-bold leading-[1.08] tracking-[-.05em] md:text-[50px]">Every brief has a next step.</h1><p className="mt-5 max-w-[380px] text-[13px] leading-6 text-[#aaa8a3]">Keep client relationships, pricing details and payments connected—right through to the final balance.</p></div><div className="text-[10px] text-[#888780]">COLLAGE · CREATING RESULTS · GHANA</div></section><section className="flex items-center justify-center bg-[#f8f6f1] p-5"><div className="w-full max-w-[370px]"><Link href="/" className="mb-10 inline-flex items-center gap-2 text-[11px] text-[#858079] hover:text-[#b12b3f]"><ArrowLeft size={14}/>Back to Collage</Link><div className="panel p-6 md:p-8"><div className="mb-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#a82a3d]">{signup?'Get started':'Welcome back'}</div><h2 className="m-0 font-[Manrope] text-[26px] font-bold tracking-[-.04em]">{signup?'Create your workspace':'Sign in to Collage'}</h2><p className="mb-0 mt-2 text-[12px] leading-5 text-[#858079]">Access to this workspace is managed securely with Clerk.</p><div className="mt-6 rounded-lg border border-[#eadfd7] bg-[#faf4ec] p-4 text-[11px] leading-5 text-[#766e66]">Clerk sign-in is ready to be connected for this workspace. Once the Clerk provider is configured, the branded authentication flow will appear here.</div><div className="mt-5 flex gap-2"><Link href="/sign-in" className={`btn flex-1 ${signup?'btn-secondary':'btn-primary'}`}><LogIn size={15}/>Sign in</Link><Link href="/sign-up" className={`btn flex-1 ${signup?'btn-primary':'btn-secondary'}`}><Plus size={15}/>Sign up</Link></div></div><div className="mt-4 text-center text-[10px] text-[#9b958d]">Private workspace · Ghana</div></div></section></div>}
+function Welcome() {
+  return (
+    <div className="min-h-[100dvh] overflow-x-hidden bg-[#faf8f5]">
+      {/* Header */}
+      <header className="mx-auto flex max-w-[1280px] items-center justify-between px-6 py-6 md:px-12">
+        <Brand />
+        <div className="flex items-center gap-3">
+          <Link href="/sign-in" className="btn btn-secondary !rounded-full !px-5 text-[13px]">
+            Sign in <ArrowRight size={14}/>
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <main className="mx-auto max-w-[1280px] px-6 pb-20 pt-8 md:px-12 md:pt-16">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_.9fr]">
+          {/* Left Column */}
+          <div className="animate-fade-in">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#e5ded4] bg-white/90 px-3.5 py-1.5 text-[11px] font-semibold tracking-wide text-[#8a333f] shadow-xs">
+              <span className="h-2 w-2 rounded-full bg-[#c61c2e] animate-pulse"/>
+              Corporate Marketing · Events · Advertising · Rentals
+            </div>
+            
+            <h1 className="max-w-[680px] font-sans text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] text-[#1c1c21] md:text-[60px]">
+              From first brief to <span className="text-[#c61c2e]">paid in full.</span>
+            </h1>
+            
+            <p className="mt-5 max-w-[520px] text-[15px] leading-relaxed text-[#6b6762]">
+              Collage keeps client accounts, equipment rentals, custom quotations, and Ghanaian statutory invoices connected in one dependable system.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href="/sign-in" className="btn btn-primary !h-12 !px-7 text-[14px] shadow-md hover:shadow-lg">
+                Enter your workspace <ArrowRight size={16}/>
+              </Link>
+              <Link href="/sign-up" className="btn btn-secondary !h-12 !px-6 text-[14px]">
+                Create account
+              </Link>
+            </div>
+
+            <div className="mt-9 flex items-center gap-3 text-[12px] text-[#79746e]">
+              <div className="grid h-6 w-6 place-items-center rounded-full bg-[#eaf4ec] text-[#3d774e]">
+                <ShieldCheck size={15}/>
+              </div>
+              <span>Private operations desk for teams in Ghana</span>
+            </div>
+          </div>
+
+          {/* Right Column: Dynamic Preview Card with Float Animation */}
+          <div className="relative mx-auto w-full max-w-[490px] animate-slide-up delay-150">
+            <div className="absolute -right-10 -top-12 h-64 w-64 rounded-full bg-[#fae2e4]/60 blur-3xl pointer-events-none"/>
+            <div className="animate-float relative rounded-2xl border border-[#e6dfd6] bg-white p-5 shadow-[0_20px_60px_rgba(30,25,20,0.08)] md:p-6">
+              <div className="flex items-center justify-between border-b border-[#eee8e0] pb-4">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[.15em] text-[#8e8880]">Live Operations</div>
+                  <div className="mt-0.5 text-[15px] font-bold text-[#232227]">Today at Collage</div>
+                </div>
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#fbeded] text-[#c61c2e]">
+                  <BriefcaseBusiness size={18}/>
+                </div>
+              </div>
+
+              {/* Sample Activity Cards */}
+              <div className="mt-4 space-y-2.5">
+                {[
+                  { name: 'Telescopic Pole Rental', desc: 'Eugenia · 4 units × 5 days', badge: 'RENTAL', tagCls: 'bg-[#f4efe7] text-[#776c5f]' },
+                  { name: 'Quotation QTN-2602-014', desc: 'Flag Printing (1x3m) · Wayfinding', badge: 'QUOTE', tagCls: 'bg-[#fbeded] text-[#c61c2e]' },
+                  { name: 'Payment Recorded', desc: 'GHS 1,896.00 · Bank Transfer', badge: 'PAID', tagCls: 'bg-[#eaf4ec] text-[#3d774e]' },
+                ].map((item) => (
+                  <div key={item.name} className="flex items-center gap-3 rounded-xl border border-[#efe9e1] bg-[#fdfcf9] p-3 transition-all duration-200 hover:scale-[1.01] hover:bg-white hover:shadow-xs">
+                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f5f1eb] text-[#69635c]">
+                      <FileCheck2 size={16}/>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[12px] font-bold text-[#232227]">{item.name}</div>
+                      <div className="truncate text-[11px] text-[#8c867f]">{item.desc}</div>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold ${item.tagCls}`}>
+                      {item.badge}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Outstanding Widget */}
+              <div className="mt-4 rounded-xl bg-[#1e1f24] p-4 text-white shadow-inner">
+                <div className="flex items-center justify-between text-[11px] text-[#b5b3b0]">
+                  <span>Active pipeline balance</span>
+                  <span className="flex items-center gap-1 text-[#bde3c2] text-[10px] font-medium">
+                    <ArrowDownRight size={13}/> Updated today
+                  </span>
+                </div>
+                <div className="mono mt-2 text-[24px] font-semibold tracking-tight text-white">
+                  GHS 14,736.50
+                </div>
+                <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full w-[72%] rounded-full bg-[#c61c2e] transition-all duration-500"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 Pillars (Miller's Law) */}
+        <div className="mt-20 border-t border-[#eae3d9] pt-12">
+          <div className="text-center mb-10">
+            <span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#c61c2e]">Integrated ERP Architecture</span>
+            <h2 className="mt-2 font-sans text-[26px] font-extrabold text-[#1c1c21] md:text-[32px]">
+              Built specifically for how Collage operates
+            </h2>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: Users,
+                title: 'Client Book & Acquisition',
+                desc: 'Consolidate client contacts, corporate relationships, and past project briefs in one searchable directory.',
+              },
+              {
+                icon: FileText,
+                title: 'Rental & Production Quotes',
+                desc: 'Formulate accurate proposals with multi-day rental day multipliers, logistics charges, and item breakdowns.',
+              },
+              {
+                icon: ReceiptText,
+                title: 'Ghanaian Statutory Invoicing',
+                desc: 'Automate 2.5% GETFund, 2.5% NHIL, and 15% VAT breakdowns, record partial payments, and track receivables.',
+              },
+            ].map((col) => {
+              const Icon = col.icon;
+              return (
+                <div key={col.title} className="panel p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#fae8ea] text-[#c61c2e] mb-4">
+                    <Icon size={20}/>
+                  </div>
+                  <h3 className="text-[15px] font-bold text-[#1e1e23] mb-2">{col.title}</h3>
+                  <p className="text-[13px] leading-relaxed text-[#757069] m-0">{col.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-[#eae3d9] bg-[#f5f1eb]/60 py-8 text-[11px] text-[#88827a]">
+        <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-4 px-6 md:flex-row md:px-12">
+          <div className="flex items-center gap-3">
+            <span className="font-bold text-[#201f24]">Collage · Creating Results</span>
+            <span>·</span>
+            <span>Accra, Ghana</span>
+          </div>
+          <div>Corporate marketing · event branding · advertising · pole rentals</div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+function AuthScreen({signup=false}:{signup?:boolean}) {
+  return (
+    <div className="grid min-h-[100dvh] lg:grid-cols-[1.1fr_1fr]">
+      {/* Left Hero Panel */}
+      <section className="flex flex-col justify-between bg-[#1a1b1f] p-8 text-[#f7f5ee] md:p-14">
+        <div>
+          <Brand inverse />
+        </div>
+        <div className="my-14 max-w-[500px]">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[.18em] text-[#e04555]">
+            Operations Desk
+          </div>
+          <h1 className="font-sans text-[34px] font-extrabold leading-[1.1] tracking-[-0.035em] text-white md:text-[46px]">
+            Every brief has a clear next step.
+          </h1>
+          <p className="mt-5 max-w-[420px] text-[14px] leading-relaxed text-[#aba8a1]">
+            Keep corporate clients, multi-day equipment rentals, and invoice payments synchronized through to the final balance.
+          </p>
+
+          <div className="mt-8 space-y-3 text-[12px] text-[#ccc9c0]">
+            <div className="flex items-center gap-2.5">
+              <Check size={16} className="text-[#e04555]"/>
+              <span>Pre-calculated Ghanaian taxes (GETFund, NHIL, VAT)</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Check size={16} className="text-[#e04555]"/>
+              <span>Equipment rental day multipliers and inventory tracking</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Check size={16} className="text-[#e04555]"/>
+              <span>Role-based access control and admin security</span>
+            </div>
+          </div>
+        </div>
+        <div className="text-[11px] text-[#7d7a74]">COLLAGE · CREATING RESULTS · GHANA</div>
+      </section>
+
+      {/* Right Form Section */}
+      <section className="flex items-center justify-center bg-[#faf8f5] p-6 md:p-12">
+        <div className="w-full max-w-[400px]">
+          <Link href="/" className="mb-8 inline-flex items-center gap-2 text-[12px] text-[#7d7770] hover:text-[#c61c2e] transition-colors">
+            <ArrowLeft size={14}/> Back to Collage
+          </Link>
+
+          <div className="panel p-6 md:p-8">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#c61c2e]">
+              {signup ? 'Workspace Enrollment' : 'Welcome Back'}
+            </div>
+            <h2 className="m-0 font-sans text-[24px] font-bold tracking-[-0.03em] text-[#1e1e23]">
+              {signup ? 'Create your workspace' : 'Sign in to Collage'}
+            </h2>
+            <p className="mb-0 mt-2 text-[12px] leading-5 text-[#7a746d]">
+              Access is protected with secure Clerk authentication and admin approval.
+            </p>
+
+            <div className="mt-6 rounded-xl border border-[#ebdcd2] bg-[#fbf5ee] p-4 text-[12px] leading-relaxed text-[#6f675e]">
+              Authentication is ready to connect with your verified admin email. Once initialized, the secure sign-in modal will display your profile.
+            </div>
+
+            <div className="mt-6 flex gap-2.5">
+              <Link href="/sign-in" className={`btn flex-1 !h-11 ${signup ? 'btn-secondary' : 'btn-primary'}`}>
+                <LogIn size={15}/> Sign in
+              </Link>
+              <Link href="/sign-up" className={`btn flex-1 !h-11 ${signup ? 'btn-primary' : 'btn-secondary'}`}>
+                <Plus size={15}/> Sign up
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-5 text-center text-[11px] text-[#9c958c]">
+            Secure Workspace · Collage Ghana
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
 function Router() {
   return <ErrorBoundary><Switch>
     <Route path="/" component={Welcome}/>
@@ -204,8 +599,27 @@ function Router() {
     <Route path="/quotations/:id">{()=> <Shell><DocumentDetail/></Shell>}</Route>
     <Route path="/invoices">{()=> <Shell><DocumentList kind="invoice"/></Shell>}</Route>
     <Route path="/invoices/:id">{()=> <Shell><DocumentDetail/></Shell>}</Route>
-    <Route><div className="grid min-h-[100dvh] place-items-center"><div className="text-center"><h1 className="font-[Manrope] text-3xl">This page isn’t in the desk.</h1><Link href="/dashboard" className="btn btn-primary mt-4">Back to overview</Link></div></div></Route>
+    <Route><div className="grid min-h-[100dvh] place-items-center"><div className="text-center"><h1 className="font-sans font-extrabold text-3xl text-[#1e1e23]">Page not found</h1><p className="text-sm text-[#777] mt-2">The requested view could not be located in this workspace.</p><Link href="/dashboard" className="btn btn-primary mt-5">Back to overview</Link></div></div></Route>
   </Switch></ErrorBoundary>;
 }
-function App() {return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/,'')}><Router/></WouterRouter><Toaster/></TooltipProvider></QueryClientProvider>}
+function App() {
+  const content = (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/,'')}>
+          <Router/>
+        </WouterRouter>
+        <Toaster/>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+  if (clerkPubKey) {
+    return (
+      <ClerkProvider publishableKey={clerkPubKey} appearance={clerkAppearance}>
+        {content}
+      </ClerkProvider>
+    );
+  }
+  return content;
+}
 export default App;

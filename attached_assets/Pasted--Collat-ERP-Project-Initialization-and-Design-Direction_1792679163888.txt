@@ -1,0 +1,100 @@
+# Collat ERP — Project Initialization and Design Direction
+
+## Project overview
+
+I am building a custom ERP system for Collat, a corporate marketing, client acquisition, event branding, advertising and rental management business.
+
+I have already built a similar business system for the main company, PrintD Pigh. Collat's ERP should inherit the same level of UI quality, design consistency, animations, interaction patterns and technical discipline while having its own identity and business-specific workflows.
+
+**Do not start coding the entire application immediately. First inspect the existing reference implementation and establish a clear implementation plan.**
+
+## Phase 1: Inspect and understand the reference
+
+1. Inspect the existing PrintD Pigh application, its available source code, screenshots, component library and design tokens.
+2. Identify its typography, colors, spacing, layouts, sidebar, navigation, cards, tables, dialogs, forms, authentication screens and animation patterns.
+3. Identify which components and implementation patterns can be reused and which should be redesigned for Collat.
+4. If the reference implementation is not accessible, ask me for the relevant screenshots or source files. Do not invent its design system.
+5. Audit the current Collat project before changing anything. Preserve working functionality and existing architectural decisions where appropriate.
+
+## Phase 2: Technical foundation
+
+Prefer the established stack from my existing business application where compatible:
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS v4
+- React Router v7
+- Framer Motion
+- Lucide React
+
+Use a maintainable, modular architecture. Select backend, database, authentication and validation technologies based on the existing project and its actual requirements. Do not introduce unnecessary frameworks or duplicate dependencies.
+
+## Phase 3: Visual direction
+
+Create a premium, modern enterprise SaaS experience consistent with PrintD Pigh.
+
+The interface must feel intentionally designed, polished and production-ready, not like a generic AI-generated admin dashboard.
+
+Requirements:
+
+- Consistent typography, spacing, radii, shadows and color tokens.
+- Elegant sidebar and top navigation with carefully designed active states.
+- Smooth page transitions and restrained entrance animations.
+- Subtle animated background details on authentication screens where appropriate.
+- Sophisticated hover, focus, loading, empty and error states.
+- Well-designed data tables, search, filters, pagination and contextual actions.
+- Thoughtful forms, validation, dialogs, dropdowns and confirmation flows.
+- Responsive layouts for desktop, tablet and mobile.
+- Accessible keyboard navigation, visible focus states and reduced-motion support.
+- Consistent iconography using Lucide React.
+- A clear hierarchy that prioritizes important business information.
+
+Avoid excessive glassmorphism, gradients, oversized cards, unnecessary animations, emoji-based navigation and decorative elements that reduce usability. Reproduce the reference's actual design characteristics rather than assuming a particular aesthetic.
+
+## Phase 4: Collat-specific modules
+
+Design the system around these business workflows:
+
+1. Dashboard and management reporting.
+2. Client CRM and business development pipeline.
+3. Quotations, proposals and contracts.
+4. Event branding and project management.
+5. Rental assets, availability calendars and reservations.
+6. Billboard inventory, advertising campaigns and renewals.
+7. Sister-company production coordination and supplier work orders.
+8. Installation, delivery, dismantling and field verification.
+9. Invoicing, payments, expenses and project profitability.
+10. Staff roles, permissions, audit logs and settings.
+
+Design each module around the actual workflow rather than forcing every operation into a generic CRUD table.
+
+## Phase 5: Implementation rules
+
+- Establish shared design tokens and reusable components before duplicating layouts.
+- Separate UI components, business logic, API services, types and data models.
+- Use real persisted data when backend functionality is implemented.
+- Do not present mock data as real business information.
+- Enforce authorization and data access on the server, not just in the interface.
+- Validate inputs and financial calculations on the server.
+- Protect sensitive supplier costs, financial records and client information through role-based permissions.
+- Include meaningful loading, empty, error and success states.
+- Add tests for critical workflows and calculations.
+- Avoid placeholder buttons, dead navigation links and simulated functionality presented as complete features.
+
+## Working method
+
+Work incrementally.
+
+First return:
+1. Your findings from the reference implementation.
+2. A proposed Collat design system.
+3. The application architecture and module structure.
+4. A proposed screen-by-screen implementation plan.
+5. Any blockers or missing reference materials.
+
+Then implement the shared UI foundation and the first approved screens.
+
+After each major phase, run the relevant checks, report what works, identify outstanding issues and wait for my approval before moving to the next phase.
+
+The priority is to build a cohesive, genuinely usable business application with the same design quality as PrintD Pigh, not merely a collection of attractive screens.

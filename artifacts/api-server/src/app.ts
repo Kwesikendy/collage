@@ -11,7 +11,28 @@ import {
   getClerkProxyHost,
 } from "./middlewares/clerkProxyMiddleware";
 
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
 const app: Express = express();
+
+// Security Headers: XSS protection, anti-clickjacking, MIME sniffing prevention
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Handled by frontend bundler / Clerk proxy
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
+
+// Rate Limiting: Protect against brute-force and DoS
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Rate limit exceeded. Please try again later." },
+});
 
 app.use(
   pinoHttp({
@@ -37,9 +58,26 @@ app.use(
 // are forwarded without consuming their bodies.
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
-app.use(cors({ credentials: true, origin: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowedPatterns = [
+        /^http:\/\/localhost:\d+$/,
+        /^http:\/\/127\.0\.0\.1:\d+$/,
+        /^https:\/\/.*\.replit\.dev$/,
+        /^https:\/\/.*\.replit\.app$/,
+        /^https:\/\/.*\.collagenmosaic\.com$/,
+      ];
+      const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin));
+      callback(null, isAllowed);
+    },
+  }),
+);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.use(
   clerkMiddleware((req) => ({
@@ -50,6 +88,6 @@ app.use(
   })),
 );
 
-app.use("/api", router);
+app.use("/api", apiLimiter, router);
 
 export default app;

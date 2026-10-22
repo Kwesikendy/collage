@@ -1,3 +1,9 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="46" cy="50" r="13.5" fill="#E52329" />
+  <!-- Top-left black arc -->
+  <path d="M 40 4 A 46 46 0 0 0 4 44 L 24 44 A 26 26 0 0 1 40 24 Z" fill="#231F20" />
+  <!-- Bottom-left red arc -->
+  <path d="M 4 54 A 46 46 0 0 0 38 96 L 38 74 A 26 26 0 0 1 24 54 Z" fill="#E52329" />
+  <!-- Bottom-right black arc -->
+  <path d="M 50 96 A 46 46 0 0 0 82 76 L 69 63 A 26 26 0 0 1 50 74 Z" fill="#231F20" />
 </svg>
