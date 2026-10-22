@@ -8,7 +8,7 @@ import { ClerkProvider, Show, SignIn, SignUp, useAuth, useClerk, useUser } from 
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { useArchiveClient, useConvertQuotation, useCreateClient, useCreateDocument, useGetClient, useGetClients, useGetDashboardSummary, useGetDocument, useGetDocuments, useRecordPayment, useUpdateClient, useUpdateDocument, getGetClientQueryKey, getGetClientsQueryKey, getGetDashboardSummaryQueryKey, getGetDocumentQueryKey, getGetDocumentsQueryKey, type Client, type ClientInput, type DocumentInput, type SalesDocument } from '@workspace/api-client-react';
-import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, BriefcaseBusiness, Building2, Check, ChevronRight, CircleAlert, Clock3, FileCheck2, FilePlus2, FileText, FolderOpen, LayoutDashboard, LoaderCircle, LogIn, LogOut, Menu, Pencil, Plus, Printer, ReceiptText, Search, ShieldCheck, Sparkles, Tag, UserRound, Users, X } from 'lucide-react';
+import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, BriefcaseBusiness, Building2, CalendarDays, Check, ChevronRight, CircleAlert, CircleDollarSign, Clock3, FileCheck2, FilePlus2, FileText, FolderOpen, LayoutDashboard, LoaderCircle, LogIn, LogOut, Menu, Package, Pencil, Plus, Printer, ReceiptText, Search, ShieldCheck, Sparkles, Tag, TrendingUp, UserRound, Users, Wrench, X } from 'lucide-react';
 import collageLogo from './assets/collage-logo.png';
 
 const queryClient = new QueryClient({ defaultOptions:{queries:{retry:1,refetchOnWindowFocus:false}} });
@@ -351,144 +351,290 @@ function DocumentDetail() {
   </>
 }
 function MoneyRow({label,value,strong=false}:{label:string,value:number,strong?:boolean}) {return <div className={`flex justify-between ${strong?'font-bold text-[#39373d]':'text-[#77726c]'}`}><span>{label}</span><span className="mono">{fmt(value)}</span></div>}
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.12 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return { ref, visible };
+}
+
+const PREVIEW_ITEMS = [
+  {
+    icon: BriefcaseBusiness,
+    name: 'Brand Identity — Apex Holdings',
+    desc: 'Logo suite · stationery · brand guide · awaiting approval',
+    badge: 'PENDING',
+    badgeCls: 'bg-[#fff3e0] text-[#a05c00]',
+    iconBg: 'bg-[#fff8ee]',
+    iconCl: 'text-[#b06e1a]',
+  },
+  {
+    icon: CalendarDays,
+    name: 'Telescopic Poles — Accra Expo',
+    desc: '12 units · 5 Nov – 9 Nov · Available',
+    badge: 'RENTAL',
+    badgeCls: 'bg-[#f4efe7] text-[#776c5f]',
+    iconBg: 'bg-[#f5f1eb]',
+    iconCl: 'text-[#69635c]',
+  },
+  {
+    icon: Wrench,
+    name: 'Wayfinding Production — KNUST',
+    desc: 'Sister co. · 40 signs · In progress',
+    badge: 'IN PROD',
+    badgeCls: 'bg-[#edf3ff] text-[#3550a3]',
+    iconBg: 'bg-[#eef1fb]',
+    iconCl: 'text-[#3550a3]',
+  },
+  {
+    icon: CircleDollarSign,
+    name: 'Invoice INV-2602-031',
+    desc: 'GHS 4,840.00 · Part paid · GHS 2,100 outstanding',
+    badge: 'PART PAID',
+    badgeCls: 'bg-[#fdf3e1] text-[#915c00]',
+    iconBg: 'bg-[#fdf6ec]',
+    iconCl: 'text-[#a87830]',
+  },
+] as const;
+
 function Welcome() {
+  const feat1 = useScrollReveal();
+  const feat2 = useScrollReveal();
+  const feat3 = useScrollReveal();
+  const featRefs = [feat1, feat2, feat3];
+
   return (
     <div className="min-h-[100dvh] overflow-x-hidden bg-[#faf8f5]">
-      {/* Header */}
-      <header className="mx-auto flex max-w-[1280px] items-center justify-between px-6 py-6 md:px-12">
-        <Brand />
-        <div className="flex items-center gap-3">
-          <Link href="/sign-in" className="btn btn-secondary !rounded-full !px-5 text-[13px]">
-            Sign in <ArrowRight size={14}/>
-          </Link>
+
+      {/* ── Sticky header ── */}
+      <header className="sticky top-0 z-30 border-b border-[#ede7df]/70 bg-[#faf8f5]/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1280px] items-center justify-between px-6 py-4 md:px-12">
+          <Brand />
+          <nav className="flex items-center gap-2">
+            {hasClerk ? (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="btn btn-quiet !rounded-full !px-4 text-[13px] font-semibold"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="btn btn-primary !rounded-full !px-5 text-[13px]"
+                >
+                  Create account <ArrowRight size={13}/>
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/dashboard"
+                className="btn btn-secondary !rounded-full !px-5 text-[13px] font-semibold"
+              >
+                Open desk <ArrowRight size={13}/>
+              </Link>
+            )}
+          </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="mx-auto max-w-[1280px] px-6 pb-20 pt-8 md:px-12 md:pt-16">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_.9fr]">
-          {/* Left Column */}
-          <div className="animate-fade-in">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#e5ded4] bg-white/90 px-3.5 py-1.5 text-[11px] font-semibold tracking-wide text-[#8a333f] shadow-xs">
-              <span className="h-2 w-2 rounded-full bg-[#c61c2e] animate-pulse"/>
+      {/* ── Hero ── */}
+      <main className="mx-auto max-w-[1280px] px-6 pb-24 pt-12 md:px-12 md:pt-20">
+        <div className="grid items-center gap-14 lg:grid-cols-[1fr_0.9fr] xl:gap-20">
+
+          {/* Left: copy */}
+          <div>
+            {!hasClerk && (
+              <div
+                className="mb-7 flex items-start gap-3 rounded-xl border border-[#c8e6ce] bg-[#edf7f0] px-4 py-3 text-[12px] text-[#25573a] animate-fade-in"
+              >
+                <ShieldCheck size={15} className="mt-0.5 shrink-0 text-[#3a8053]"/>
+                <div>
+                  <span className="font-bold">Dev mode active.</span>{' '}
+                  Signed in as <span className="font-semibold">Kojo Admin</span>. No authentication required.
+                </div>
+              </div>
+            )}
+
+            {/* Eyebrow */}
+            <div
+              className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#e8dfd4] bg-white/80 px-4 py-1.5 text-[11px] font-semibold tracking-wide text-[#8a333f] shadow-sm animate-fade-in"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-[#c61c2e] animate-pulse"/>
               Corporate Marketing · Events · Advertising · Rentals
             </div>
-            
-            <h1 className="max-w-[680px] font-sans text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] text-[#1c1c21] md:text-[60px]">
-              From first brief to <span className="text-[#c61c2e]">paid in full.</span>
+
+            {/* Headline */}
+            <h1
+              className="animate-slide-up delay-75 max-w-[620px] font-sans text-[40px] font-extrabold leading-[1.06] tracking-[-0.04em] text-[#1a1a1f] sm:text-[50px] md:text-[58px]"
+            >
+              From first brief{' '}
+              <br className="hidden sm:block"/>
+              to{' '}
+              <span className="text-[#c61c2e]">paid in full.</span>
             </h1>
-            
-            <p className="mt-5 max-w-[520px] text-[15px] leading-relaxed text-[#6b6762]">
-              Collage keeps client accounts, equipment rentals, custom quotations, and Ghanaian statutory invoices connected in one dependable system.
+
+            {/* Supporting copy */}
+            <p
+              className="animate-slide-up delay-150 mt-6 max-w-[500px] text-[15px] leading-[1.7] text-[#67635e]"
+            >
+              Manage clients, branding projects, equipment rentals and payments
+              from one connected workspace. Built for the way Collat operates in Ghana.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/sign-in" className="btn btn-primary !h-12 !px-7 text-[14px] shadow-md hover:shadow-lg">
-                Enter your workspace <ArrowRight size={16}/>
+            {/* CTAs */}
+            <div className="animate-slide-up delay-200 mt-9 flex flex-wrap items-center gap-3">
+              <Link
+                href={hasClerk ? '/sign-in' : '/dashboard'}
+                className="btn btn-primary !h-12 !px-7 text-[14px]"
+              >
+                Enter your workspace <ArrowRight size={15}/>
               </Link>
-              <Link href="/sign-up" className="btn btn-secondary !h-12 !px-6 text-[14px]">
-                Create account
-              </Link>
+              {hasClerk && (
+                <Link
+                  href="/sign-up"
+                  className="btn btn-secondary !h-12 !px-6 text-[14px]"
+                >
+                  Create account
+                </Link>
+              )}
             </div>
 
-            <div className="mt-9 flex items-center gap-3 text-[12px] text-[#79746e]">
-              <div className="grid h-6 w-6 place-items-center rounded-full bg-[#eaf4ec] text-[#3d774e]">
-                <ShieldCheck size={15}/>
-              </div>
-              <span>Private operations desk for teams in Ghana</span>
+            {/* Trust line */}
+            <div className="animate-fade-in delay-300 mt-8 flex items-center gap-2.5 text-[12px] text-[#7a756f]">
+              <ShieldCheck size={14} className="text-[#3a8053]"/>
+              <span>Private operations desk for Collat teams in Ghana</span>
             </div>
           </div>
 
-          {/* Right Column: Dynamic Preview Card with Float Animation */}
-          <div className="relative mx-auto w-full max-w-[490px] animate-slide-up delay-150">
-            <div className="absolute -right-10 -top-12 h-64 w-64 rounded-full bg-[#fae2e4]/60 blur-3xl pointer-events-none"/>
-            <div className="animate-float relative rounded-2xl border border-[#e6dfd6] bg-white p-5 shadow-[0_20px_60px_rgba(30,25,20,0.08)] md:p-6">
-              <div className="flex items-center justify-between border-b border-[#eee8e0] pb-4">
+          {/* Right: operations preview card */}
+          <div className="relative mx-auto w-full max-w-[460px] animate-slide-up delay-150 lg:mx-0">
+            {/* Decorative glow */}
+            <div className="pointer-events-none absolute -right-8 -top-10 h-60 w-60 rounded-full bg-[#fae2e4]/50 blur-3xl"/>
+            <div className="pointer-events-none absolute -bottom-8 -left-6 h-40 w-40 rounded-full bg-[#e8f0fd]/50 blur-2xl"/>
+
+            <div className="animate-float relative rounded-2xl border border-[#e4ddd5] bg-white shadow-[0_24px_72px_rgba(26,22,18,0.10)] overflow-hidden">
+
+              {/* Card header */}
+              <div className="flex items-center justify-between border-b border-[#eee8e0] px-5 py-4">
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[.15em] text-[#8e8880]">Live Operations</div>
-                  <div className="mt-0.5 text-[15px] font-bold text-[#232227]">Today at Collage</div>
+                  <div className="text-[9.5px] font-bold uppercase tracking-[.18em] text-[#9b9590]">Sample data · illustrative</div>
+                  <div className="mt-0.5 text-[14px] font-bold text-[#1e1e23]">Operations today</div>
                 </div>
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#fbeded] text-[#c61c2e]">
-                  <BriefcaseBusiness size={18}/>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-[#3dbc6b]"/>
+                  <span className="text-[10px] font-medium text-[#5a9970]">Live</span>
                 </div>
               </div>
 
-              {/* Sample Activity Cards */}
-              <div className="mt-4 space-y-2.5">
-                {[
-                  { name: 'Telescopic Pole Rental', desc: 'Eugenia · 4 units × 5 days', badge: 'RENTAL', tagCls: 'bg-[#f4efe7] text-[#776c5f]' },
-                  { name: 'Quotation QTN-2602-014', desc: 'Flag Printing (1x3m) · Wayfinding', badge: 'QUOTE', tagCls: 'bg-[#fbeded] text-[#c61c2e]' },
-                  { name: 'Payment Recorded', desc: 'GHS 1,896.00 · Bank Transfer', badge: 'PAID', tagCls: 'bg-[#eaf4ec] text-[#3d774e]' },
-                ].map((item) => (
-                  <div key={item.name} className="flex items-center gap-3 rounded-xl border border-[#efe9e1] bg-[#fdfcf9] p-3 transition-all duration-200 hover:scale-[1.01] hover:bg-white hover:shadow-xs">
-                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f5f1eb] text-[#69635c]">
-                      <FileCheck2 size={16}/>
+              {/* Activity rows */}
+              <div className="divide-y divide-[#f2ece5]">
+                {PREVIEW_ITEMS.map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.name}
+                      className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[#fdfaf7]"
+                      style={{ animationDelay: `${300 + i * 80}ms` }}
+                    >
+                      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.iconBg} ${item.iconCl}`}>
+                        <Icon size={15}/>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[12px] font-semibold text-[#232227]">{item.name}</div>
+                        <div className="truncate text-[11px] text-[#9b958e]">{item.desc}</div>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide ${item.badgeCls}`}>
+                        {item.badge}
+                      </span>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[12px] font-bold text-[#232227]">{item.name}</div>
-                      <div className="truncate text-[11px] text-[#8c867f]">{item.desc}</div>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold ${item.tagCls}`}>
-                      {item.badge}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              {/* Outstanding Widget */}
-              <div className="mt-4 rounded-xl bg-[#1e1f24] p-4 text-white shadow-inner">
-                <div className="flex items-center justify-between text-[11px] text-[#b5b3b0]">
-                  <span>Active pipeline balance</span>
-                  <span className="flex items-center gap-1 text-[#bde3c2] text-[10px] font-medium">
-                    <ArrowDownRight size={13}/> Updated today
+              {/* Pipeline widget */}
+              <div className="m-4 rounded-xl bg-[#1a1b1f] px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-medium text-[#a5a09a]">Active pipeline</span>
+                  <span className="flex items-center gap-1 text-[9.5px] font-semibold text-[#7dc89a]">
+                    <TrendingUp size={11}/> +12% vs last month
                   </span>
                 </div>
-                <div className="mono mt-2 text-[24px] font-semibold tracking-tight text-white">
+                <div className="mono mt-2 text-[22px] font-semibold tracking-tight text-white">
                   GHS 14,736.50
                 </div>
-                <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <div className="h-full w-[72%] rounded-full bg-[#c61c2e] transition-all duration-500"/>
+                <div className="mt-1 text-[10px] text-[#706c66]">4 open · 1 partially paid · 2 overdue</div>
+                {/* Animated progress bar */}
+                <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#c61c2e] to-[#e8495a] transition-all duration-[1200ms] ease-out"
+                    style={{ width: '72%' }}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between text-[9.5px] text-[#5e5a56]">
+                  <span>GHS 10,610 collected</span>
+                  <span>GHS 4,126 outstanding</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 3 Pillars (Miller's Law) */}
-        <div className="mt-20 border-t border-[#eae3d9] pt-12">
-          <div className="text-center mb-10">
-            <span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#c61c2e]">Integrated ERP Architecture</span>
-            <h2 className="mt-2 font-sans text-[26px] font-extrabold text-[#1c1c21] md:text-[32px]">
-              Built specifically for how Collage operates
+        {/* ── Features (scroll-reveal) ── */}
+        <div className="mt-24 border-t border-[#eae3d9] pt-16">
+          <div className="mb-12 text-center">
+            <span className="text-[10px] font-bold uppercase tracking-[.2em] text-[#c61c2e]">What it handles</span>
+            <h2 className="mt-3 font-sans text-[26px] font-extrabold tracking-[-0.03em] text-[#1a1a1f] md:text-[32px]">
+              Built for the way Collat works
             </h2>
+            <p className="mx-auto mt-3 max-w-[480px] text-[14px] leading-relaxed text-[#706c66]">
+              One system that connects every brief, quote, rental and payment to the right client record.
+            </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3">
             {[
               {
                 icon: Users,
-                title: 'Client Book & Acquisition',
-                desc: 'Consolidate client contacts, corporate relationships, and past project briefs in one searchable directory.',
+                title: 'Client book',
+                desc: 'Searchable directory of corporate clients, contacts and all past project history in one place.',
               },
               {
-                icon: FileText,
-                title: 'Rental & Production Quotes',
-                desc: 'Formulate accurate proposals with multi-day rental day multipliers, logistics charges, and item breakdowns.',
+                icon: Package,
+                title: 'Rentals and quotes',
+                desc: 'Multi-day rental multipliers, logistics charges, unit breakdowns and accurate cost summaries.',
               },
               {
                 icon: ReceiptText,
-                title: 'Ghanaian Statutory Invoicing',
-                desc: 'Automate 2.5% GETFund, 2.5% NHIL, and 15% VAT breakdowns, record partial payments, and track receivables.',
+                title: 'Ghanaian invoicing',
+                desc: 'Automatic 2.5% GETFund, 2.5% NHIL and 15% VAT. Record partial payments and track outstanding balances.',
               },
-            ].map((col) => {
+            ].map((col, i) => {
               const Icon = col.icon;
+              const { ref, visible } = featRefs[i];
               return (
-                <div key={col.title} className="panel p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#fae8ea] text-[#c61c2e] mb-4">
-                    <Icon size={20}/>
+                <div
+                  key={col.title}
+                  ref={ref}
+                  className={`panel p-6 transition-all duration-500 ease-out hover:-translate-y-1 ${
+                    visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                  }`}
+                  style={{ transitionDelay: `${i * 80}ms` }}
+                >
+                  <div className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-[#fae8ea] text-[#c61c2e]">
+                    <Icon size={19}/>
                   </div>
-                  <h3 className="text-[15px] font-bold text-[#1e1e23] mb-2">{col.title}</h3>
-                  <p className="text-[13px] leading-relaxed text-[#757069] m-0">{col.desc}</p>
+                  <h3 className="mb-2 text-[14px] font-bold text-[#1e1e23]">{col.title}</h3>
+                  <p className="m-0 text-[13px] leading-relaxed text-[#74706a]">{col.desc}</p>
                 </div>
               );
             })}
@@ -496,11 +642,11 @@ function Welcome() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#eae3d9] bg-[#f5f1eb]/60 py-8 text-[11px] text-[#88827a]">
-        <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-4 px-6 md:flex-row md:px-12">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-[#201f24]">Collage · Creating Results</span>
+      {/* ── Footer ── */}
+      <footer className="border-t border-[#eae3d9] bg-[#f4f1eb]/70 py-8">
+        <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-3 px-6 text-[11px] text-[#8f8880] md:flex-row md:px-12">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#1e1e23]">Collage · Creating Results</span>
             <span>·</span>
             <span>Accra, Ghana</span>
           </div>
@@ -562,21 +708,37 @@ function AuthScreen({signup=false}:{signup?:boolean}) {
               {signup ? 'Create your workspace' : 'Sign in to Collage'}
             </h2>
             <p className="mb-0 mt-2 text-[12px] leading-5 text-[#7a746d]">
-              Access is protected with secure Clerk authentication and admin approval.
+              {hasClerk
+                ? 'Access is protected with secure Clerk authentication and admin approval.'
+                : 'Authentication is not yet configured. Dev mode is active.'}
             </p>
 
-            <div className="mt-6 rounded-xl border border-[#ebdcd2] bg-[#fbf5ee] p-4 text-[12px] leading-relaxed text-[#6f675e]">
-              Authentication is ready to connect with your verified admin email. Once initialized, the secure sign-in modal will display your profile.
-            </div>
-
-            <div className="mt-6 flex gap-2.5">
-              <Link href="/sign-in" className={`btn flex-1 !h-11 ${signup ? 'btn-secondary' : 'btn-primary'}`}>
-                <LogIn size={15}/> Sign in
-              </Link>
-              <Link href="/sign-up" className={`btn flex-1 !h-11 ${signup ? 'btn-primary' : 'btn-secondary'}`}>
-                <Plus size={15}/> Sign up
-              </Link>
-            </div>
+            {hasClerk ? (
+              <div className="mt-6">
+                <SignIn routing="path" path={`${basePath}/sign-in`} appearance={clerkAppearance} fallbackRedirectUrl={`${basePath}/dashboard`}/>
+              </div>
+            ) : (
+              <>
+                <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#d4ead8] bg-[#edf7f0] px-4 py-3.5 text-[12px] leading-relaxed text-[#2d6640]">
+                  <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#3a8053]"/>
+                  <div>
+                    <div className="font-bold mb-0.5">Dev mode active</div>
+                    <div>Signed in as <span className="font-semibold">Kojo Admin</span> (admin@collage.com.gh). Click below to open the operations desk.</div>
+                  </div>
+                </div>
+                <Link href="/dashboard" className="btn btn-primary mt-5 w-full !h-11">
+                  <LayoutDashboard size={16}/> Enter Operations Desk
+                </Link>
+                <div className="mt-4 flex gap-2.5">
+                  <Link href="/sign-in" className={`btn flex-1 !h-10 !text-[12px] ${signup ? 'btn-secondary' : 'btn-secondary opacity-50 cursor-not-allowed pointer-events-none'}`}>
+                    <LogIn size={14}/> Sign in (needs Clerk)
+                  </Link>
+                  <Link href="/sign-up" className={`btn flex-1 !h-10 !text-[12px] btn-secondary opacity-50 cursor-not-allowed pointer-events-none`}>
+                    <Plus size={14}/> Sign up (needs Clerk)
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mt-5 text-center text-[11px] text-[#9c958c]">

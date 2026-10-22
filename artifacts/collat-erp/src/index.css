@@ -107,15 +107,28 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   50% { opacity: 0.82; }
 }
 
-.animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-slide-up { animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-float { animation: floatSubtle 4s ease-in-out infinite; }
+.animate-fade-in { animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-up { animation: slideInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-float { animation: floatSubtle 5s ease-in-out infinite; }
 .animate-pulse-subtle { animation: pulseSubtle 3s ease-in-out infinite; }
 
-.delay-75 { animation-delay: 75ms; }
+.delay-75  { animation-delay: 75ms; }
 .delay-150 { animation-delay: 150ms; }
 .delay-200 { animation-delay: 200ms; }
 .delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Scroll-reveal: pair with useScrollReveal hook (JS adds .is-visible) */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* Toggle tokens for quick filter choices */
 .toggle-token {
