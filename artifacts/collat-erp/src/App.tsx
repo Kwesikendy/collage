@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, createContext, useContext, useEffect, useRef, useState } from 'react';
+﻿import { type FormEvent, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, createContext, useContext, useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -8,8 +8,10 @@ import { ClerkProvider, Show, SignIn, SignUp, useAuth, useClerk, useUser } from 
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { useArchiveClient, useConvertQuotation, useCreateClient, useCreateDocument, useGetClient, useGetClients, useGetDashboardSummary, useGetDocument, useGetDocuments, useRecordPayment, useUpdateClient, useUpdateDocument, getGetClientQueryKey, getGetClientsQueryKey, getGetDashboardSummaryQueryKey, getGetDocumentQueryKey, getGetDocumentsQueryKey, type Client, type ClientInput, type DocumentInput, type SalesDocument } from '@workspace/api-client-react';
-import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Banknote, BriefcaseBusiness, Building2, CalendarDays, Check, ChevronRight, CircleAlert, CircleDollarSign, Clock3, FileCheck2, FilePlus2, FileText, FolderOpen, LayoutDashboard, LoaderCircle, LogIn, LogOut, Menu, Package, Pencil, Plus, Printer, ReceiptText, Search, ShieldCheck, Sparkles, Tag, TrendingUp, UserRound, Users, Wrench, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Banknote, Building2, Check, ChevronRight, CircleAlert, Clock3, FilePlus2, FileText, FolderOpen, LayoutDashboard, LoaderCircle, LogIn, LogOut, Menu, Pencil, Plus, Printer, ReceiptText, Search, ShieldCheck, UserRound, Users, X } from 'lucide-react';
 import collageLogo from './assets/collage-logo.png';
+import { Brand } from '@/components/brand';
+import { Welcome } from '@/pages/welcome';
 
 const queryClient = new QueryClient({ defaultOptions:{queries:{retry:1,refetchOnWindowFocus:false}} });
 const rawClerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
@@ -30,7 +32,7 @@ const mockUser = {
   },
 };
 
-// ── App-level user context ──────────────────────────────────────────────────
+// â”€â”€ App-level user context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Never call Clerk hooks outside <ClerkProvider>. Instead, we funnel user data
 // through a React context. When Clerk is active, <ClerkDataProvider> bridges
 // Clerk's hooks into the context. In dev mode the context default (mockUser /
@@ -104,17 +106,6 @@ const fmt = (n:number) => new Intl.NumberFormat('en-GH',{style:'currency',curren
 const dateFmt = (date?:string|null) => date ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(date)) : '-';
 const today = () => new Date().toISOString().slice(0,10);
 
-function Brand({inverse=false, className=""}:{inverse?:boolean, className?:string}) {
-  return inverse ? (
-    <div className={`inline-flex items-center rounded-xl bg-white px-3.5 py-1.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] ${className}`}>
-      <img src={collageLogo} alt="Collage · Creating Results" className="h-7 w-auto object-contain" />
-    </div>
-  ) : (
-    <div className={`inline-flex items-center transition-transform duration-200 hover:scale-[1.02] ${className}`}>
-      <img src={collageLogo} alt="Collage · Creating Results" className="h-8 md:h-9 w-auto object-contain" />
-    </div>
-  );
-}
 const nav = [
   {href:'/dashboard',label:'Overview',icon:LayoutDashboard},
   {href:'/clients',label:'Clients',icon:Users},
@@ -157,7 +148,7 @@ function Shell({children}:{children:ReactNode}) {
       <nav className="space-y-1" aria-label="Main navigation">{nav.map(item=>{const Icon=item.icon;const active=location===item.href||location.startsWith(`${item.href}/`);return <Link key={item.href} href={item.href} data-testid={`link-${item.label.toLowerCase()}`} onClick={()=>setMobileOpen(false)} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors ${active?'bg-[#33343a] text-white shadow-inner':'text-[#aaa9a5] hover:bg-white/[.055] hover:text-white'}`}><Icon size={17} strokeWidth={1.8}/><span>{item.label}</span>{item.label==='Invoices'&&<span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#e53b50]"/>}</Link>})}</nav>
       <div className="mx-2 mb-3 mt-9 text-[10px] font-bold uppercase tracking-[.17em] text-[#77777b]">Your desk</div>
       <div className="mx-1 rounded-lg border border-white/[.08] bg-white/[.035] p-3.5"><div className="flex items-center gap-2 text-[11px] font-semibold text-[#eeece5]"><ShieldCheck size={14} className="text-[#de4859]"/>First things, in order</div><p className="mb-0 mt-2 text-[11px] leading-[1.65] text-[#aaa8a2]">Keep every brief, quote and payment connected to the right client.</p></div>
-      <div className="mt-auto border-t border-white/[.09] px-2 pt-4"><div className="flex items-center gap-3"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#393a3f] text-[11px] font-bold text-white">{user?.firstName?.slice(0,1)||'C'}{user?.lastName?.slice(0,1)||''}</div><div className="min-w-0"><div className="truncate text-[12px] font-semibold">{isLoaded?user?.fullName||user?.firstName||'Signed in':'Loading profile…'}</div><div className="truncate text-[10px] text-[#9b9994]">{user?.primaryEmailAddress?.emailAddress||'Collage workspace'}</div></div><button aria-label="Sign out" title="Sign out" onClick={()=>signOut({redirectUrl:'/'})} className="btn btn-quiet ml-auto !h-8 !min-h-8 !px-2 !text-[#aaa8a2] hover:!text-white"><LogOut size={16}/></button></div></div>
+      <div className="mt-auto border-t border-white/[.09] px-2 pt-4"><div className="flex items-center gap-3"><div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#393a3f] text-[11px] font-bold text-white">{user?.firstName?.slice(0,1)||'C'}{user?.lastName?.slice(0,1)||''}</div><div className="min-w-0"><div className="truncate text-[12px] font-semibold">{isLoaded?user?.fullName||user?.firstName||'Signed in':'Loading profileâ€¦'}</div><div className="truncate text-[10px] text-[#9b9994]">{user?.primaryEmailAddress?.emailAddress||'Collage workspace'}</div></div><button aria-label="Sign out" title="Sign out" onClick={()=>signOut({redirectUrl:'/'})} className="btn btn-quiet ml-auto !h-8 !min-h-8 !px-2 !text-[#aaa8a2] hover:!text-white"><LogOut size={16}/></button></div></div>
     </aside>
     <main className="min-w-0 flex-1">
       <header className="sticky top-0 z-20 flex h-[66px] items-center justify-between border-b border-[#e9e3dc] bg-[#f8f6f1]/95 px-4 backdrop-blur md:px-8">
@@ -192,7 +183,7 @@ function ClientList() {
   const clients=(query.data||[]).filter(c=>(filter==='all'||c.status===filter)&&`${c.companyName} ${c.contactName||''} ${c.email||''} ${c.city||''}`.toLowerCase().includes(search.toLowerCase()));
   function archiveClient(c:Client){if(window.confirm(`Archive ${c.companyName}? You can still find archived records by using the status filter.`))archive.mutate({id:c.id},{onSuccess:()=>{qc.invalidateQueries({queryKey:getGetClientsQueryKey()});qc.invalidateQueries({queryKey:getGetClientQueryKey(c.id)})}})}
   return <><PageTitle eyebrow="Relationships" title="Clients" description="Keep every relationship and request close at hand." action={<button className="btn btn-primary" onClick={()=>{setEditing(undefined);setModal(true)}}><Plus size={16}/>Add client</button>}/>
-    <div className="panel overflow-hidden"><div className="flex flex-col gap-3 border-b border-[#eee8e0] px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5"><div className="relative w-full max-w-[350px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a958e]"/><input aria-label="Search clients" data-testid="input-search-clients" className="field !pl-9" placeholder="Search company, contact, email…" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="flex items-center gap-2"><span className="text-[11px] text-[#86817b]">Show</span><select aria-label="Filter clients by status" className="field !h-9 !min-h-9 !w-auto py-1 text-[12px]" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">All clients</option><option value="active">Active</option><option value="lead">Leads</option><option value="archived">Archived</option></select><span className="ml-1 text-[11px] text-[#8b8580]">{query.data?.length??0} records</span></div></div>
+    <div className="panel overflow-hidden"><div className="flex flex-col gap-3 border-b border-[#eee8e0] px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5"><div className="relative w-full max-w-[350px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a958e]"/><input aria-label="Search clients" data-testid="input-search-clients" className="field !pl-9" placeholder="Search company, contact, emailâ€¦" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="flex items-center gap-2"><span className="text-[11px] text-[#86817b]">Show</span><select aria-label="Filter clients by status" className="field !h-9 !min-h-9 !w-auto py-1 text-[12px]" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">All clients</option><option value="active">Active</option><option value="lead">Leads</option><option value="archived">Archived</option></select><span className="ml-1 text-[11px] text-[#8b8580]">{query.data?.length??0} records</span></div></div>
       {query.isLoading?<LoadingRows/>:query.isError?<div className="p-5"><Alert>Client records could not be loaded. <button className="ml-2 underline" onClick={()=>query.refetch()}>Try again</button></Alert></div>:clients.length===0?<Empty icon={Users} title={search?'No matching clients':'A good relationship starts here'} detail={search?'Try another name, contact or city.':'Add your first client to keep requests, quotes and invoices connected.'} action={!search&&<button className="btn btn-primary" onClick={()=>setModal(true)}><Plus size={15}/>Add first client</button>}/>:<div className="overflow-x-auto"><table className="w-full min-w-[720px] border-collapse text-left"><thead><tr className="border-b border-[#eee8e0] text-[10px] font-bold uppercase tracking-[.1em] text-[#99928b]"><th className="px-5 py-3">Company / contact</th><th className="px-4 py-3">Location</th><th className="px-4 py-3">Email & phone</th><th className="px-4 py-3">Status</th><th className="px-5 py-3 text-right">Actions</th></tr></thead><tbody>{clients.map(c=><tr key={c.id} className="table-row border-b border-[#f0ece6] last:border-0"><td className="px-5 py-4"><Link href={`/clients/${c.id}`} className="text-[13px] font-bold text-[#333338] hover:text-[#af273c]">{c.companyName}</Link><div className="mt-1 text-[11px] text-[#89847e]">{c.contactName||'No contact added'}</div></td><td className="px-4 py-4 text-[12px] text-[#68666a]">{[c.city,c.country].filter(Boolean).join(', ')||'-'}</td><td className="px-4 py-4 text-[12px] text-[#68666a]">{c.email&&<div>{c.email}</div>}<div className="mt-1 text-[#96918b]">{c.phone||'-'}</div></td><td className="px-4 py-4"><Status value={c.status}/></td><td className="px-5 py-4 text-right"><div className="inline-flex gap-1"><Link href={`/clients/${c.id}`} className="btn btn-quiet !h-8 !min-h-8 !px-2.5 text-[11px]">Open</Link><button aria-label={`Edit ${c.companyName}`} className="btn btn-quiet !h-8 !min-h-8 !px-2" onClick={()=>{setEditing(c);setModal(true)}}><Pencil size={14}/></button>{c.status!=='archived'&&<button aria-label={`Archive ${c.companyName}`} className="btn btn-quiet !h-8 !min-h-8 !px-2 text-[#a53b47]" disabled={archive.isPending} onClick={()=>archiveClient(c)}><X size={15}/></button>}</div></td></tr>)}</tbody></table></div>}</div>
     {modal&&<Modal title={editing?'Edit client':'Add a client'} subtitle="A single source of truth for every piece of work." onClose={()=>setModal(false)}><ClientForm client={editing} onClose={()=>setModal(false)}/></Modal>}
   </>
@@ -236,7 +227,7 @@ function DocumentList({kind}:{kind:'quotation'|'invoice'}) {
   const docs=(query.data||[]).filter(d=>(filter==='all'||d.status===filter)&&`${d.number} ${d.clientName} ${d.subject}`.toLowerCase().includes(search.toLowerCase()));
   const title=kind==='quotation'?'Quotations':'Invoices';
   return <><PageTitle eyebrow={kind==='quotation'?'Shape the work':'Keep cash moving'} title={title} description={kind==='quotation'?'Move a brief into a clear, considered proposal.':'Every bill, balance and payment in one place.'} action={<button className="btn btn-primary" onClick={()=>{setEditing(undefined);setModal(true)}}><Plus size={16}/>New {kind}</button>}/>
-    <div className="panel overflow-hidden"><div className="flex flex-col gap-3 border-b border-[#eee8e0] px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5"><div className="relative w-full max-w-[350px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a958e]"/><input aria-label={`Search ${title.toLowerCase()}`} className="field !pl-9" placeholder="Search number, client or subject…" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="flex items-center gap-2"><span className="text-[11px] text-[#86817b]">Status</span><select aria-label={`Filter ${title.toLowerCase()} by status`} className="field !h-9 !min-h-9 !w-auto py-1 text-[12px]" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">All statuses</option>{(kind==='quotation'?['draft','issued','accepted','declined','cancelled']:['draft','issued','partially_paid','paid','cancelled']).map(x=><option key={x} value={x}>{x.replaceAll('_',' ')}</option>)}</select><span className="ml-1 text-[11px] text-[#8b8580]">{query.data?.length??0} records</span></div></div>
+    <div className="panel overflow-hidden"><div className="flex flex-col gap-3 border-b border-[#eee8e0] px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5"><div className="relative w-full max-w-[350px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a958e]"/><input aria-label={`Search ${title.toLowerCase()}`} className="field !pl-9" placeholder="Search number, client or subjectâ€¦" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="flex items-center gap-2"><span className="text-[11px] text-[#86817b]">Status</span><select aria-label={`Filter ${title.toLowerCase()} by status`} className="field !h-9 !min-h-9 !w-auto py-1 text-[12px]" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">All statuses</option>{(kind==='quotation'?['draft','issued','accepted','declined','cancelled']:['draft','issued','partially_paid','paid','cancelled']).map(x=><option key={x} value={x}>{x.replaceAll('_',' ')}</option>)}</select><span className="ml-1 text-[11px] text-[#8b8580]">{query.data?.length??0} records</span></div></div>
     {query.isLoading?<LoadingRows/>:query.isError?<div className="p-5"><Alert>{title} could not be loaded. <button className="ml-2 underline" onClick={()=>query.refetch()}>Try again</button></Alert></div>:docs.length===0?<Empty icon={kind==='quotation'?FileText:ReceiptText} title={search?`No matching ${title.toLowerCase()}`:`No ${title.toLowerCase()} yet`} detail={search?'Try a different reference, client or subject.':`Create your first ${kind} and keep the work connected to a client.`} action={!search&&<button className="btn btn-primary" onClick={()=>setModal(true)}><Plus size={15}/>Create {kind}</button>}/>:<div className="overflow-x-auto"><table className="w-full min-w-[760px] border-collapse text-left"><thead><tr className="border-b border-[#eee8e0] text-[10px] font-bold uppercase tracking-[.1em] text-[#99928b]"><th className="px-5 py-3">Reference</th><th className="px-4 py-3">Client / subject</th><th className="px-4 py-3">Issued</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Total</th><th className="px-5 py-3 text-right">Balance</th></tr></thead><tbody>{docs.map(d=>{const href=`/${d.kind==='quotation'?'quotations':'invoices'}/${d.id}`;return <tr key={d.id} className="table-row border-b border-[#f0ece6] last:border-0"><td className="px-5 py-4"><Link href={href} className="mono text-[11px] font-semibold text-[#a82b3e]">{d.number}</Link><div className="mt-1 text-[10px] capitalize text-[#928c85]">{d.kind}</div></td><td className="max-w-[270px] px-4 py-4"><Link href={href} className="block truncate text-[12px] font-semibold text-[#45434a] hover:text-[#a82b3e]">{d.clientName}</Link><div className="mt-1 truncate text-[11px] text-[#89847e]">{d.subject}</div></td><td className="px-4 py-4 text-[12px] text-[#6f6b66]">{dateFmt(d.issueDate)}</td><td className="px-4 py-4"><Status value={d.status}/></td><td className="mono px-4 py-4 text-right text-[12px] font-semibold">{fmt(d.total)}</td><td className="mono px-5 py-4 text-right text-[12px] text-[#6f6b66]">{fmt(d.balance)}</td></tr>})}</tbody></table></div>}</div>
     {modal&&<Modal title={editing?'Update quotation':`Create ${kind}`} subtitle="Clear scope now means fewer questions later." wide onClose={()=>setModal(false)}><DocumentForm kind={kind} doc={editing} onClose={()=>setModal(false)}/></Modal>}
   </>
@@ -352,7 +343,6 @@ function DocumentDetail() {
       <div className="mt-12 flex flex-wrap items-end justify-between border-t border-[#e2dcce] pt-6 text-[11px]">
         <div className="text-[10px] text-[#7a756f] space-y-0.5">
           <div className="font-bold uppercase tracking-wider text-[#1f2024]">Collage · Creating Results</div>
-          <div>Corporate marketing · events · advertising · rentals</div>
           <div className="text-[#999]">Accra, Ghana</div>
         </div>
         <div className="text-right text-[10px] leading-tight text-[#444] space-y-0.5">
@@ -368,311 +358,6 @@ function DocumentDetail() {
   </>
 }
 function MoneyRow({label,value,strong=false}:{label:string,value:number,strong?:boolean}) {return <div className={`flex justify-between ${strong?'font-bold text-[#39373d]':'text-[#77726c]'}`}><span>{label}</span><span className="mono">{fmt(value)}</span></div>}
-function useScrollReveal() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.12 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-  return { ref, visible };
-}
-
-const PREVIEW_ITEMS = [
-  {
-    icon: BriefcaseBusiness,
-    name: 'Brand Identity — Apex Holdings',
-    desc: 'Logo suite · stationery · brand guide · awaiting approval',
-    badge: 'PENDING',
-    badgeCls: 'bg-[#fff3e0] text-[#a05c00]',
-    iconBg: 'bg-[#fff8ee]',
-    iconCl: 'text-[#b06e1a]',
-  },
-  {
-    icon: CalendarDays,
-    name: 'Telescopic Poles — Accra Expo',
-    desc: '12 units · 5 Nov – 9 Nov · Available',
-    badge: 'RENTAL',
-    badgeCls: 'bg-[#f4efe7] text-[#776c5f]',
-    iconBg: 'bg-[#f5f1eb]',
-    iconCl: 'text-[#69635c]',
-  },
-  {
-    icon: Wrench,
-    name: 'Wayfinding Production — KNUST',
-    desc: 'Sister co. · 40 signs · In progress',
-    badge: 'IN PROD',
-    badgeCls: 'bg-[#edf3ff] text-[#3550a3]',
-    iconBg: 'bg-[#eef1fb]',
-    iconCl: 'text-[#3550a3]',
-  },
-  {
-    icon: CircleDollarSign,
-    name: 'Invoice INV-2602-031',
-    desc: 'GHS 4,840.00 · Part paid · GHS 2,100 outstanding',
-    badge: 'PART PAID',
-    badgeCls: 'bg-[#fdf3e1] text-[#915c00]',
-    iconBg: 'bg-[#fdf6ec]',
-    iconCl: 'text-[#a87830]',
-  },
-] as const;
-
-function Welcome() {
-  const feat1 = useScrollReveal();
-  const feat2 = useScrollReveal();
-  const feat3 = useScrollReveal();
-  const featRefs = [feat1, feat2, feat3];
-
-  return (
-    <div className="min-h-[100dvh] overflow-x-hidden bg-[#faf8f5]">
-
-      {/* ── Sticky header ── */}
-      <header className="sticky top-0 z-30 border-b border-[#ede7df]/70 bg-[#faf8f5]/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1280px] items-center justify-between px-6 py-4 md:px-12">
-          <Brand />
-          <nav className="flex items-center gap-2">
-            {hasClerk ? (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="btn btn-quiet !rounded-full !px-4 text-[13px] font-semibold"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="btn btn-primary !rounded-full !px-5 text-[13px]"
-                >
-                  Create account <ArrowRight size={13}/>
-                </Link>
-              </>
-            ) : (
-              <Link
-                href="/dashboard"
-                className="btn btn-secondary !rounded-full !px-5 text-[13px] font-semibold"
-              >
-                Open desk <ArrowRight size={13}/>
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
-
-      {/* ── Hero ── */}
-      <main className="mx-auto max-w-[1280px] px-6 pb-24 pt-12 md:px-12 md:pt-20">
-        <div className="grid items-center gap-14 lg:grid-cols-[1fr_0.9fr] xl:gap-20">
-
-          {/* Left: copy */}
-          <div>
-            {!hasClerk && (
-              <div
-                className="mb-7 flex items-start gap-3 rounded-xl border border-[#c8e6ce] bg-[#edf7f0] px-4 py-3 text-[12px] text-[#25573a] animate-fade-in"
-              >
-                <ShieldCheck size={15} className="mt-0.5 shrink-0 text-[#3a8053]"/>
-                <div>
-                  <span className="font-bold">Dev mode active.</span>{' '}
-                  Signed in as <span className="font-semibold">Kojo Admin</span>. No authentication required.
-                </div>
-              </div>
-            )}
-
-            {/* Eyebrow */}
-            <div
-              className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#e8dfd4] bg-white/80 px-4 py-1.5 text-[11px] font-semibold tracking-wide text-[#8a333f] shadow-sm animate-fade-in"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-[#c61c2e] animate-pulse"/>
-              Corporate Marketing · Events · Advertising · Rentals
-            </div>
-
-            {/* Headline */}
-            <h1
-              className="animate-slide-up delay-75 max-w-[620px] font-sans text-[40px] font-extrabold leading-[1.06] tracking-[-0.04em] text-[#1a1a1f] sm:text-[50px] md:text-[58px]"
-            >
-              From first brief{' '}
-              <br className="hidden sm:block"/>
-              to{' '}
-              <span className="text-[#c61c2e]">paid in full.</span>
-            </h1>
-
-            {/* Supporting copy */}
-            <p
-              className="animate-slide-up delay-150 mt-6 max-w-[500px] text-[15px] leading-[1.7] text-[#67635e]"
-            >
-              Manage clients, branding projects, equipment rentals and payments
-              from one connected workspace. Built for the way Collat operates in Ghana.
-            </p>
-
-            {/* CTAs */}
-            <div className="animate-slide-up delay-200 mt-9 flex flex-wrap items-center gap-3">
-              <Link
-                href={hasClerk ? '/sign-in' : '/dashboard'}
-                className="btn btn-primary !h-12 !px-7 text-[14px]"
-              >
-                Enter your workspace <ArrowRight size={15}/>
-              </Link>
-              {hasClerk && (
-                <Link
-                  href="/sign-up"
-                  className="btn btn-secondary !h-12 !px-6 text-[14px]"
-                >
-                  Create account
-                </Link>
-              )}
-            </div>
-
-            {/* Trust line */}
-            <div className="animate-fade-in delay-300 mt-8 flex items-center gap-2.5 text-[12px] text-[#7a756f]">
-              <ShieldCheck size={14} className="text-[#3a8053]"/>
-              <span>Private operations desk for Collat teams in Ghana</span>
-            </div>
-          </div>
-
-          {/* Right: operations preview card */}
-          <div className="relative mx-auto w-full max-w-[460px] animate-slide-up delay-150 lg:mx-0">
-            {/* Decorative glow */}
-            <div className="pointer-events-none absolute -right-8 -top-10 h-60 w-60 rounded-full bg-[#fae2e4]/50 blur-3xl"/>
-            <div className="pointer-events-none absolute -bottom-8 -left-6 h-40 w-40 rounded-full bg-[#e8f0fd]/50 blur-2xl"/>
-
-            <div className="animate-float relative rounded-2xl border border-[#e4ddd5] bg-white shadow-[0_24px_72px_rgba(26,22,18,0.10)] overflow-hidden">
-
-              {/* Card header */}
-              <div className="flex items-center justify-between border-b border-[#eee8e0] px-5 py-4">
-                <div>
-                  <div className="text-[9.5px] font-bold uppercase tracking-[.18em] text-[#9b9590]">Sample data · illustrative</div>
-                  <div className="mt-0.5 text-[14px] font-bold text-[#1e1e23]">Operations today</div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-[#3dbc6b]"/>
-                  <span className="text-[10px] font-medium text-[#5a9970]">Live</span>
-                </div>
-              </div>
-
-              {/* Activity rows */}
-              <div className="divide-y divide-[#f2ece5]">
-                {PREVIEW_ITEMS.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={item.name}
-                      className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[#fdfaf7]"
-                      style={{ animationDelay: `${300 + i * 80}ms` }}
-                    >
-                      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.iconBg} ${item.iconCl}`}>
-                        <Icon size={15}/>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[12px] font-semibold text-[#232227]">{item.name}</div>
-                        <div className="truncate text-[11px] text-[#9b958e]">{item.desc}</div>
-                      </div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide ${item.badgeCls}`}>
-                        {item.badge}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Pipeline widget */}
-              <div className="m-4 rounded-xl bg-[#1a1b1f] px-4 py-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-medium text-[#a5a09a]">Active pipeline</span>
-                  <span className="flex items-center gap-1 text-[9.5px] font-semibold text-[#7dc89a]">
-                    <TrendingUp size={11}/> +12% vs last month
-                  </span>
-                </div>
-                <div className="mono mt-2 text-[22px] font-semibold tracking-tight text-white">
-                  GHS 14,736.50
-                </div>
-                <div className="mt-1 text-[10px] text-[#706c66]">4 open · 1 partially paid · 2 overdue</div>
-                {/* Animated progress bar */}
-                <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#c61c2e] to-[#e8495a] transition-all duration-[1200ms] ease-out"
-                    style={{ width: '72%' }}
-                  />
-                </div>
-                <div className="mt-2 flex justify-between text-[9.5px] text-[#5e5a56]">
-                  <span>GHS 10,610 collected</span>
-                  <span>GHS 4,126 outstanding</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Features (scroll-reveal) ── */}
-        <div className="mt-24 border-t border-[#eae3d9] pt-16">
-          <div className="mb-12 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-[.2em] text-[#c61c2e]">What it handles</span>
-            <h2 className="mt-3 font-sans text-[26px] font-extrabold tracking-[-0.03em] text-[#1a1a1f] md:text-[32px]">
-              Built for the way Collat works
-            </h2>
-            <p className="mx-auto mt-3 max-w-[480px] text-[14px] leading-relaxed text-[#706c66]">
-              One system that connects every brief, quote, rental and payment to the right client record.
-            </p>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-3">
-            {[
-              {
-                icon: Users,
-                title: 'Client book',
-                desc: 'Searchable directory of corporate clients, contacts and all past project history in one place.',
-              },
-              {
-                icon: Package,
-                title: 'Rentals and quotes',
-                desc: 'Multi-day rental multipliers, logistics charges, unit breakdowns and accurate cost summaries.',
-              },
-              {
-                icon: ReceiptText,
-                title: 'Ghanaian invoicing',
-                desc: 'Automatic 2.5% GETFund, 2.5% NHIL and 15% VAT. Record partial payments and track outstanding balances.',
-              },
-            ].map((col, i) => {
-              const Icon = col.icon;
-              const { ref, visible } = featRefs[i];
-              return (
-                <div
-                  key={col.title}
-                  ref={ref}
-                  className={`panel p-6 transition-all duration-500 ease-out hover:-translate-y-1 ${
-                    visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                  }`}
-                  style={{ transitionDelay: `${i * 80}ms` }}
-                >
-                  <div className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-[#fae8ea] text-[#c61c2e]">
-                    <Icon size={19}/>
-                  </div>
-                  <h3 className="mb-2 text-[14px] font-bold text-[#1e1e23]">{col.title}</h3>
-                  <p className="m-0 text-[13px] leading-relaxed text-[#74706a]">{col.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </main>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-[#eae3d9] bg-[#f4f1eb]/70 py-8">
-        <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-3 px-6 text-[11px] text-[#8f8880] md:flex-row md:px-12">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[#1e1e23]">Collage · Creating Results</span>
-            <span>·</span>
-            <span>Accra, Ghana</span>
-          </div>
-          <div>Corporate marketing · event branding · advertising · pole rentals</div>
-        </div>
-      </footer>
-    </div>
-  );
-}
 function AuthScreen({signup=false}:{signup?:boolean}) {
   return (
     <div className="grid min-h-[100dvh] lg:grid-cols-[1.1fr_1fr]">
@@ -689,21 +374,21 @@ function AuthScreen({signup=false}:{signup?:boolean}) {
             Every brief has a clear next step.
           </h1>
           <p className="mt-5 max-w-[420px] text-[14px] leading-relaxed text-[#aba8a1]">
-            Keep corporate clients, multi-day equipment rentals, and invoice payments synchronized through to the final balance.
+            Keep clients, quotations, invoices and payments on one desk, from the first brief through the last balance.
           </p>
 
           <div className="mt-8 space-y-3 text-[12px] text-[#ccc9c0]">
             <div className="flex items-center gap-2.5">
               <Check size={16} className="text-[#e04555]"/>
-              <span>Pre-calculated Ghanaian taxes (GETFund, NHIL, VAT)</span>
+              <span>Ghanaian tax calculated on every quote and invoice</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check size={16} className="text-[#e04555]"/>
-              <span>Equipment rental day multipliers and inventory tracking</span>
+              <span>Line items with quantity, days and unit price</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check size={16} className="text-[#e04555]"/>
-              <span>Role-based access control and admin security</span>
+              <span>Access waits on admin approval</span>
             </div>
           </div>
         </div>
@@ -726,8 +411,8 @@ function AuthScreen({signup=false}:{signup?:boolean}) {
             </h2>
             <p className="mb-0 mt-2 text-[12px] leading-5 text-[#7a746d]">
               {hasClerk
-                ? 'Access is protected with secure Clerk authentication and admin approval.'
-                : 'Authentication is not yet configured. Dev mode is active.'}
+                ? 'Access is protected. New accounts wait on admin approval.'
+                : 'Open the workspace to continue.'}
             </p>
 
             {hasClerk ? (
@@ -735,26 +420,9 @@ function AuthScreen({signup=false}:{signup?:boolean}) {
                 <SignIn routing="path" path={`${basePath}/sign-in`} appearance={clerkAppearance} fallbackRedirectUrl={`${basePath}/dashboard`}/>
               </div>
             ) : (
-              <>
-                <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#d4ead8] bg-[#edf7f0] px-4 py-3.5 text-[12px] leading-relaxed text-[#2d6640]">
-                  <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#3a8053]"/>
-                  <div>
-                    <div className="font-bold mb-0.5">Dev mode active</div>
-                    <div>Signed in as <span className="font-semibold">Kojo Admin</span> (admin@collage.com.gh). Click below to open the operations desk.</div>
-                  </div>
-                </div>
-                <Link href="/dashboard" className="btn btn-primary mt-5 w-full !h-11">
-                  <LayoutDashboard size={16}/> Enter Operations Desk
-                </Link>
-                <div className="mt-4 flex gap-2.5">
-                  <Link href="/sign-in" className={`btn flex-1 !h-10 !text-[12px] ${signup ? 'btn-secondary' : 'btn-secondary opacity-50 cursor-not-allowed pointer-events-none'}`}>
-                    <LogIn size={14}/> Sign in (needs Clerk)
-                  </Link>
-                  <Link href="/sign-up" className={`btn flex-1 !h-10 !text-[12px] btn-secondary opacity-50 cursor-not-allowed pointer-events-none`}>
-                    <Plus size={14}/> Sign up (needs Clerk)
-                  </Link>
-                </div>
-              </>
+              <Link href="/dashboard" className="btn btn-primary mt-6 w-full !h-11">
+                Enter your workspace
+              </Link>
             )}
           </div>
 
@@ -768,7 +436,7 @@ function AuthScreen({signup=false}:{signup?:boolean}) {
 }
 function Router() {
   return <ErrorBoundary><Switch>
-    <Route path="/" component={Welcome}/>
+    <Route path="/" component={() => <Welcome hasClerk={hasClerk} />}/>
     <Route path="/sign-in" component={()=> <AuthScreen/>}/><Route path="/sign-in/*" component={()=> <AuthScreen/>}/>
     <Route path="/sign-up" component={()=> <AuthScreen signup/>}/><Route path="/sign-up/*" component={()=> <AuthScreen signup/>}/>
     <Route path="/dashboard">{()=> <Shell><Dashboard/></Shell>}</Route>
