@@ -142,3 +142,7 @@ All quotation and invoice calculations strictly follow the statutory Ghanaian bi
   - Added toggle tokens for quick status filtering on documents and clients.
   - Hardened API server with Helmet headers, rate limiting, and CORS whitelist.
   - Created `.agents/skills/security-audit-and-hardening/SKILL.md` and `PROJECT_CONTEXT.md`.
+  - Configured `.vscode/settings.json` to resolve Tailwind CSS v4 `@plugin`, `@custom-variant`, `@theme`, `@apply` lint warnings.
+  - Added `.env.example` template with `DATABASE_URL` instructions for live database connection.
+  - Linked GitHub remote and pushed complete codebase to `https://github.com/Kwesikendy/collage.git` (`main` branch).
+
