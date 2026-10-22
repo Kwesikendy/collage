@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, useEffect, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, createContext, useContext, useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -30,16 +30,33 @@ const mockUser = {
   },
 };
 
-function useAppUser() {
-  const clerkResult = useUser();
-  if (hasClerk) return clerkResult;
-  return mockUser;
-}
+// ── App-level user context ──────────────────────────────────────────────────
+// Never call Clerk hooks outside <ClerkProvider>. Instead, we funnel user data
+// through a React context. When Clerk is active, <ClerkDataProvider> bridges
+// Clerk's hooks into the context. In dev mode the context default (mockUser /
+// mockClerk) is used automatically -- no Clerk hooks ever fire.
+type AppUser = typeof mockUser;
+type AppClerkCtx = { signOut: (opts?: unknown) => void };
 
-function useAppClerk() {
-  const clerkResult = useClerk();
-  if (hasClerk) return clerkResult;
-  return { signOut: async (_opts?: unknown) => { window.location.href = basePath || '/'; } };
+const AppUserContext  = createContext<AppUser>(mockUser);
+const AppClerkContext = createContext<AppClerkCtx>({
+  signOut: () => { window.location.href = basePath || '/'; },
+});
+
+function useAppUser()  { return useContext(AppUserContext);  }
+function useAppClerk() { return useContext(AppClerkContext); }
+
+/** Rendered ONLY inside <ClerkProvider> -- safe to call Clerk hooks here. */
+function ClerkDataProvider({ children }: { children: ReactNode }) {
+  const clerkUser   = useUser();
+  const { signOut } = useClerk();
+  return (
+    <AppUserContext.Provider value={clerkUser as unknown as AppUser}>
+      <AppClerkContext.Provider value={{ signOut }}>
+        {children}
+      </AppClerkContext.Provider>
+    </AppUserContext.Provider>
+  );
 }
 const clerkAppearance = {
   theme: shadcn,
@@ -765,10 +782,10 @@ function Router() {
   </Switch></ErrorBoundary>;
 }
 function App() {
-  const content = (
+  const inner = (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/,'')}>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Router/>
         </WouterRouter>
         <Toaster/>
@@ -778,10 +795,12 @@ function App() {
   if (clerkPubKey) {
     return (
       <ClerkProvider publishableKey={clerkPubKey} appearance={clerkAppearance}>
-        {content}
+        <ClerkDataProvider>
+          {inner}
+        </ClerkDataProvider>
       </ClerkProvider>
     );
   }
-  return content;
+  return inner;
 }
 export default App;

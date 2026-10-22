@@ -144,5 +144,23 @@ All quotation and invoice calculations strictly follow the statutory Ghanaian bi
   - Created `.agents/skills/security-audit-and-hardening/SKILL.md` and `PROJECT_CONTEXT.md`.
   - Configured `.vscode/settings.json` to resolve Tailwind CSS v4 `@plugin`, `@custom-variant`, `@theme`, `@apply` lint warnings.
   - Added `.env.example` template with `DATABASE_URL` instructions for live database connection.
-  - Linked GitHub remote and pushed complete codebase to `https://github.com/Kwesikendy/collage.git` (`main` branch).
+  - Auth flow fixed: when `VITE_CLERK_PUBLISHABLE_KEY` is absent, landing page and sign-in screen show a "Dev mode active" banner; all CTAs bypass Clerk and go directly to `/dashboard`.
+  - Fixed `<Show>` missing `when` prop Clerk type error -- removed the redundant wrapper, `<SignIn>` now renders directly inside the `hasClerk` branch.
 
+- **2026-10-22 (Landing page UI/UX refinement)**:
+  - **Header**: Converted to `sticky` with `backdrop-blur-md` translucent treatment. Cleaner nav: "Sign in" (quiet), "Create account" (primary) when Clerk is active; "Open desk" (secondary) in dev mode.
+  - **Hero copy**: Updated supporting copy to "Manage clients, branding projects, equipment rentals and payments from one connected workspace. Built for the way Collat operates in Ghana." Preserved headline "From first brief to paid in full."
+  - **Headline**: Responsive sizing (`40px` mobile, `50px` tablet, `58px` desktop). Controlled line break with `<br className="hidden sm:block"/>` to prevent orphaned words.
+  - **Staggered entrance**: Hero left column animates with `fadeIn` on eyebrow, `slideInUp delay-75` on h1, `slideInUp delay-150` on copy, `slideInUp delay-200` on CTAs, `fadeIn delay-300` on trust line.
+  - **Operations preview card**: Upgraded from 3 generic rows to 4 realistic, semantically distinct activities with individual Lucide icons:
+    1. Branding project (BriefcaseBusiness) -- "PENDING" amber chip
+    2. Equipment rental booking (CalendarDays) -- "RENTAL" warm chip
+    3. Production work order dispatched to sister company (Wrench) -- "IN PROD" blue chip
+    4. Outstanding invoice (CircleDollarSign) -- "PART PAID" gold chip
+  - **Pipeline widget**: Added `TrendingUp` indicator, split progress bar labels ("GHS 10,610 collected / GHS 4,126 outstanding"), gradient progress bar.
+  - **Scroll-reveal features section**: `useScrollReveal()` hook uses `IntersectionObserver` to trigger opacity/translateY transition on each feature card when it enters viewport. Staggered per-card `transitionDelay`.
+  - **CSS**: Added `delay-400`, `delay-500` utilities; slowed `floatSubtle` to 5s; added `.reveal` / `.reveal.is-visible` CSS pair.
+  - **`PREVIEW_ITEMS` constant**: Extracted to module-level `as const` array for type safety and maintainability.
+  - **Footer**: Tightened padding and colour.
+  - **TypeScript**: All checks pass (`tsc --noEmit` exit code 0). No regressions in routing, shell, invoice, client, or quotation views.
+  - **Git**: Committed and pushed to `https://github.com/Kwesikendy/collage.git` (`main` branch, commit `b74e148`).
