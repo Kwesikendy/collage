@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Collage ERP API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: dashboard
+  - name: clients
+  - name: documents
 paths:
   /healthz:
     get:
@@ -24,13 +26,414 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard metrics
+      responses:
+        "200":
+          description: Summary metrics and recent activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /clients:
+    get:
+      operationId: getClients
+      tags: [clients]
+      summary: List clients
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string, enum: [lead, active, archived] }
+      responses:
+        "200":
+          description: Client records
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Client" }
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientInput" }
+      responses:
+        "201":
+          description: Created client
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /clients/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get one client
+      responses:
+        "200":
+          description: Client record
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientUpdate" }
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /clients/{id}/archive:
+    post:
+      operationId: archiveClient
+      tags: [clients]
+      summary: Archive a client
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Archived client
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /documents:
+    get:
+      operationId: getDocuments
+      tags: [documents]
+      summary: List quotations and invoices
+      parameters:
+        - in: query
+          name: kind
+          schema: { type: string, enum: [quotation, invoice] }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sales documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SalesDocument" }
+    post:
+      operationId: createDocument
+      tags: [documents]
+      summary: Create a quotation or invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentInput" }
+      responses:
+        "201":
+          description: Created document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SalesDocument" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /documents/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getDocument
+      tags: [documents]
+      summary: Get a quotation or invoice
+      responses:
+        "200":
+          description: Sales document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SalesDocument" }
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateDocument
+      tags: [documents]
+      summary: Update a draft document
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentUpdate" }
+      responses:
+        "200":
+          description: Updated document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SalesDocument" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /documents/{id}/convert:
+    post:
+      operationId: convertQuotation
+      tags: [documents]
+      summary: Convert an accepted quotation to an invoice
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Created invoice
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SalesDocument" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /documents/{id}/payments:
+    post:
+      operationId: recordPayment
+      tags: [documents]
+      summary: Record a payment against an invoice
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentInput" }
+      responses:
+        "201":
+          description: Recorded payment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+      required: [status]
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+    Client:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        companyName: { type: string }
+        contactName: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        city: { type: ["string", "null"] }
+        country: { type: string }
+        status: { type: string, enum: [lead, active, archived] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, companyName, country, status, createdAt, updatedAt]
+    ClientInput:
+      type: object
+      properties:
+        companyName: { type: string, minLength: 1, maxLength: 180 }
+        contactName: { type: ["string", "null"], maxLength: 180 }
+        email: { type: ["string", "null"], format: email }
+        phone: { type: ["string", "null"], maxLength: 60 }
+        address: { type: ["string", "null"], maxLength: 400 }
+        city: { type: ["string", "null"], maxLength: 100 }
+        country: { type: string, minLength: 1, maxLength: 100, default: Ghana }
+        status: { type: string, enum: [lead, active], default: lead }
+      required: [companyName]
+    ClientUpdate:
+      type: object
+      properties:
+        companyName: { type: string, minLength: 1, maxLength: 180 }
+        contactName: { type: ["string", "null"], maxLength: 180 }
+        email: { type: ["string", "null"], format: email }
+        phone: { type: ["string", "null"], maxLength: 60 }
+        address: { type: ["string", "null"], maxLength: 400 }
+        city: { type: ["string", "null"], maxLength: 100 }
+        country: { type: string, minLength: 1, maxLength: 100 }
+        status: { type: string, enum: [lead, active, archived] }
+    DocumentLineItem:
+      type: object
+      properties:
+        description: { type: string, minLength: 1, maxLength: 240 }
+        quantity: { type: number, exclusiveMinimum: 0 }
+        days: { type: number, exclusiveMinimum: 0 }
+        unitPrice: { type: number, minimum: 0 }
+        total: { type: number, minimum: 0 }
+      required: [description, quantity, days, unitPrice, total]
+    DocumentLineInput:
+      type: object
+      properties:
+        description: { type: string, minLength: 1, maxLength: 240 }
+        quantity: { type: number, exclusiveMinimum: 0 }
+        days: { type: number, exclusiveMinimum: 0 }
+        unitPrice: { type: number, minimum: 0 }
+      required: [description, quantity, days, unitPrice]
+    SalesDocument:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        number: { type: string }
+        kind: { type: string, enum: [quotation, invoice] }
+        clientId: { type: string, format: uuid }
+        clientName: { type: string }
+        subject: { type: string }
+        issueDate: { type: string, format: date }
+        dueDate: { type: ["string", "null"], format: date }
+        status: { type: string, enum: [draft, issued, accepted, declined, partially_paid, paid, cancelled] }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentLineItem" }
+        subtotal: { type: number }
+        discountPercent: { type: number }
+        discountAmount: { type: number }
+        getfundRate: { type: number }
+        getfundAmount: { type: number }
+        nhilRate: { type: number }
+        nhilAmount: { type: number }
+        vatRate: { type: number }
+        vatAmount: { type: number }
+        total: { type: number }
+        amountPaid: { type: number }
+        balance: { type: number }
+        paymentTerms: { type: string }
+        validityDays: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, number, kind, clientId, clientName, subject, issueDate, dueDate, status, items, subtotal, discountPercent, discountAmount, getfundRate, getfundAmount, nhilRate, nhilAmount, vatRate, vatAmount, total, amountPaid, balance, paymentTerms, validityDays, createdAt, updatedAt]
+    DocumentInput:
+      type: object
+      properties:
+        kind: { type: string, enum: [quotation, invoice] }
+        clientId: { type: string, format: uuid }
+        subject: { type: string, minLength: 1, maxLength: 240 }
+        issueDate: { type: string, format: date }
+        dueDate: { type: ["string", "null"], format: date }
+        status: { type: string, enum: [draft, issued] }
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/DocumentLineInput" }
+        discountPercent: { type: number, minimum: 0, maximum: 100, default: 0 }
+        getfundRate: { type: number, minimum: 0, maximum: 100, default: 2.5 }
+        nhilRate: { type: number, minimum: 0, maximum: 100, default: 2.5 }
+        vatRate: { type: number, minimum: 0, maximum: 100, default: 15 }
+        paymentTerms: { type: string, maxLength: 500, default: "100% Down Payment" }
+        validityDays: { type: integer, minimum: 1, maximum: 365, default: 5 }
+      required: [kind, clientId, subject, issueDate, items]
+    DocumentUpdate:
+      type: object
+      properties:
+        subject: { type: string, minLength: 1, maxLength: 240 }
+        issueDate: { type: string, format: date }
+        dueDate: { type: ["string", "null"], format: date }
+        status: { type: string, enum: [draft, issued, accepted, declined, cancelled] }
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/DocumentLineInput" }
+        discountPercent: { type: number, minimum: 0, maximum: 100 }
+        getfundRate: { type: number, minimum: 0, maximum: 100 }
+        nhilRate: { type: number, minimum: 0, maximum: 100 }
+        vatRate: { type: number, minimum: 0, maximum: 100 }
+        paymentTerms: { type: string, maxLength: 500 }
+        validityDays: { type: integer, minimum: 1, maximum: 365 }
+    PaymentInput:
+      type: object
+      properties:
+        amount: { type: number, exclusiveMinimum: 0 }
+        paymentDate: { type: string, format: date }
+        method: { type: string, enum: [cash, bank_transfer, mobile_money, card, other] }
+        reference: { type: ["string", "null"], maxLength: 120 }
+      required: [amount, paymentDate, method]
+    Payment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        documentId: { type: string, format: uuid }
+        amount: { type: number }
+        paymentDate: { type: string, format: date }
+        method: { type: string, enum: [cash, bank_transfer, mobile_money, card, other] }
+        reference: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, documentId, amount, paymentDate, method, reference, createdAt]
+    ActivityItem:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        detail: { type: string }
+        date: { type: string, format: date-time }
+        kind: { type: string, enum: [client, quotation, invoice, payment] }
+      required: [id, title, detail, date, kind]
+    DashboardSummary:
+      type: object
+      properties:
+        totalClients: { type: integer }
+        activeQuotes: { type: integer }
+        openInvoices: { type: integer }
+        collectedThisMonth: { type: number }
+        outstandingBalance: { type: number }
+        recentActivity:
+          type: array
+          items: { $ref: "#/components/schemas/ActivityItem" }
+      required: [totalClients, activeQuotes, openInvoices, collectedThisMonth, outstandingBalance, recentActivity]
