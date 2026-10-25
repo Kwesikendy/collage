@@ -1,16 +1,39 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compileOnSave": false,
-  "files": [],
-  "references": [
-    {
-      "path": "./lib/db"
-    },
-    {
-      "path": "./lib/api-client-react"
-    },
-    {
-      "path": "./lib/api-zod"
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@workspace/api-client-react": ["./src/lib/api-client/index.ts"],
+      "@clerk/react": ["./src/lib/clerk-stub.tsx"],
+      "@clerk/react/internal": ["./src/lib/clerk-stub.tsx"],
+      "@clerk/themes": ["./src/lib/clerk-stub.tsx"]
     }
-  ]
+  },
+  "include": [
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/vite-env.d.ts",
+    "src/components/brand.tsx",
+    "src/components/error-boundary.tsx",
+    "src/components/landing/**/*",
+    "src/components/ui/toast.tsx",
+    "src/components/ui/toaster.tsx",
+    "src/components/ui/tooltip.tsx",
+    "src/hooks/use-toast.ts",
+    "src/lib/**/*",
+    "src/pages/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "artifacts", "lib", "scripts"]
 }
