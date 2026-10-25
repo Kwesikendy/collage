@@ -68,21 +68,61 @@ export class ApiError<T = unknown> extends Error {
   }
 }
 
+export interface RentalBooking {
+  id: string;
+  itemName: string;
+  clientName: string;
+  documentNumber: string;
+  quantity: number;
+  days: number;
+  unitRate: number;
+  startDate: string;
+  returnDate: string;
+  status: 'reserved' | 'deployed' | 'returned';
+}
+
+export interface ProductionOrder {
+  id: string;
+  jobCode: string;
+  clientName: string;
+  documentNumber: string;
+  specification: string;
+  quantity: number;
+  assignedTo: string;
+  dueDate: string;
+  status: 'queued' | 'in_production' | 'quality_check' | 'delivered';
+}
+
 type StoredDocument = Omit<SalesDocument, 'clientName' | 'amountPaid' | 'balance'>;
 
 interface ErpStore {
   clients: Client[];
   documents: StoredDocument[];
   payments: Payment[];
+  rentals: RentalBooking[];
+  productionOrders: ProductionOrder[];
 }
 
-const STORAGE_KEY = 'collat_erp_store_v1';
+const STORAGE_KEY = 'collat_erp_store_v2';
 
 function createInitialStore(): ErpStore {
   const now = new Date();
   const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   const clients: Client[] = [
+    {
+      id: 'cli-eugenia',
+      companyName: 'Eugenia',
+      contactName: 'Eugenia',
+      email: 'eugenia@clientpartners.com.gh',
+      phone: '+233 24 512 8890',
+      address: 'Osu RE, Oxford Street',
+      city: 'Accra',
+      country: 'Ghana',
+      status: 'active',
+      createdAt: `${currentMonthPrefix}-20T09:00:00.000Z`,
+      updatedAt: `${currentMonthPrefix}-21T10:00:00.000Z`,
+    },
     {
       id: 'cli-ecobank-gh',
       companyName: 'Ecobank Ghana PLC',
@@ -137,8 +177,35 @@ function createInitialStore(): ErpStore {
     },
   ];
 
-  // Authentic invoice 00211026.01 TELESCOPIC FLAG PRINT AND POLE RENTALS
-  const inv1Pricing = calculateDocumentPricing({
+  // Exact match for authentic sample PDF: Invoice No. 00211026.01 TELESCOPIC FLAG PRINT AND POLE RENTALS
+  const eugeniaPricing = calculateDocumentPricing({
+    items: [
+      {
+        description: 'Polo rental',
+        quantity: 4,
+        days: 1,
+        unitPrice: 70,
+      },
+      {
+        description: 'Flag printing (1x3m)',
+        quantity: 4,
+        days: 1,
+        unitPrice: 200,
+      },
+      {
+        description: 'Logistics (Transpotation, Deployment)',
+        quantity: 1,
+        days: 1,
+        unitPrice: 500,
+      },
+    ],
+    discountPercent: 0,
+    getfundRate: 2.5,
+    nhilRate: 2.5,
+    vatRate: 15,
+  });
+
+  const ecobankPricing = calculateDocumentPricing({
     items: [
       {
         description: 'Telescopic Flag Print (Double-Sided Sublimation Fabric 4.2m)',
@@ -153,7 +220,7 @@ function createInitialStore(): ErpStore {
         unitPrice: 95,
       },
       {
-        description: 'On-Site Rigging, Installation & Dismantling Crew (Accra International Conference Centre)',
+        description: 'On-Site Rigging, Installation & Dismantling Crew (AICC)',
         quantity: 1,
         days: 2,
         unitPrice: 650,
@@ -165,7 +232,7 @@ function createInitialStore(): ErpStore {
     vatRate: 15,
   });
 
-  const inv2Pricing = calculateDocumentPricing({
+  const mtnPricing = calculateDocumentPricing({
     items: [
       {
         description: 'Corporate AGM Stage Backdrop & Wayfinding Totem Branding',
@@ -227,25 +294,50 @@ function createInitialStore(): ErpStore {
       id: 'doc-inv-00211026-01',
       number: '00211026.01',
       kind: 'invoice',
-      clientId: 'cli-ecobank-gh',
+      clientId: 'cli-eugenia',
       subject: 'TELESCOPIC FLAG PRINT AND POLE RENTALS',
-      issueDate: `${currentMonthPrefix}-21`,
-      dueDate: `${currentMonthPrefix}-26`,
-      status: 'partially_paid',
-      items: inv1Pricing.items,
-      subtotal: Number(inv1Pricing.subtotal),
-      discountPercent: Number(inv1Pricing.discountPercent),
-      discountAmount: Number(inv1Pricing.discountAmount),
-      getfundRate: Number(inv1Pricing.getfundRate),
-      getfundAmount: Number(inv1Pricing.getfundAmount),
-      nhilRate: Number(inv1Pricing.nhilRate),
-      nhilAmount: Number(inv1Pricing.nhilAmount),
-      vatRate: Number(inv1Pricing.vatRate),
-      vatAmount: Number(inv1Pricing.vatAmount),
-      total: Number(inv1Pricing.total),
+      issueDate: '2026-10-21',
+      dueDate: '2026-10-26',
+      status: 'issued',
+      items: eugeniaPricing.items,
+      subtotal: Number(eugeniaPricing.subtotal),
+      discountPercent: Number(eugeniaPricing.discountPercent),
+      discountAmount: Number(eugeniaPricing.discountAmount),
+      getfundRate: Number(eugeniaPricing.getfundRate),
+      getfundAmount: Number(eugeniaPricing.getfundAmount),
+      nhilRate: Number(eugeniaPricing.nhilRate),
+      nhilAmount: Number(eugeniaPricing.nhilAmount),
+      vatRate: Number(eugeniaPricing.vatRate),
+      vatAmount: Number(eugeniaPricing.vatAmount),
+      total: Number(eugeniaPricing.total),
       paymentTerms: '100% Down Payment',
       validityDays: 5,
       createdAt: `${currentMonthPrefix}-21T10:00:00.000Z`,
+      updatedAt: `${currentMonthPrefix}-21T10:00:00.000Z`,
+    },
+    {
+      id: 'doc-inv-00221026-01',
+      number: '00221026.01',
+      kind: 'invoice',
+      clientId: 'cli-ecobank-gh',
+      subject: 'ANNUAL SUMMIT FLAG POLES & OUTDOOR WAYFINDING',
+      issueDate: `${currentMonthPrefix}-22`,
+      dueDate: `${currentMonthPrefix}-29`,
+      status: 'partially_paid',
+      items: ecobankPricing.items,
+      subtotal: Number(ecobankPricing.subtotal),
+      discountPercent: Number(ecobankPricing.discountPercent),
+      discountAmount: Number(ecobankPricing.discountAmount),
+      getfundRate: Number(ecobankPricing.getfundRate),
+      getfundAmount: Number(ecobankPricing.getfundAmount),
+      nhilRate: Number(ecobankPricing.nhilRate),
+      nhilAmount: Number(ecobankPricing.nhilAmount),
+      vatRate: Number(ecobankPricing.vatRate),
+      vatAmount: Number(ecobankPricing.vatAmount),
+      total: Number(ecobankPricing.total),
+      paymentTerms: '100% Down Payment',
+      validityDays: 5,
+      createdAt: `${currentMonthPrefix}-22T10:00:00.000Z`,
       updatedAt: `${currentMonthPrefix}-22T14:30:00.000Z`,
     },
     {
@@ -257,17 +349,17 @@ function createInitialStore(): ErpStore {
       issueDate: `${currentMonthPrefix}-18`,
       dueDate: `${currentMonthPrefix}-25`,
       status: 'paid',
-      items: inv2Pricing.items,
-      subtotal: Number(inv2Pricing.subtotal),
-      discountPercent: Number(inv2Pricing.discountPercent),
-      discountAmount: Number(inv2Pricing.discountAmount),
-      getfundRate: Number(inv2Pricing.getfundRate),
-      getfundAmount: Number(inv2Pricing.getfundAmount),
-      nhilRate: Number(inv2Pricing.nhilRate),
-      nhilAmount: Number(inv2Pricing.nhilAmount),
-      vatRate: Number(inv2Pricing.vatRate),
-      vatAmount: Number(inv2Pricing.vatAmount),
-      total: Number(inv2Pricing.total),
+      items: mtnPricing.items,
+      subtotal: Number(mtnPricing.subtotal),
+      discountPercent: Number(mtnPricing.discountPercent),
+      discountAmount: Number(mtnPricing.discountAmount),
+      getfundRate: Number(mtnPricing.getfundRate),
+      getfundAmount: Number(mtnPricing.getfundAmount),
+      nhilRate: Number(mtnPricing.nhilRate),
+      nhilAmount: Number(mtnPricing.nhilAmount),
+      vatRate: Number(mtnPricing.vatRate),
+      vatAmount: Number(mtnPricing.vatAmount),
+      total: Number(mtnPricing.total),
       paymentTerms: '50% deposit to confirm. Balance on completion.',
       validityDays: 7,
       createdAt: `${currentMonthPrefix}-18T09:00:00.000Z`,
@@ -329,7 +421,7 @@ function createInitialStore(): ErpStore {
     {
       id: 'pay-mtn-full',
       documentId: 'doc-inv-00181026-01',
-      amount: Number(inv2Pricing.total),
+      amount: Number(mtnPricing.total),
       paymentDate: `${currentMonthPrefix}-20`,
       method: 'bank_transfer',
       reference: 'GTB-TRF-9082341',
@@ -337,16 +429,103 @@ function createInitialStore(): ErpStore {
     },
     {
       id: 'pay-ecobank-dep',
-      documentId: 'doc-inv-00211026-01',
+      documentId: 'doc-inv-00221026-01',
       amount: 6500,
       paymentDate: `${currentMonthPrefix}-22`,
       method: 'bank_transfer',
-      reference: 'ECO-DEP-00211026',
+      reference: 'ECO-DEP-00221026',
       createdAt: `${currentMonthPrefix}-22T14:30:00.000Z`,
     },
   ];
 
-  return { clients, documents, payments };
+  const rentals: RentalBooking[] = [
+    {
+      id: 'rent-1',
+      itemName: 'Telescopic Flag Pole & Heavy Water Base (5m)',
+      clientName: 'Eugenia',
+      documentNumber: '00211026.01',
+      quantity: 4,
+      days: 1,
+      unitRate: 70,
+      startDate: '2026-10-21',
+      returnDate: '2026-10-22',
+      status: 'deployed',
+    },
+    {
+      id: 'rent-2',
+      itemName: 'Telescopic Flag Pole & Base Kit (5m)',
+      clientName: 'Ecobank Ghana PLC',
+      documentNumber: '00221026.01',
+      quantity: 12,
+      days: 4,
+      unitRate: 95,
+      startDate: `${currentMonthPrefix}-22`,
+      returnDate: `${currentMonthPrefix}-26`,
+      status: 'deployed',
+    },
+    {
+      id: 'rent-3',
+      itemName: 'Exhibition LED Floodlight & Truss System',
+      clientName: 'Scancom PLC (MTN Ghana)',
+      documentNumber: '00181026.01',
+      quantity: 6,
+      days: 3,
+      unitRate: 180,
+      startDate: `${currentMonthPrefix}-18`,
+      returnDate: `${currentMonthPrefix}-21`,
+      status: 'returned',
+    },
+    {
+      id: 'rent-4',
+      itemName: 'Executive Summit Feather Banner Poles',
+      clientName: 'Kempinski Hotel Gold Coast City',
+      documentNumber: 'QT00231026.01',
+      quantity: 16,
+      days: 3,
+      unitRate: 160,
+      startDate: `${currentMonthPrefix}-27`,
+      returnDate: `${currentMonthPrefix}-30`,
+      status: 'reserved',
+    },
+  ];
+
+  const productionOrders: ProductionOrder[] = [
+    {
+      id: 'prod-1',
+      jobCode: 'PDP-2610-041',
+      clientName: 'Eugenia',
+      documentNumber: '00211026.01',
+      specification: 'Flag printing (1x3m) · Sublimation fabric double-stitched',
+      quantity: 4,
+      assignedTo: 'PrintD Pigh · Large Format Press',
+      dueDate: '2026-10-21',
+      status: 'delivered',
+    },
+    {
+      id: 'prod-2',
+      jobCode: 'PDP-2610-044',
+      clientName: 'Ecobank Ghana PLC',
+      documentNumber: '00221026.01',
+      specification: 'Telescopic Flag Print (4.2m Double-Sided Sublimation)',
+      quantity: 12,
+      assignedTo: 'PrintD Pigh · Textile & Dye Sub',
+      dueDate: `${currentMonthPrefix}-24`,
+      status: 'in_production',
+    },
+    {
+      id: 'prod-3',
+      jobCode: 'PDP-2610-048',
+      clientName: 'Kempinski Hotel Gold Coast City',
+      documentNumber: 'QT00231026.01',
+      specification: 'Registration Desk Fascia & Media Wall Matte Vinyl Print',
+      quantity: 2,
+      assignedTo: 'PrintD Pigh · Finishing & Mounting',
+      dueDate: `${currentMonthPrefix}-28`,
+      status: 'queued',
+    },
+  ];
+
+  return { clients, documents, payments, rentals, productionOrders };
 }
 
 function loadStore(): ErpStore {
@@ -366,6 +545,12 @@ function loadStore(): ErpStore {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
       return seed;
     }
+    if (!Array.isArray(parsed.rentals) || !Array.isArray(parsed.productionOrders)) {
+      const seed = createInitialStore();
+      parsed.rentals = seed.rentals;
+      parsed.productionOrders = seed.productionOrders;
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
     return parsed;
   } catch {
     return createInitialStore();
@@ -379,6 +564,89 @@ function saveStore(store: ErpStore): void {
   } catch {
     // Ignore storage quota errors
   }
+}
+
+export function resetErpDemoData(): void {
+  if (typeof window === 'undefined') return;
+  const seed = createInitialStore();
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+}
+
+export function getDocumentPayments(documentId: string): Payment[] {
+  const store = loadStore();
+  return store.payments
+    .filter((p) => p.documentId === documentId)
+    .sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
+}
+
+export function getOperationsData(): {
+  rentals: RentalBooking[];
+  productionOrders: ProductionOrder[];
+} {
+  const store = loadStore();
+  return {
+    rentals: store.rentals,
+    productionOrders: store.productionOrders,
+  };
+}
+
+export function updateRentalStatus(
+  id: string,
+  status: RentalBooking['status'],
+): RentalBooking[] {
+  const store = loadStore();
+  const rental = store.rentals.find((r) => r.id === id);
+  if (rental) {
+    rental.status = status;
+    saveStore(store);
+  }
+  return store.rentals;
+}
+
+export function createRentalBooking(
+  input: Omit<RentalBooking, 'id'>,
+): RentalBooking[] {
+  const store = loadStore();
+  store.rentals.unshift({
+    ...input,
+    id: genId('rent'),
+  });
+  saveStore(store);
+  return store.rentals;
+}
+
+export function updateProductionOrderStatus(
+  id: string,
+  status: ProductionOrder['status'],
+): ProductionOrder[] {
+  const store = loadStore();
+  const order = store.productionOrders.find((o) => o.id === id);
+  if (order) {
+    order.status = status;
+    saveStore(store);
+  }
+  return store.productionOrders;
+}
+
+export function createProductionOrder(
+  input: Omit<ProductionOrder, 'id' | 'jobCode'>,
+): ProductionOrder[] {
+  const store = loadStore();
+  const nextNum = String(store.productionOrders.length + 45).padStart(3, '0');
+  store.productionOrders.unshift({
+    ...input,
+    id: genId('prod'),
+    jobCode: `PDP-2610-${nextNum}`,
+  });
+  saveStore(store);
+  return store.productionOrders;
+}
+
+export function deleteDocumentById(id: string): void {
+  const store = loadStore();
+  store.documents = store.documents.filter((d) => d.id !== id);
+  store.payments = store.payments.filter((p) => p.documentId !== id);
+  saveStore(store);
 }
 
 function genId(prefix: string): string {
@@ -453,10 +721,6 @@ function handleApiRequest(
 
   // GET /api/dashboard/summary
   if (method === 'GET' && pathname === '/api/dashboard/summary') {
-    const now = new Date();
-    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-    const today = now.toISOString().slice(0, 10);
-
     const activeClients = store.clients.filter((c) => c.status !== 'archived');
     const invoiceDocs = store.documents
       .filter(
@@ -473,11 +737,7 @@ function handleApiRequest(
         ['draft', 'issued', 'accepted'].includes(d.status),
     );
 
-    const monthPayments = store.payments.filter(
-      (p) => p.paymentDate >= monthStart && p.paymentDate <= today,
-    );
-
-    const collectedCents = monthPayments.reduce(
+    const collectedCents = store.payments.reduce(
       (sum, p) => sum + amountToCents(p.amount),
       0,
     );
@@ -491,9 +751,9 @@ function handleApiRequest(
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 4)
       .map((c) => ({
-        id: `client-${c.id}`,
-        title: 'New client added',
-        detail: c.companyName,
+        id: `client:${c.id}`,
+        title: 'Client record active',
+        detail: `${c.companyName}${c.city ? ` · ${c.city}` : ''}`,
         date: c.createdAt,
         kind: 'client',
       }));
@@ -502,8 +762,8 @@ function handleApiRequest(
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 4)
       .map((d) => ({
-        id: `document-${d.id}`,
-        title: d.kind === 'quotation' ? 'Quotation created' : 'Invoice created',
+        id: `document:${d.kind}:${d.id}`,
+        title: d.kind === 'quotation' ? 'Quotation issued' : 'Invoice issued',
         detail: `${d.number} · ${d.subject}`,
         date: d.createdAt,
         kind: d.kind,
@@ -516,7 +776,7 @@ function handleApiRequest(
         const doc = store.documents.find((d) => d.id === p.documentId);
         const client = store.clients.find((c) => c.id === doc?.clientId);
         return {
-          id: `payment-${p.id}`,
+          id: `payment:${doc?.id ?? p.id}`,
           title: 'Payment recorded',
           detail: `${client?.companyName ?? 'Client'} · ${doc?.number ?? 'Invoice'} · GHS ${Number(p.amount).toFixed(2)}`,
           date: p.createdAt,
@@ -682,7 +942,7 @@ function handleApiRequest(
       vatAmount: Number(pricing.vatAmount),
       total: Number(pricing.total),
       paymentTerms: input.paymentTerms || '100% Down Payment',
-      validityDays: input.validityDays ?? 14,
+      validityDays: input.validityDays ?? 5,
       createdAt: nowIso,
       updatedAt: nowIso,
     };
@@ -860,6 +1120,27 @@ export async function customFetch<T = unknown>(
         ? input.toString()
         : input.url;
   const method = (options.method || 'GET').toUpperCase();
+
+  // If a remote API base URL is explicitly configured in production, try it first
+  if (_baseUrl && rawUrl.startsWith('/api/')) {
+    try {
+      const finalUrl = `${_baseUrl}${rawUrl}`;
+      const headers = new Headers(options.headers);
+      if (typeof options.body === 'string' && !headers.has('content-type')) {
+        headers.set('content-type', 'application/json');
+      }
+      if (_authTokenGetter && !headers.has('authorization')) {
+        const token = await _authTokenGetter();
+        if (token) headers.set('authorization', `Bearer ${token}`);
+      }
+      const response = await fetch(finalUrl, { ...options, method, headers });
+      if (response.ok) {
+        return (await response.json()) as T;
+      }
+    } catch {
+      // Fall back to local store if remote server is unreachable
+    }
+  }
 
   if (rawUrl.startsWith('/api/') || rawUrl.includes('/api/')) {
     const bodyText = typeof options.body === 'string' ? options.body : null;
