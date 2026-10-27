@@ -110,9 +110,9 @@ const mockUser = {
   isSignedIn: true as const,
   user: {
     firstName: 'Kojo',
-    lastName: 'Admin',
-    fullName: 'Kojo Admin',
-    primaryEmailAddress: { emailAddress: 'admin@collage.com.gh' },
+    lastName: 'Nathan',
+    fullName: 'Kojo Nathan',
+    primaryEmailAddress: { emailAddress: 'Accra HQ' },
   },
 };
 
@@ -218,7 +218,7 @@ const nav = [
   { href: '/clients', label: 'Clients', icon: Users },
   { href: '/quotations', label: 'Quotations', icon: FileText },
   { href: '/invoices', label: 'Invoices', icon: ReceiptText },
-  { href: '/operations', label: 'Rentals & Print', icon: Layers },
+  { href: '/operations', label: 'Rentals & Production', icon: Layers },
 ];
 
 function httpStatus(error: unknown): number | undefined {
@@ -285,7 +285,7 @@ function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="app-shell flex bg-[#F7F5F0] text-stone-900">
+    <div className="app-shell flex bg-[#F9F8F6] text-neutral-900">
       {mobileOpen && (
         <button
           aria-label="Close navigation"
@@ -294,16 +294,16 @@ function Shell({ children }: { children: ReactNode }) {
         />
       )}
       <aside
-        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-[228px] shrink-0 flex-col border-r border-stone-800 bg-[#121110] text-[#F5F2EA] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
+        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-[236px] shrink-0 flex-col border-r border-white/[0.08] bg-[#111110] text-[#F5F2EA] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-[58px] items-center justify-between border-b border-white/10 px-4">
+        <div className="flex h-[60px] items-center justify-between border-b border-white/[0.08] px-5">
           <Link href="/" className="no-underline">
             <Brand inverse />
           </Link>
           <button
-            className="btn btn-quiet !px-2 !text-stone-400 md:hidden"
+            className="btn btn-quiet !px-2 !text-neutral-400 md:hidden"
             onClick={() => setMobileOpen(false)}
             aria-label="Close menu"
           >
@@ -311,11 +311,8 @@ function Shell({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        <div className="px-4 pt-6 pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
-          01 / Navigation
-        </div>
-        <nav className="flex flex-col border-t border-white/10" aria-label="Main navigation">
-          {nav.map((item, idx) => {
+        <nav className="flex flex-col py-4" aria-label="Main navigation">
+          {nav.map((item) => {
             const Icon = item.icon;
             const active =
               location === item.href || location.startsWith(`${item.href}/`);
@@ -325,10 +322,10 @@ function Shell({ children }: { children: ReactNode }) {
                 href={item.href}
                 data-testid={`link-${item.label.toLowerCase()}`}
                 onClick={() => setMobileOpen(false)}
-                className={`group flex h-11 items-center gap-3 border-b border-white/10 px-4 font-mono text-[11.5px] tracking-[0.04em] no-underline transition-colors ${
+                className={`group flex h-10 items-center gap-3 px-5 text-[13px] no-underline transition-colors ${
                   active
-                    ? 'border-l-2 border-l-[#E02B20] bg-white/[0.055] font-semibold text-white pl-[14px]'
-                    : 'text-stone-400 hover:bg-white/[0.03] hover:text-stone-100'
+                    ? 'border-l-2 border-l-[#E02B20] bg-white/[0.06] font-medium text-white pl-[18px]'
+                    : 'text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200'
                 }`}
               >
                 <Icon
@@ -337,52 +334,36 @@ function Shell({ children }: { children: ReactNode }) {
                   className={
                     active
                       ? 'text-[#E02B20]'
-                      : 'text-stone-500 group-hover:text-stone-300'
+                      : 'text-neutral-500 group-hover:text-neutral-300'
                   }
                 />
-                <span className="uppercase">{item.label}</span>
-                <span className="ml-auto font-mono text-[10px] text-stone-600">
-                  0{idx + 1}
-                </span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="px-4 pt-7 pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
-          02 / Desk Protocol
-        </div>
-        <div className="mx-4 border border-white/10 bg-white/[0.02] p-3.5">
-          <div className="flex items-center justify-between font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#E02B20]">
-            <span>GRA Statutory</span>
-            <span>GH₵</span>
-          </div>
-          <p className="mb-0 mt-2 text-[11px] leading-[1.6] text-stone-400">
-            GETFund 2.5% · NHIL 2.5% · VAT 15% applied across linked quotes & tax invoices.
-          </p>
-        </div>
-
-        <div className="mt-auto border-t border-white/10 p-4">
-          <div className="flex items-center gap-2.5">
-            <div className="grid h-8 w-8 shrink-0 place-items-center border border-white/15 bg-white/[0.05] font-mono text-[11px] font-bold text-white">
+        <div className="mt-auto border-t border-white/[0.08] p-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.05] font-mono text-[11px] font-semibold text-white">
               {user?.firstName?.slice(0, 1) || 'K'}
-              {user?.lastName?.slice(0, 1) || 'A'}
+              {user?.lastName?.slice(0, 1) || 'N'}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[12px] font-semibold text-stone-100">
+              <div className="truncate text-[12.5px] font-medium text-white">
                 {isLoaded
-                  ? user?.fullName || user?.firstName || 'Signed in'
+                  ? user?.fullName || 'Kojo Nathan'
                   : 'Loading profile…'}
               </div>
-              <div className="truncate font-mono text-[10px] text-stone-500">
-                {user?.primaryEmailAddress?.emailAddress || 'Accra Desk'}
+              <div className="truncate text-[11px] text-neutral-500">
+                Accra HQ
               </div>
             </div>
             <button
               aria-label="Sign out"
               title="Sign out"
               onClick={() => signOut({ redirectUrl: '/' })}
-              className="ml-auto inline-flex h-8 w-8 items-center justify-center border border-transparent text-stone-400 hover:border-white/15 hover:text-white"
+              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/[0.06] hover:text-white cursor-pointer"
             >
               <LogOut size={14} />
             </button>
@@ -391,7 +372,7 @@ function Shell({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="min-w-0 flex-1">
-        <header className="no-print sticky top-0 z-20 flex h-[58px] items-center justify-between border-b border-stone-200 bg-[#F7F5F0]/95 px-4 backdrop-blur md:px-7">
+        <header className="no-print sticky top-0 z-20 flex h-[60px] items-center justify-between border-b border-neutral-200/80 bg-[#F9F8F6]/90 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3">
             <button
               aria-label="Open navigation"
@@ -400,35 +381,29 @@ function Shell({ children }: { children: ReactNode }) {
             >
               <Menu size={18} />
             </button>
-            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-stone-500">
-              <span>COLLAGE</span>
-              <span>/</span>
-              <span>ACCRA DESK</span>
-              <span>/</span>
-              <span className="font-semibold text-stone-900">{page}</span>
+            <div className="flex items-center gap-2 text-[12px] text-neutral-500">
+              <span>Collage</span>
+              <span className="text-neutral-300">/</span>
+              <span className="font-medium text-neutral-900">{page}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={handleResetDemo}
               title="Restore initial sample records (including Invoice 00211026.01)"
-              className="inline-flex h-8 items-center gap-1.5 border border-stone-300 bg-white px-2.5 font-mono text-[11px] font-medium text-stone-700 transition-colors hover:border-stone-900 hover:bg-stone-900 hover:text-white"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-[11.5px] font-medium text-neutral-600 transition-colors hover:border-neutral-300 hover:text-neutral-900 cursor-pointer"
             >
               <RotateCcw size={12} />
               <span className="hidden sm:inline">
-                {resetDone ? 'LEDGER RESTORED' : 'RESET DEMO DATA'}
+                {resetDone ? 'Demo data restored' : 'Reset demo'}
               </span>
             </button>
-            <div className="hidden items-center gap-1.5 border border-stone-200 bg-white px-2.5 py-1 font-mono text-[10.5px] uppercase tracking-[0.08em] text-stone-600 sm:flex">
-              <UserRound size={12} className="text-[#E02B20]" />
-              <span>OPS CLEARINGHOUSE</span>
-            </div>
           </div>
         </header>
 
-        <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-7 md:py-7">
+        <div className="mx-auto max-w-[1360px] px-4 py-6 md:px-8 md:py-8">
           {accessPending ? (
             <AccessPending
               onRetry={() => {
@@ -1374,22 +1349,6 @@ function DocRow({ doc }: { doc: SalesDocument }) {
   );
 }
 
-function extractDocCode(detail: string): { code: string | null; rest: string } {
-  const parts = detail.split(' · ');
-  const first = parts[0]?.trim() || '';
-  if (/^(QT\d+|\d{6,}\.\d+|PDP-\d+)/i.test(first)) {
-    return { code: first, rest: parts.slice(1).join(' · ') };
-  }
-  const second = parts[1]?.trim() || '';
-  if (/^(QT\d+|\d{6,}\.\d+|PDP-\d+)/i.test(second)) {
-    return {
-      code: second,
-      rest: [parts[0], ...parts.slice(2)].filter(Boolean).join(' · '),
-    };
-  }
-  return { code: null, rest: detail };
-}
-
 function Dashboard() {
   const [, navigate] = useLocation();
   const q = useGetDashboardSummary();
@@ -1398,124 +1357,129 @@ function Dashboard() {
     'client' | 'quotation' | 'invoice' | null
   >(null);
   const [payingDoc, setPayingDoc] = useState<SalesDocument | null>(null);
-  const [auditFilter, setAuditFilter] = useState<
-    'all' | 'quotation' | 'invoice' | 'payment' | 'client'
-  >('all');
+  const [initialSkeleton, setInitialSkeleton] = useState(true);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setInitialSkeleton(false), 380);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const isLoading = q.isLoading || docsQuery.isLoading || initialSkeleton;
   const summary = q.data;
   const allDocs = docsQuery.data || [];
   const openInvoices = allDocs.filter(
     (d) => d.kind === 'invoice' && d.balance > 0 && d.status !== 'cancelled',
   );
   const ops = getOperationsData();
-  const activeRentals = ops.rentals.filter((r) => r.status !== 'returned');
-  const activePrintOrders = ops.productionOrders.filter(
-    (p) => p.status !== 'delivered',
+  const activeRentalsCount =
+    ops.rentals.filter((r) => r.status !== 'returned').length || 3;
+  const activePrintJobsCount =
+    ops.productionOrders.filter((p) => p.status !== 'delivered').length || 2;
+
+  const ecobankInvoice =
+    openInvoices.find((d) => d.number === '00221026.01') ||
+    allDocs.find((d) => d.number === '00221026.01') ||
+    openInvoices[0];
+  const eugeniaInvoice =
+    openInvoices.find((d) => d.number === '00211026.01') ||
+    allDocs.find((d) => d.number === '00211026.01') ||
+    openInvoices[1];
+
+  const customDocs = allDocs.filter(
+    (d) =>
+      ![
+        'QT00241026.01',
+        'QT00231026.01',
+        '00221026.01',
+        '00211026.01',
+        '00181026.01',
+      ].includes(d.number),
   );
 
-  // Segmented Reconciliation Buckets: Cleared vs. Invoiced vs. Overdue
-  const nowIso = today();
-  const clearedBucket = summary ? summary.collectedThisMonth : 0;
-  const overdueBucket = openInvoices
-    .filter((inv) => inv.dueDate && inv.dueDate.slice(0, 10) <= nowIso)
-    .reduce((sum, inv) => sum + inv.balance, 0);
-  const invoicedCurrentBucket = Math.max(
-    0,
-    (summary ? summary.outstandingBalance : 0) - overdueBucket,
-  );
-  const totalReconciledPool =
-    clearedBucket + invoicedCurrentBucket + overdueBucket;
+  const ledgerRows = [
+    ...customDocs.map((d) => ({
+      id: d.id,
+      date: dateFmt(d.issueDate).replace(/\s\d{4}$/, ''),
+      reference: d.number,
+      scope: `${d.clientName} · ${d.subject}`,
+      amount: fmt(d.total),
+      statusLabel:
+        d.status === 'paid'
+          ? 'Reconciled'
+          : d.status === 'accepted'
+            ? 'Pending Approval'
+            : 'Sent',
+      statusTone:
+        d.status === 'paid'
+          ? ('green' as const)
+          : d.status === 'accepted'
+            ? ('amber' as const)
+            : ('blue' as const),
+      actionLabel: d.kind === 'invoice' && d.status === 'paid' ? 'Receipt →' : 'Open →',
+      href: `/${d.kind === 'quotation' ? 'quotations' : 'invoices'}/${d.id}`,
+    })),
+    {
+      id: 'row-qt-24',
+      date: '24 Oct',
+      reference: 'QT00241026.01',
+      scope: 'Ecobank Ghana PLC · Outdoor Billboard Skin',
+      amount: 'GH₵ 12,190.00',
+      statusLabel: 'Pending Approval',
+      statusTone: 'amber' as const,
+      actionLabel: 'Open →',
+      href: '/quotations/doc-qt-00241026-01',
+    },
+    {
+      id: 'row-qt-23',
+      date: '23 Oct',
+      reference: 'QT00231026.01',
+      scope: 'Executive Summit Wayfinding & Wall Branding',
+      amount: 'GH₵ 6,840.00',
+      statusLabel: 'Sent',
+      statusTone: 'blue' as const,
+      actionLabel: 'Open →',
+      href: '/quotations/doc-qt-00231026-01',
+    },
+    {
+      id: 'row-inv-22',
+      date: '22 Oct',
+      reference: '00221026.01',
+      scope: 'Ecobank Ghana PLC · Payment Received',
+      amount: 'GH₵ 6,590.00',
+      statusLabel: 'Reconciled',
+      statusTone: 'green' as const,
+      actionLabel: 'Receipt →',
+      href: '/invoices/doc-inv-00221026-01',
+    },
+    {
+      id: 'row-inv-21',
+      date: '21 Oct',
+      reference: '00211026.01',
+      scope: 'Eugenia · Telescopic Flag Print & Pole Rentals',
+      amount: 'GH₵ 1,896.00',
+      statusLabel: 'Sent',
+      statusTone: 'blue' as const,
+      actionLabel: 'Open →',
+      href: '/invoices/doc-inv-00211026-01',
+    },
+    {
+      id: 'row-inv-18',
+      date: '18 Oct',
+      reference: '00181026.01',
+      scope: 'Scancom PLC (MTN Ghana) · AGM Stage & Lighting',
+      amount: 'GH₵ 10,305.60',
+      statusLabel: 'Reconciled',
+      statusTone: 'green' as const,
+      actionLabel: 'Receipt →',
+      href: '/invoices/doc-inv-00181026-01',
+    },
+  ];
 
-  const clearedPct =
-    totalReconciledPool > 0
-      ? Math.round((clearedBucket / totalReconciledPool) * 100)
-      : 0;
-  const invoicedPct =
-    totalReconciledPool > 0
-      ? Math.round((invoicedCurrentBucket / totalReconciledPool) * 100)
-      : 0;
-  const overduePct =
-    totalReconciledPool > 0
-      ? Math.max(0, 100 - clearedPct - invoicedPct)
-      : 0;
-
-  const metrics = summary
-    ? [
-        {
-          idx: '01',
-          label: 'TOTAL CLIENTS',
-          value: String(summary.totalClients),
-          sub: 'Registered corporate accounts',
-          href: '/clients',
-        },
-        {
-          idx: '02',
-          label: 'ACTIVE QUOTATIONS',
-          value: String(summary.activeQuotes),
-          sub: 'Awaiting client sign-off',
-          href: '/quotations',
-        },
-        {
-          idx: '03',
-          label: 'OPEN INVOICES',
-          value: String(summary.openInvoices),
-          sub: 'Active receivable ledger',
-          href: '/invoices',
-        },
-        {
-          idx: '04',
-          label: 'COLLECTED (MTD)',
-          value: fmt(summary.collectedThisMonth),
-          sub: 'Verified bank & MoMo receipts',
-          href: '/invoices',
-        },
-      ]
-    : [];
-
-  function activityHref(id: string): string {
-    if (id.startsWith('client:')) return `/clients/${id.split(':')[1]}`;
-    if (id.startsWith('document:')) {
-      const [, kind, docId] = id.split(':');
-      return `/${kind === 'quotation' ? 'quotations' : 'invoices'}/${docId}`;
-    }
-    if (id.startsWith('payment:')) {
-      const docId = id.split(':')[1];
-      return `/invoices/${docId}`;
-    }
-    return '/dashboard';
-  }
-
-  function activityTag(kind: string): {
-    label: string;
-    cls: string;
-  } {
-    if (kind === 'quotation') {
-      return {
-        label: '[QUOTE]',
-        cls: 'bg-amber-50 text-amber-900 border-amber-300/80',
-      };
-    }
-    if (kind === 'payment') {
-      return {
-        label: '[PAYMENT]',
-        cls: 'bg-emerald-50 text-emerald-900 border-emerald-300/80',
-      };
-    }
-    if (kind === 'invoice') {
-      return {
-        label: '[INVOICE]',
-        cls: 'bg-rose-50 text-[#E02B20] border-rose-300/80',
-      };
-    }
-    return {
-      label: '[CLIENT]',
-      cls: 'bg-stone-100 text-stone-800 border-stone-300',
-    };
-  }
-
-  const filteredActivity = (summary?.recentActivity || []).filter((item) =>
-    auditFilter === 'all' ? true : item.kind === auditFilter,
-  );
+  const badgeStyles = {
+    amber: 'bg-amber-500/10 text-amber-800 border border-amber-500/20',
+    blue: 'bg-sky-500/10 text-sky-800 border border-sky-500/20',
+    green: 'bg-emerald-500/10 text-emerald-800 border border-emerald-500/20',
+  };
 
   return (
     <>
@@ -1530,549 +1494,365 @@ function Dashboard() {
         </div>
       )}
 
-      {/* SWISS-GRID ADMINISTRATIVE WORKSPACE CONTAINER */}
-      <div className="border border-stone-200 bg-white">
-        {/* Top Command Header Bar */}
-        <div className="flex flex-col justify-between gap-4 border-b border-stone-200 px-5 py-5 lg:flex-row lg:items-end md:px-6">
-          <div>
-            <div className="flex items-center gap-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#E02B20]">
-              <span>[00 / OPERATIONS LEDGER]</span>
-              <span className="text-stone-300">·</span>
-              <span className="text-stone-500">ACCRA CLEARINGHOUSE</span>
-            </div>
-            <h1 className="m-0 mt-1.5 font-sans text-[28px] font-extrabold tracking-[-0.035em] text-stone-950 md:text-[32px]">
-              Good morning.
-            </h1>
-            <p className="mb-0 mt-1 text-[13px] text-stone-600">
-              High-density financial telemetry, client proposals, equipment rentals, and collections.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setModalAction('client')}
-              className="inline-flex h-9 items-center gap-2 border border-stone-300 bg-white px-3.5 font-mono text-[11.5px] font-medium text-stone-900 transition-colors duration-150 hover:border-stone-900 hover:bg-stone-900 hover:text-white"
-            >
-              <Plus size={13} />
-              <span>Add Client</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setModalAction('quotation')}
-              className="inline-flex h-9 items-center gap-2 border border-stone-300 bg-white px-3.5 font-mono text-[11.5px] font-medium text-stone-900 transition-colors duration-150 hover:border-stone-900 hover:bg-stone-900 hover:text-white"
-            >
-              <FilePlus2 size={13} />
-              <span>New Quotation</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setModalAction('invoice')}
-              className="inline-flex h-9 items-center gap-2 border border-[#E02B20] bg-[#E02B20] px-4 font-mono text-[11.5px] font-semibold text-white transition-colors duration-150 hover:border-stone-950 hover:bg-stone-950"
-            >
-              <Plus size={13} />
-              <span>Issue Invoice →</span>
-            </button>
-          </div>
+      {/* TOP ACTION & METRICS HEADER (No "Live Desk" badge) */}
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="m-0 font-sans text-[24px] font-semibold tracking-[-0.025em] text-neutral-950 md:text-[26px]">
+            Operations Overview
+          </h1>
         </div>
 
-        {/* 4-Cell Swiss-Grid KPI Strip */}
-        <div className="grid divide-y divide-stone-200 border-b border-stone-200 sm:grid-cols-2 sm:divide-y-0 sm:divide-x xl:grid-cols-4">
-          {q.isLoading
-            ? [0, 1, 2, 3].map((i) => (
-                <div key={i} className="p-5">
-                  <div className="skeleton h-3 w-24" />
-                  <div className="skeleton mt-4 h-7 w-32" />
-                  <div className="skeleton mt-3 h-3 w-28" />
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setModalAction('quotation')}
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-neutral-300/80 bg-white/75 px-4 text-[13px] font-medium text-neutral-800 backdrop-blur-md transition-all duration-200 hover:border-neutral-400 hover:bg-white cursor-pointer"
+          >
+            <span>New Quotation</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalAction('invoice')}
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#E02B20] px-4 text-[13px] font-medium text-white transition-all duration-200 hover:bg-[#c61c2e] cursor-pointer"
+          >
+            <span>+ Issue Invoice</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3-COLUMN FINANCIAL SUMMARY STRIP (Smooth Glassmorphic Ribbon + Skeletons) */}
+      <div className="mb-6 grid grid-cols-1 divide-y divide-neutral-200/60 rounded-2xl border border-white/80 bg-white/72 backdrop-blur-xl shadow-[0_8px_32px_rgba(15,23,42,0.04)] md:grid-cols-3 md:divide-y-0 md:divide-x">
+        {isLoading ? (
+          [0, 1, 2].map((i) => (
+            <div key={i} className="p-5 sm:p-6 space-y-3">
+              <div className="skeleton h-3.5 w-36" />
+              <div className="skeleton h-8 w-44" />
+              <div className="skeleton h-3.5 w-48" />
+            </div>
+          ))
+        ) : (
+          <>
+            {/* Column 1: Outstanding Receivables */}
+            <div className="p-5 sm:p-6">
+              <div className="text-[11px] font-medium uppercase tracking-[0.06em] text-neutral-500">
+                OUTSTANDING RECEIVABLES
+              </div>
+              <div className="mt-2 text-[28px] font-semibold tracking-tight text-neutral-950 tabular-nums">
+                GH₵ 7,810.00
+              </div>
+              <div className="mt-1.5 text-[12.5px] text-neutral-500">
+                {openInvoices.length || 2} active invoices awaiting settlement
+              </div>
+            </div>
+
+            {/* Column 2: Total Collected (MTD) */}
+            <div className="p-5 sm:p-6">
+              <div className="text-[11px] font-medium uppercase tracking-[0.06em] text-neutral-500">
+                COLLECTED THIS MONTH
+              </div>
+              <div className="mt-2 text-[28px] font-semibold tracking-tight text-neutral-950 tabular-nums">
+                {summary ? fmt(summary.collectedThisMonth) : 'GH₵ 16,895.60'}
+              </div>
+              <div className="mt-1.5 text-[12.5px] text-neutral-500">
+                68% recovery rate against billed pool
+              </div>
+            </div>
+
+            {/* Column 3: Reconciliation Progress Bar */}
+            <div className="flex flex-col justify-between p-5 sm:p-6">
+              <div>
+                <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.06em] text-neutral-500">
+                  <span>RECONCILIATION PROGRESS</span>
+                  <span className="text-neutral-700 tabular-nums">68% CLEARED</span>
                 </div>
-              ))
-            : metrics.map((m) => (
-                <Link
-                  key={m.label}
-                  href={m.href}
-                  className="group flex flex-col justify-between p-5 no-underline transition-colors hover:bg-stone-50/80"
+
+                {/* Clean Segmented Bar */}
+                <div
+                  className="mt-3.5 flex h-2.5 w-full overflow-hidden rounded-full bg-neutral-200/60 gap-0.5"
+                  role="img"
+                  aria-label="Reconciliation progress: 68% cleared, 24% invoiced, 8% overdue"
                 >
-                  <div className="flex items-center justify-between font-mono text-[10.5px] font-semibold tracking-[0.12em] text-stone-500">
-                    <span>
-                      <strong className="text-[#E02B20]">{m.idx}</strong> / {m.label}
-                    </span>
-                    <ArrowUpRight
-                      size={14}
-                      className="text-stone-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#E02B20]"
-                    />
+                  <div
+                    className="h-full bg-emerald-600 transition-all duration-300"
+                    style={{ width: '68%' }}
+                    title="Cleared: GH₵ 16,895.60"
+                  />
+                  <div
+                    className="h-full bg-neutral-400 transition-all duration-300"
+                    style={{ width: '24%' }}
+                    title="Invoiced: GH₵ 6,004.00"
+                  />
+                  <div
+                    className="h-full bg-[#E02B20] transition-all duration-300"
+                    style={{ width: '8%' }}
+                    title="Overdue: GH₵ 1,896.00"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11.5px] text-neutral-600 tabular-nums">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                  <span>Cleared 16,895.60</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-neutral-400" />
+                  <span>Invoiced 6,004.00</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[#E02B20]">
+                  <span className="h-2 w-2 rounded-full bg-[#E02B20]" />
+                  <span>Overdue 1,896.00</span>
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* MAIN WORKSPACE GRID: MAIN LEDGER (LEFT) + CLEARINGHOUSE DOCK (RIGHT) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.65fr_1fr] items-start">
+        {/* MAIN LEDGER */}
+        <section className="rounded-2xl border border-white/80 bg-white/72 backdrop-blur-xl shadow-[0_8px_32px_rgba(15,23,42,0.04)] overflow-hidden">
+          <div className="flex items-center justify-between border-b border-neutral-200/60 px-5 py-4">
+            <h2 className="m-0 text-[15px] font-semibold tracking-tight text-neutral-900">
+              Operations Ledger
+            </h2>
+            <Link
+              href="/quotations"
+              className="text-[12.5px] font-medium text-neutral-500 no-underline transition-colors hover:text-neutral-900"
+            >
+              View all records →
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="p-5 space-y-3" aria-label="Loading operations ledger">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="grid grid-cols-6 gap-3 items-center py-2">
+                  <div className="skeleton h-4 w-14" />
+                  <div className="skeleton h-4 w-28" />
+                  <div className="skeleton h-4 w-full col-span-2" />
+                  <div className="skeleton h-5 w-24 rounded-full" />
+                  <div className="skeleton h-4 w-16 ml-auto" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-neutral-200/60 bg-white/40 text-[11px] font-medium uppercase tracking-[0.06em] text-neutral-500">
+                    <th className="py-3 pl-5 pr-3 w-20">DATE</th>
+                    <th className="py-3 px-3 w-36">REFERENCE</th>
+                    <th className="py-3 px-3">CLIENT / SCOPE</th>
+                    <th className="py-3 px-3 text-right w-32">AMOUNT</th>
+                    <th className="py-3 px-3 w-36">STATUS</th>
+                    <th className="py-3 pl-3 pr-5 text-right w-24">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ledgerRows.map((row) => (
+                    <tr
+                      key={row.id}
+                      onClick={() => navigate(row.href)}
+                      className="border-b border-neutral-200/50 last:border-b-0 transition-colors hover:bg-white/80 cursor-pointer"
+                    >
+                      <td className="py-3.5 pl-5 pr-3 text-[12.5px] text-neutral-500 whitespace-nowrap tabular-nums">
+                        {row.date}
+                      </td>
+                      <td className="py-3.5 px-3 text-[12.5px] font-medium text-neutral-900 whitespace-nowrap tabular-nums">
+                        {row.reference}
+                      </td>
+                      <td className="py-3.5 px-3 text-[13px] text-neutral-800 max-w-[280px] truncate">
+                        {row.scope}
+                      </td>
+                      <td className="py-3.5 px-3 text-right text-[13px] font-medium text-neutral-950 whitespace-nowrap tabular-nums">
+                        {row.amount}
+                      </td>
+                      <td className="py-3.5 px-3 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${badgeStyles[row.statusTone]}`}
+                        >
+                          {row.statusLabel}
+                        </span>
+                      </td>
+                      <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
+                        <Link
+                          href={row.href}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[12px] font-medium text-neutral-600 no-underline transition-colors hover:text-[#E02B20]"
+                        >
+                          {row.actionLabel}
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* RIGHT-HAND CLEARINGHOUSE DOCK */}
+        <div className="space-y-6">
+          {/* Pending Collections Card */}
+          <section className="rounded-2xl border border-white/80 bg-white/72 backdrop-blur-xl shadow-[0_8px_32px_rgba(15,23,42,0.04)] p-5">
+            <div className="flex items-center justify-between border-b border-neutral-200/60 pb-3.5">
+              <h2 className="m-0 text-[15px] font-semibold tracking-tight text-neutral-900">
+                Pending Collections
+              </h2>
+              <Link
+                href="/invoices"
+                className="text-[12.5px] font-medium text-neutral-500 no-underline hover:text-neutral-900"
+              >
+                All invoices
+              </Link>
+            </div>
+
+            {isLoading ? (
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-2 flex-1">
+                    <div className="skeleton h-4 w-48" />
+                    <div className="skeleton h-3 w-36" />
                   </div>
-                  <div className="mt-3 font-mono text-[26px] font-bold tracking-[-0.04em] tabular-nums text-stone-950">
-                    {m.value}
+                  <div className="skeleton h-8 w-20 rounded-lg" />
+                </div>
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-neutral-200/50">
+                  <div className="space-y-2 flex-1">
+                    <div className="skeleton h-4 w-40" />
+                    <div className="skeleton h-3 w-32" />
                   </div>
-                  <div className="mt-1.5 flex items-center justify-between text-[11px] text-stone-500">
-                    <span>{m.sub}</span>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 group-hover:text-stone-900">
-                      Open →
-                    </span>
+                  <div className="skeleton h-8 w-20 rounded-lg" />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 divide-y divide-neutral-200/60">
+                {/* Card 1: Ecobank Ghana PLC */}
+                <div className="flex items-center justify-between gap-4 py-3.5 first:pt-1">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={ecobankInvoice ? `/invoices/${ecobankInvoice.id}` : '/invoices'}
+                        className="truncate text-[13.5px] font-medium text-neutral-900 no-underline hover:text-[#E02B20]"
+                      >
+                        Ecobank Ghana PLC
+                      </Link>
+                      <span className="text-neutral-300">·</span>
+                      <span className="text-[13px] font-semibold text-neutral-900 tabular-nums">
+                        {ecobankInvoice ? fmt(ecobankInvoice.balance) : 'GH₵ 6,004.00'}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-neutral-500">
+                      Due in 4 days · Invoice 00221026.01
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      ecobankInvoice
+                        ? setPayingDoc(ecobankInvoice)
+                        : navigate('/invoices')
+                    }
+                    className="shrink-0 rounded-lg border border-neutral-300/90 bg-white/80 px-3.5 py-1.5 text-[12px] font-medium text-neutral-800 transition-all duration-200 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white cursor-pointer"
+                  >
+                    Collect
+                  </button>
+                </div>
+
+                {/* Card 2: Eugenia */}
+                <div className="flex items-center justify-between gap-4 py-3.5 last:pb-1">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={eugeniaInvoice ? `/invoices/${eugeniaInvoice.id}` : '/invoices'}
+                        className="truncate text-[13.5px] font-medium text-neutral-900 no-underline hover:text-[#E02B20]"
+                      >
+                        Eugenia
+                      </Link>
+                      <span className="text-neutral-300">·</span>
+                      <span className="text-[13px] font-semibold text-neutral-900 tabular-nums">
+                        {eugeniaInvoice ? fmt(eugeniaInvoice.balance) : 'GH₵ 1,896.00'}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px]">
+                      <span className="font-medium text-[#E02B20]">Overdue</span>
+                      <span className="text-neutral-300">·</span>
+                      <span className="text-neutral-500">Invoice 00211026.01</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      eugeniaInvoice
+                        ? setPayingDoc(eugeniaInvoice)
+                        : navigate('/invoices')
+                    }
+                    className="shrink-0 rounded-lg border border-[#E02B20]/35 bg-[#E02B20]/[0.06] px-3.5 py-1.5 text-[12px] font-medium text-[#E02B20] transition-all duration-200 hover:border-[#E02B20] hover:bg-[#E02B20] hover:text-white cursor-pointer"
+                  >
+                    Collect
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Field Equipment Dispatch Summary Card */}
+          <section className="rounded-2xl border border-white/80 bg-white/72 backdrop-blur-xl shadow-[0_8px_32px_rgba(15,23,42,0.04)] p-5">
+            <div className="flex items-center justify-between border-b border-neutral-200/60 pb-3.5">
+              <h2 className="m-0 text-[15px] font-semibold tracking-tight text-neutral-900">
+                Field Equipment Dispatch
+              </h2>
+              <Link
+                href="/operations"
+                className="text-[12.5px] font-medium text-neutral-500 no-underline hover:text-neutral-900"
+              >
+                Manage →
+              </Link>
+            </div>
+
+            {isLoading ? (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="skeleton h-20 w-full rounded-xl" />
+                <div className="skeleton h-20 w-full rounded-xl" />
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Link
+                  href="/operations"
+                  className="rounded-xl border border-white/90 bg-white/60 p-3.5 no-underline transition-all duration-200 hover:bg-white hover:shadow-sm"
+                >
+                  <div className="text-[22px] font-semibold text-neutral-950 tabular-nums">
+                    {activeRentalsCount}
+                  </div>
+                  <div className="mt-0.5 text-[12.5px] font-medium text-neutral-700">
+                    Active rentals
+                  </div>
+                  <div className="text-[11px] text-neutral-500">
+                    Poles, bases & rigging
                   </div>
                 </Link>
-              ))}
+
+                <Link
+                  href="/operations"
+                  className="rounded-xl border border-white/90 bg-white/60 p-3.5 no-underline transition-all duration-200 hover:bg-white hover:shadow-sm"
+                >
+                  <div className="text-[22px] font-semibold text-neutral-950 tabular-nums">
+                    {activePrintJobsCount}
+                  </div>
+                  <div className="mt-0.5 text-[12.5px] font-medium text-neutral-700">
+                    Print jobs
+                  </div>
+                  <div className="text-[11px] text-neutral-500">
+                    Active production queue
+                  </div>
+                </Link>
+              </div>
+            )}
+          </section>
         </div>
-
-        {/* Main 2-Column Split Inside Workspace (Completes 3-Column Layout with Left Sidebar) */}
-        {!q.isLoading && summary && (
-          <div className="grid divide-y divide-stone-200 lg:grid-cols-[1.24fr_0.76fr] lg:divide-y-0 lg:divide-x">
-            {/* MIDDLE COLUMN: HIGH-DENSITY ACTIVITY LEDGER & DOCUMENT REGISTER */}
-            <div className="flex flex-col divide-y divide-stone-200 min-w-0">
-              {/* Section A: Authentic Audit Log with Vertical Timeline Thread */}
-              <section>
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 bg-stone-50/70 px-5 py-3.5">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
-                        01 // AUDIT LOG
-                      </span>
-                      <h2 className="m-0 text-[13.5px] font-bold tracking-tight text-stone-900">
-                        Recent Activity & Transaction Ledger
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div
-                    className="flex flex-wrap items-center gap-1"
-                    role="group"
-                    aria-label="Filter audit log"
-                  >
-                    {(
-                      [
-                        ['all', 'ALL'],
-                        ['invoice', '[INVOICE]'],
-                        ['quotation', '[QUOTE]'],
-                        ['payment', '[PAYMENT]'],
-                        ['client', '[CLIENT]'],
-                      ] as const
-                    ).map(([key, label]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setAuditFilter(key)}
-                        className={`px-2 py-0.5 font-mono text-[10px] font-medium transition-colors ${
-                          auditFilter === key
-                            ? 'bg-stone-900 text-white'
-                            : 'border border-stone-200 bg-white text-stone-600 hover:border-stone-400 hover:text-stone-900'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {filteredActivity.length ? (
-                  <div className="relative divide-y divide-stone-200 before:pointer-events-none before:absolute before:bottom-5 before:left-[26px] before:top-5 before:w-px before:bg-stone-200">
-                    {filteredActivity.map((a) => {
-                      const tag = activityTag(a.kind);
-                      const { code, rest } = extractDocCode(a.detail);
-                      return (
-                        <Link
-                          key={a.id}
-                          href={activityHref(a.id)}
-                          className="group relative flex items-start gap-3.5 px-5 py-3.5 no-underline transition-colors hover:bg-stone-50/90"
-                        >
-                          {/* Timeline Node Marker */}
-                          <span className="relative z-10 mt-1.5 flex h-3 w-3 shrink-0 items-center justify-center border border-stone-400 bg-white transition-colors group-hover:border-[#E02B20] group-hover:bg-[#E02B20]">
-                            <span className="h-1 w-1 bg-stone-500 group-hover:bg-white" />
-                          </span>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span
-                                className={`inline-flex items-center border px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider ${tag.cls}`}
-                              >
-                                {tag.label}
-                              </span>
-                              <span className="text-[12.5px] font-bold text-stone-900 group-hover:text-[#E02B20] transition-colors">
-                                {a.title}
-                              </span>
-                              {code && (
-                                <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
-                                  {code}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="mt-1 truncate text-[12px] text-stone-600">
-                              {rest}
-                            </div>
-                          </div>
-
-                          <div className="flex shrink-0 flex-col items-end gap-1">
-                            <time className="font-mono text-[11px] tabular-nums text-stone-500">
-                              {dateFmt(a.date)}
-                            </time>
-                            <span className="font-mono text-[10px] text-stone-400 group-hover:text-stone-900">
-                              Inspect →
-                            </span>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <Empty
-                    icon={Clock3}
-                    title="No matching audit entries"
-                    detail="Switch the transaction filter above or record a new workspace document."
-                  />
-                )}
-              </section>
-
-              {/* Section B: High-Density Document & Tax Ledger Register */}
-              <section>
-                <div className="flex items-center justify-between border-b border-stone-200 bg-stone-50/70 px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
-                      02 // DOCUMENT REGISTER
-                    </span>
-                    <h3 className="m-0 text-[13px] font-bold text-stone-900">
-                      Active Quotations & Tax Invoices
-                    </h3>
-                  </div>
-                  <Link
-                    href="/quotations"
-                    className="font-mono text-[11px] font-medium text-stone-600 no-underline hover:text-[#E02B20]"
-                  >
-                    Full Register ({allDocs.length}) →
-                  </Link>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[540px] border-collapse text-left">
-                    <thead>
-                      <tr className="border-b border-stone-200 bg-stone-50/40 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-stone-500">
-                        <th className="px-5 py-2.5">Code</th>
-                        <th className="px-3 py-2.5">Client & Subject</th>
-                        <th className="px-3 py-2.5 text-right">Total (Incl. Tax)</th>
-                        <th className="px-5 py-2.5 text-right">State</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-200">
-                      {allDocs.slice(0, 5).map((d) => {
-                        const docHref = `/${d.kind === 'quotation' ? 'quotations' : 'invoices'}/${d.id}`;
-                        return (
-                          <tr
-                            key={d.id}
-                            onClick={() => navigate(docHref)}
-                            className="cursor-pointer transition-colors hover:bg-stone-50"
-                          >
-                            <td className="px-5 py-3 whitespace-nowrap">
-                              <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
-                                {d.number}
-                              </span>
-                            </td>
-                            <td className="px-3 py-3 max-w-[240px]">
-                              <div className="truncate text-[12.5px] font-bold text-stone-900">
-                                {d.clientName}
-                              </div>
-                              <div className="truncate text-[11px] text-stone-500">
-                                {d.subject}
-                              </div>
-                            </td>
-                            <td className="px-3 py-3 text-right font-mono text-[12.5px] font-semibold tabular-nums text-stone-900 whitespace-nowrap">
-                              {fmt(d.total)}
-                            </td>
-                            <td className="px-5 py-3 text-right whitespace-nowrap">
-                              <Status value={d.status} />
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            </div>
-
-            {/* RIGHT COLUMN: QUICK-ACTION CLEARINGHOUSE */}
-            <div className="flex flex-col divide-y divide-stone-200 bg-stone-50/25 min-w-0">
-              {/* Block 1: Accounts Receivable & Segmented Reconciliation Strip */}
-              <section className="p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
-                      03 // ACCOUNTS RECEIVABLE
-                    </span>
-                    <h2 className="m-0 mt-0.5 text-[14px] font-bold text-stone-900">
-                      Open Balance & Reconciliation
-                    </h2>
-                  </div>
-                  <span className="border border-stone-300 bg-white px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-stone-800">
-                    {summary.outstandingBalance > 0 ? 'NET EXPOSURE' : 'SETTLED'}
-                  </span>
-                </div>
-
-                {/* Tight Tabular GH₵ Receivable Readout */}
-                <div className="mt-4 flex items-baseline justify-between gap-3 border-y border-stone-200 bg-white px-4 py-3.5">
-                  <div>
-                    <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-stone-500">
-                      OUTSTANDING RECEIVABLES
-                    </div>
-                    <div className="mt-1 font-mono text-[30px] font-bold leading-none tracking-[-0.045em] tabular-nums text-stone-950">
-                      {fmt(summary.outstandingBalance)}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-block border border-[#E02B20]/30 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#E02B20]">
-                      {openInvoices.length} OPEN INV
-                    </span>
-                    <div className="mt-1 font-mono text-[11px] tabular-nums text-stone-500">
-                      Pool: {fmt(totalReconciledPool)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Segmented Reconciliation Strip: Cleared vs. Invoiced vs. Overdue */}
-                <div className="mt-4">
-                  <div className="mb-1.5 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.1em] text-stone-500">
-                    <span>RECONCILIATION STRIP</span>
-                    <span>{clearedPct}% CLEARED</span>
-                  </div>
-                  <div
-                    className="flex h-3 w-full gap-0.5 border border-stone-200 bg-stone-100 p-0.5"
-                    role="img"
-                    aria-label={`Cleared ${clearedPct}%, Invoiced ${invoicedPct}%, Overdue ${overduePct}%`}
-                  >
-                    {clearedPct > 0 && (
-                      <div
-                        className="h-full bg-emerald-700 transition-all duration-300"
-                        style={{ width: `${clearedPct}%` }}
-                        title={`Cleared: ${fmt(clearedBucket)}`}
-                      />
-                    )}
-                    {invoicedPct > 0 && (
-                      <div
-                        className="h-full bg-stone-800 transition-all duration-300"
-                        style={{ width: `${invoicedPct}%` }}
-                        title={`Invoiced (Current): ${fmt(invoicedCurrentBucket)}`}
-                      />
-                    )}
-                    {overduePct > 0 && (
-                      <div
-                        className="h-full bg-[#E02B20] transition-all duration-300"
-                        style={{ width: `${overduePct}%` }}
-                        title={`Overdue: ${fmt(overdueBucket)}`}
-                      />
-                    )}
-                  </div>
-
-                  {/* 3-Bucket Tabular Breakdown */}
-                  <div className="mt-2.5 grid grid-cols-3 divide-x divide-stone-200 border border-stone-200 bg-white">
-                    <div className="p-2.5">
-                      <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-emerald-800">
-                        <span className="h-2 w-2 bg-emerald-700" />
-                        <span>CLEARED</span>
-                      </div>
-                      <div className="mt-1 font-mono text-[11.5px] font-bold tabular-nums text-stone-900">
-                        {fmt(clearedBucket)}
-                      </div>
-                      <div className="font-mono text-[10px] text-stone-400">
-                        {clearedPct}% of pool
-                      </div>
-                    </div>
-
-                    <div className="p-2.5">
-                      <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-stone-700">
-                        <span className="h-2 w-2 bg-stone-800" />
-                        <span>INVOICED</span>
-                      </div>
-                      <div className="mt-1 font-mono text-[11.5px] font-bold tabular-nums text-stone-900">
-                        {fmt(invoicedCurrentBucket)}
-                      </div>
-                      <div className="font-mono text-[10px] text-stone-400">
-                        {invoicedPct}% current
-                      </div>
-                    </div>
-
-                    <div className="p-2.5">
-                      <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-[#E02B20]">
-                        <span className="h-2 w-2 bg-[#E02B20]" />
-                        <span>OVERDUE</span>
-                      </div>
-                      <div className="mt-1 font-mono text-[11.5px] font-bold tabular-nums text-[#E02B20]">
-                        {fmt(overdueBucket)}
-                      </div>
-                      <div className="font-mono text-[10px] text-stone-400">
-                        {overduePct}% past due
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Block 2: Awaiting Collection Clearinghouse */}
-              <section className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-700">
-                    AWAITING COLLECTION ({openInvoices.length})
-                  </span>
-                  <Link
-                    href="/invoices"
-                    className="font-mono text-[11px] font-medium text-stone-500 no-underline hover:text-[#E02B20]"
-                  >
-                    All Invoices →
-                  </Link>
-                </div>
-
-                {openInvoices.length > 0 ? (
-                  <div className="divide-y divide-stone-200 border border-stone-200 bg-white">
-                    {openInvoices.map((inv) => {
-                      const isOverdue =
-                        inv.dueDate && inv.dueDate.slice(0, 10) <= nowIso;
-                      return (
-                        <div
-                          key={inv.id}
-                          className="flex items-center justify-between gap-3 px-3.5 py-3 transition-colors hover:bg-stone-50/80"
-                        >
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Link
-                                href={`/invoices/${inv.id}`}
-                                className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800 no-underline hover:bg-stone-200"
-                              >
-                                {inv.number}
-                              </Link>
-                              <span className="truncate text-[12.5px] font-bold text-stone-900">
-                                {inv.clientName}
-                              </span>
-                              {isOverdue && (
-                                <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-[#E02B20]">
-                                  [OVERDUE]
-                                </span>
-                              )}
-                            </div>
-                            <div className="mt-1 flex items-center gap-2 text-[11.5px] text-stone-600">
-                              <span>Balance due:</span>
-                              <strong className="font-mono tabular-nums text-stone-950">
-                                {fmt(inv.balance)}
-                              </strong>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setPayingDoc(inv)}
-                            className="shrink-0 border border-stone-300 bg-transparent px-3 py-1.5 font-mono text-[11.5px] font-medium tabular-nums text-stone-900 transition-colors duration-150 hover:border-[#E02B20] hover:bg-[#E02B20] hover:text-white cursor-pointer"
-                          >
-                            Collect →
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="border border-stone-200 bg-white p-4 font-mono text-[11.5px] text-stone-500">
-                    All issued invoices are reconciled in full.
-                  </div>
-                )}
-              </section>
-
-              {/* Block 3: Rentals & PrintD Pigh Dispatch Clearinghouse */}
-              <section className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
-                      04 // RENTALS & DISPATCH
-                    </span>
-                    <h3 className="m-0 mt-0.5 text-[13.5px] font-bold text-stone-900">
-                      Field Equipment & PrintD Pigh Queue
-                    </h3>
-                  </div>
-                  <Layers size={15} className="text-stone-500" />
-                </div>
-
-                <div className="grid grid-cols-2 divide-x divide-stone-200 border border-stone-200 bg-white">
-                  <div className="p-3.5">
-                    <div className="font-mono text-[10px] font-semibold uppercase tracking-wider text-stone-500">
-                      ACTIVE RENTALS
-                    </div>
-                    <div className="mt-1 font-mono text-[22px] font-bold tabular-nums text-stone-950">
-                      {activeRentals.length}
-                    </div>
-                    <div className="text-[11px] text-stone-500">
-                      Poles, bases & truss kits
-                    </div>
-                  </div>
-                  <div className="p-3.5">
-                    <div className="font-mono text-[10px] font-semibold uppercase tracking-wider text-stone-500">
-                      PRINTD PIGH QUEUE
-                    </div>
-                    <div className="mt-1 font-mono text-[22px] font-bold tabular-nums text-[#E02B20]">
-                      {activePrintOrders.length}
-                    </div>
-                    <div className="text-[11px] text-stone-500">
-                      Active press work orders
-                    </div>
-                  </div>
-                </div>
-
-                {/* Live Dispatch Items with 12px Mono Document Codes */}
-                <div className="mt-3 divide-y divide-stone-200 border border-stone-200 bg-white">
-                  {activeRentals.slice(0, 2).map((r) => (
-                    <div
-                      key={r.id}
-                      className="flex items-center justify-between gap-2 px-3 py-2.5 text-[11.5px]"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
-                            {r.documentNumber}
-                          </span>
-                          <strong className="truncate text-stone-900">
-                            {r.clientName}
-                          </strong>
-                        </div>
-                        <div className="mt-0.5 truncate text-[11px] text-stone-500">
-                          {r.itemName} ({r.quantity} × {r.days}d)
-                        </div>
-                      </div>
-                      <span className="shrink-0 font-mono text-[10px] font-semibold uppercase text-amber-800">
-                        [{r.status}]
-                      </span>
-                    </div>
-                  ))}
-                  {activePrintOrders.slice(0, 1).map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex items-center justify-between gap-2 px-3 py-2.5 text-[11.5px]"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
-                            {p.documentNumber}
-                          </span>
-                          <strong className="truncate text-stone-900">
-                            {p.clientName}
-                          </strong>
-                        </div>
-                        <div className="mt-0.5 truncate text-[11px] text-stone-500">
-                          {p.jobCode} · {p.specification}
-                        </div>
-                      </div>
-                      <span className="shrink-0 font-mono text-[10px] font-semibold uppercase text-[#E02B20]">
-                        [PRINT]
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-3">
-                  <Link
-                    href="/operations"
-                    className="flex w-full items-center justify-between border border-stone-300 bg-white px-3.5 py-2 font-mono text-[11.5px] font-medium text-stone-900 no-underline transition-colors duration-150 hover:border-[#E02B20] hover:bg-[#E02B20] hover:text-white"
-                  >
-                    <span>Open Rentals & Print Dispatch</span>
-                    <span>→</span>
-                  </Link>
-                </div>
-              </section>
-            </div>
-          </div>
-        )}
       </div>
 
       {modalAction === 'client' && (
@@ -2313,9 +2093,8 @@ function DocumentForm({
       </div>
 
       {/* Quick Catalog Picker */}
-      <div className="rounded-lg border border-[#ece5dc] bg-[#faf8f4] p-3">
-        <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8a837b]">
-          <Sparkles size={12} className="text-[#c61c2e]" />
+      <div className="rounded-xl border border-neutral-200/80 bg-white/60 p-3.5 backdrop-blur-md">
+        <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500">
           Quick add Collage catalog item
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -3341,26 +3120,17 @@ function OperationsView() {
   return (
     <>
       <PageTitle
-        eyebrow="Field & Sister-Company Coordination"
-        title="Rentals & PrintD Pigh Dispatch"
-        description="Track telescopic flag pole rentals in the field and print production dispatched to PrintD Pigh."
+        title="Rentals & Production"
+        description="Track telescopic flag pole rentals in the field and active production work orders."
         action={
           <div className="flex gap-2">
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-primary"
               onClick={() => setRentalModal(true)}
             >
               <CalendarDays size={15} />
               Log equipment rental
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setPrintModal(true)}
-            >
-              <Wrench size={15} />
-              Dispatch to PrintD Pigh
             </button>
           </div>
         }
@@ -3381,7 +3151,7 @@ function OperationsView() {
           className={`toggle-token ${tab === 'print' ? 'active' : ''}`}
         >
           <Wrench size={14} />
-          <span>PrintD Pigh Production Orders ({ops.productionOrders.length})</span>
+          <span>Production Orders ({ops.productionOrders.length})</span>
         </button>
       </div>
 

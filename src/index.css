@@ -1,12 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Source+Sans+3:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
 
 /* ===================================================================
-   COLLAGE ERP — Design Token System
-   Brand: Crimson (#c91f35) | Light neutral sidebar | Warm off-white bg
+   COLLAGE ERP — Design Token System (Smooth Glassmorphism & Simple Sans)
    =================================================================== */
 
 @theme inline {
@@ -47,10 +46,10 @@
   --sidebar-accent: 214 18% 93%; --sidebar-accent-foreground: 225 14% 20%;
   /* Charts */
   --chart-1: 354 83% 43%; --chart-2: 155 35% 42%; --chart-3: 32 68% 52%; --chart-4: 213 38% 46%; --chart-5: 268 25% 54%;
-  /* App tokens */
-  --app-font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --app-font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
-  --radius: 0.25rem;
+  /* App tokens: Clean, simple unified sans-serif */
+  --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --app-font-mono: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius: 0.75rem;
 }
 
 .dark {
@@ -75,19 +74,19 @@
   body {
     @apply font-sans antialiased text-foreground;
     margin: 0; min-height: 100dvh;
-    background-color: #faf8f5;
+    background-color: #f4f2ee;
     background-image:
-      radial-gradient(at 0% 0%,    rgba(201, 31,  53, 0.04) 0px, transparent 40%),
-      radial-gradient(at 100% 0%,  rgba(30, 31, 35, 0.03) 0px, transparent 40%),
-      radial-gradient(at 100% 100%,rgba(201, 31,  53, 0.03) 0px, transparent 40%),
-      radial-gradient(at 0%  100%, rgba(220, 215, 205, 0.05) 0px, transparent 40%);
+      radial-gradient(at 10% 10%, rgba(224, 43, 32, 0.05) 0px, transparent 48%),
+      radial-gradient(at 88% 12%, rgba(15, 23, 42, 0.04) 0px, transparent 45%),
+      radial-gradient(at 80% 88%, rgba(224, 43, 32, 0.04) 0px, transparent 50%),
+      radial-gradient(at 15% 85%, rgba(255, 255, 255, 0.7) 0px, transparent 45%);
     background-attachment: fixed;
     letter-spacing: -0.011em;
   }
 }
 
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
-:focus-visible { outline: 2.5px solid hsl(var(--primary) / 0.4); outline-offset: 2px; }
+:focus-visible { outline: 2px solid hsl(var(--primary) / 0.35); outline-offset: 2px; }
 
 /* Micro-interaction & Keyframe Animations */
 @keyframes fadeIn {
@@ -130,25 +129,30 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   transform: translateY(0);
 }
 
-/* Toggle tokens for quick filter choices */
+/* Toggle tokens for quick filter choices (Smooth Glassmorphic Pill) */
 .toggle-token {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 600;
-  border: 1px solid #e3ddd4; background: #ffffff; color: #6b6660;
-  cursor: pointer; transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 500;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #52525b;
+  cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 .toggle-token:hover:not(.active) {
-  background: #f4efe7; border-color: #d1c8bb; color: #232227;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #18181b;
 }
 .toggle-token.active {
-  background: #232227; color: #ffffff; border-color: #232227;
-  box-shadow: 0 2px 8px rgba(35, 34, 39, 0.18);
+  background: #18181b; color: #ffffff; border-color: #18181b;
+  box-shadow: 0 4px 12px rgba(24, 24, 27, 0.14);
 }
 .toggle-token.active-primary {
   background: #c61c2e; color: #ffffff; border-color: #c61c2e;
-  box-shadow: 0 2px 10px rgba(198, 28, 46, 0.28);
+  box-shadow: 0 4px 12px rgba(198, 28, 46, 0.22);
 }
 
 /* Scrollbar */
@@ -166,74 +170,92 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   border-right: 1px solid hsl(var(--sidebar-border));
 }
 
-/* ─── PANEL / CARD (Swiss-Grid Single-Pixel Rule) ────────── */
+/* ─── PANEL / CARD (Smooth Glassmorphism) ────────────────── */
 .panel {
-  background: #ffffff;
-  border: 1px solid #e7e5e4;
-  border-radius: 2px;
-  box-shadow: none;
-  transition: border-color 0.16s ease;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border-radius: 14px;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
 }
 .panel:hover:not(.no-hover) {
-  border-color: #d6d3d1;
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
 /* ─── BUTTONS ────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  gap: 7px; min-height: 36px; border-radius: calc(var(--radius) - 2px);
+  gap: 7px; min-height: 36px; border-radius: 9px;
   padding: 0 14px; font-family: var(--app-font-sans); font-size: 13px;
-  font-weight: 600; letter-spacing: -0.01em; cursor: pointer;
+  font-weight: 500; letter-spacing: -0.01em; cursor: pointer;
   border: 1px solid transparent; text-decoration: none; white-space: nowrap;
-  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), background 0.14s ease, box-shadow 0.14s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn:hover:not(:disabled)  { transform: translateY(-1px); }
-.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:active:not(:disabled) { transform: scale(0.98); }
 .btn:disabled { opacity: 0.46; cursor: not-allowed; }
 
-.btn-primary  { background: hsl(var(--primary)); color: white; box-shadow: 0 2px 8px hsl(var(--primary)/0.28); }
-.btn-primary:hover:not(:disabled) { background: hsl(354 83% 37%); box-shadow: 0 4px 16px hsl(var(--primary)/0.35); }
+.btn-primary  { background: #E02B20; color: white; box-shadow: 0 4px 14px rgba(224, 43, 32, 0.22); }
+.btn-primary:hover:not(:disabled) { background: #c61c2e; box-shadow: 0 6px 20px rgba(224, 43, 32, 0.3); }
 
-.btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); border-color: hsl(var(--border)); }
-.btn-secondary:hover:not(:disabled) { background: hsl(var(--muted)); }
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #18181b;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.18);
+}
 
-.btn-quiet { background: transparent; color: hsl(var(--muted-foreground)); }
-.btn-quiet:hover:not(:disabled) { background: hsl(var(--accent)); color: hsl(var(--foreground)); }
+.btn-quiet { background: transparent; color: #52525b; }
+.btn-quiet:hover:not(:disabled) { background: rgba(15, 23, 42, 0.05); color: #18181b; }
 
 .btn-danger { background: hsl(var(--destructive)); color: white; box-shadow: 0 2px 8px hsl(var(--destructive)/0.22); }
 .btn-danger:hover:not(:disabled) { background: hsl(0 68% 38%); }
 
 /* ─── FIELDS ─────────────────────────────────────────────── */
 .field {
-  width: 100%; min-height: 38px; border: 1px solid hsl(var(--border));
-  background: hsl(var(--card)); border-radius: calc(var(--radius) - 4px);
-  padding: 8px 11px; font-family: var(--app-font-sans); font-size: 13px;
+  width: 100%; min-height: 38px; border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 9px;
+  padding: 8px 12px; font-family: var(--app-font-sans); font-size: 13px;
   color: hsl(var(--foreground));
-  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
 }
-.field:focus { outline: none; border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary)/0.1); }
+.field:focus { outline: none; background: #ffffff; border-color: #E02B20; box-shadow: 0 0 0 3px rgba(224, 43, 32, 0.1); }
 .field::placeholder { color: hsl(var(--muted-foreground)); }
 .field-label {
-  display: block; margin: 0 0 5px; font-size: 10.5px; font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase; color: hsl(var(--muted-foreground));
+  display: block; margin: 0 0 5px; font-size: 11px; font-weight: 500;
+  color: #52525b;
 }
 
 /* ─── TABLE ──────────────────────────────────────────────── */
-.table-row { transition: background 0.12s ease; }
-.table-row:hover { background: hsl(var(--muted)); }
+.table-row { transition: background 0.15s ease; }
+.table-row:hover { background: rgba(255, 255, 255, 0.65); }
 
 /* ─── MODAL ──────────────────────────────────────────────── */
 .scrim {
   position: fixed; inset: 0; z-index: 50;
-  background: hsl(225 20% 8% / 0.52); backdrop-filter: blur(5px);
+  background: rgba(15, 15, 18, 0.42); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex; align-items: center; justify-content: center; padding: 16px;
 }
 .dialog {
   width: min(640px, 100%); max-height: calc(100dvh - 32px); overflow: auto;
-  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) + 2px);
-  box-shadow: 0 28px 90px hsl(0 0% 0% / 0.22), 0 8px 24px hsl(0 0% 0% / 0.1);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08);
   animation: dialogIn 0.22s cubic-bezier(0.16,1,0.3,1) both;
 }
 
@@ -248,12 +270,12 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
 /* ─── SKELETON ───────────────────────────────────────────── */
 .skeleton {
-  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted)/0.55) 42%, hsl(var(--muted)) 63%);
-  background-size: 300% 100%; animation: shimmer 1.6s ease infinite; border-radius: 6px;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.05) 25%, rgba(15, 23, 42, 0.1) 42%, rgba(15, 23, 42, 0.05) 63%);
+  background-size: 300% 100%; animation: shimmer 1.5s ease infinite; border-radius: 8px;
 }
 
-/* ─── MONO ───────────────────────────────────────────────── */
-.mono { font-family: var(--app-font-mono); font-variant-numeric: tabular-nums; }
+/* ─── MONO / TABULAR ─────────────────────────────────────── */
+.mono { font-family: var(--app-font-sans); font-variant-numeric: tabular-nums; }
 
 /* ─── PRINT ──────────────────────────────────────────────── */
 @media print {
@@ -526,11 +548,11 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   border-top: 1px solid rgba(28, 27, 25, 0.08);
 }
 
-/* Second-pass landing identity: distinct display, humanist reading face, quiet UI face. */
+/* Second-pass landing identity: clean, simple, unified modern sans. */
 .landing {
-  --landing-display: 'Bricolage Grotesque', 'Arial Narrow', sans-serif;
-  --landing-sans: 'Source Sans 3', 'Segoe UI', sans-serif;
-  --landing-ui: 'IBM Plex Sans', system-ui, sans-serif;
+  --landing-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --landing-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --landing-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 .landing-nav, .landing-link, .landing-cta, .landing-kicker, .landing-index, .landing-row > span, .landing-thread__item > span, .landing-footer, .landing-mark-caption { font-family: var(--landing-ui); }
 .landing-kicker { font-weight: 600; letter-spacing: 0.18em; }
