@@ -20,7 +20,6 @@ export function LandingMark() {
         <span className="landing-mark__crop landing-mark__crop--tr" />
         <span className="landing-mark__crop landing-mark__crop--bl" />
         <span className="landing-mark__crop landing-mark__crop--br" />
-
         <svg key={cycle} viewBox="0 0 100 100" className="landing-mark__svg" aria-hidden="true">
           <motion.circle
             cx="50"
@@ -49,7 +48,6 @@ export function LandingMark() {
           <line x1="50" y1="82" x2="50" y2="92" stroke="#c9bfb3" strokeWidth="0.35" />
           <line x1="8" y1="50" x2="18" y2="50" stroke="#c9bfb3" strokeWidth="0.35" />
           <line x1="82" y1="50" x2="92" y2="50" stroke="#c9bfb3" strokeWidth="0.35" />
-
           <motion.path
             d="M 46 18 A 32 32 0 0 0 18 46 L 30 46 A 20 20 0 0 1 46 30 Z"
             fill="#231F20"
@@ -84,7 +82,19 @@ export function LandingMark() {
             transition={{ duration: 0.56, delay: 0.72, ease }}
             style={{ transformOrigin: '50px 50px' }}
           />
-          {!reduce && <motion.circle cx="50" cy="50" r="10" fill="none" stroke="#E52329" strokeWidth="0.25" animate={{ scale: [1, 1.23, 1], opacity: [0, 0.32, 0] }} transition={{ duration: 3.8, delay: 1.45, repeat: Infinity, ease: 'easeInOut' }} style={{ transformOrigin: '50px 50px' }} />}
+          {!reduce && (
+            <motion.circle
+              cx="50"
+              cy="50"
+              r="10"
+              fill="none"
+              stroke="#E52329"
+              strokeWidth="0.25"
+              animate={{ scale: [1, 1.23, 1], opacity: [0, 0.32, 0] }}
+              transition={{ duration: 3.8, delay: 1.45, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: '50px 50px' }}
+            />
+          )}
         </svg>
       </div>
       <figcaption className="landing-mark-caption">One job, four connected states.</figcaption>

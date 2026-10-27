@@ -168,11 +168,10 @@ const clerkAppearance = {
 };
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat('en-GH', {
-    style: 'currency',
-    currency: 'GHS',
+  `GH₵ ${(Number.isFinite(n) ? n : 0).toLocaleString('en-GH', {
     minimumFractionDigits: 2,
-  }).format(Number.isFinite(n) ? n : 0);
+    maximumFractionDigits: 2,
+  })}`;
 
 const dateFmt = (date?: string | null) =>
   date
@@ -286,7 +285,7 @@ function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="app-shell flex">
+    <div className="app-shell flex bg-[#F7F5F0] text-stone-900">
       {mobileOpen && (
         <button
           aria-label="Close navigation"
@@ -295,27 +294,28 @@ function Shell({ children }: { children: ReactNode }) {
         />
       )}
       <aside
-        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-[244px] flex-col bg-[#1a1b1f] px-4 py-5 text-[#f8f5ee] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
+        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-[228px] shrink-0 flex-col border-r border-stone-800 bg-[#121110] text-[#F5F2EA] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between px-2">
-          <Link href="/">
+        <div className="flex h-[58px] items-center justify-between border-b border-white/10 px-4">
+          <Link href="/" className="no-underline">
             <Brand inverse />
           </Link>
           <button
-            className="btn btn-quiet !px-2 !text-[#c5c1ba] md:hidden"
+            className="btn btn-quiet !px-2 !text-stone-400 md:hidden"
             onClick={() => setMobileOpen(false)}
             aria-label="Close menu"
           >
-            <X size={18} />
+            <X size={17} />
           </button>
         </div>
-        <div className="mx-2 mb-2 mt-10 text-[10px] font-bold uppercase tracking-[.17em] text-[#77777b]">
-          Workspace
+
+        <div className="px-4 pt-6 pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
+          01 / Navigation
         </div>
-        <nav className="space-y-1" aria-label="Main navigation">
-          {nav.map((item) => {
+        <nav className="flex flex-col border-t border-white/10" aria-label="Main navigation">
+          {nav.map((item, idx) => {
             const Icon = item.icon;
             const active =
               location === item.href || location.startsWith(`${item.href}/`);
@@ -325,96 +325,110 @@ function Shell({ children }: { children: ReactNode }) {
                 href={item.href}
                 data-testid={`link-${item.label.toLowerCase()}`}
                 onClick={() => setMobileOpen(false)}
-                className={`flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors ${
+                className={`group flex h-11 items-center gap-3 border-b border-white/10 px-4 font-mono text-[11.5px] tracking-[0.04em] no-underline transition-colors ${
                   active
-                    ? 'bg-[#33343a] text-white shadow-inner'
-                    : 'text-[#aaa9a5] hover:bg-white/[.055] hover:text-white'
+                    ? 'border-l-2 border-l-[#E02B20] bg-white/[0.055] font-semibold text-white pl-[14px]'
+                    : 'text-stone-400 hover:bg-white/[0.03] hover:text-stone-100'
                 }`}
               >
-                <Icon size={17} strokeWidth={1.8} />
-                <span>{item.label}</span>
-                {item.label === 'Invoices' && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#e53b50]" />
-                )}
+                <Icon
+                  size={15}
+                  strokeWidth={1.8}
+                  className={
+                    active
+                      ? 'text-[#E02B20]'
+                      : 'text-stone-500 group-hover:text-stone-300'
+                  }
+                />
+                <span className="uppercase">{item.label}</span>
+                <span className="ml-auto font-mono text-[10px] text-stone-600">
+                  0{idx + 1}
+                </span>
               </Link>
             );
           })}
         </nav>
-        <div className="mx-2 mb-3 mt-8 text-[10px] font-bold uppercase tracking-[.17em] text-[#77777b]">
-          Your desk
+
+        <div className="px-4 pt-7 pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
+          02 / Desk Protocol
         </div>
-        <div className="mx-1 rounded-lg border border-white/[.08] bg-white/[.035] p-3.5">
-          <div className="flex items-center gap-2 text-[11px] font-semibold text-[#eeece5]">
-            <ShieldCheck size={14} className="text-[#de4859]" />
-            First things, in order
+        <div className="mx-4 border border-white/10 bg-white/[0.02] p-3.5">
+          <div className="flex items-center justify-between font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#E02B20]">
+            <span>GRA Statutory</span>
+            <span>GH₵</span>
           </div>
-          <p className="mb-0 mt-2 text-[11px] leading-[1.65] text-[#aaa8a2]">
-            Keep every brief, quote, rental and payment connected to the right client.
+          <p className="mb-0 mt-2 text-[11px] leading-[1.6] text-stone-400">
+            GETFund 2.5% · NHIL 2.5% · VAT 15% applied across linked quotes & tax invoices.
           </p>
         </div>
-        <div className="mt-auto border-t border-white/[.09] px-2 pt-4">
-          <div className="flex items-center gap-3">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#393a3f] text-[11px] font-bold text-white">
-              {user?.firstName?.slice(0, 1) || 'C'}
-              {user?.lastName?.slice(0, 1) || ''}
+
+        <div className="mt-auto border-t border-white/10 p-4">
+          <div className="flex items-center gap-2.5">
+            <div className="grid h-8 w-8 shrink-0 place-items-center border border-white/15 bg-white/[0.05] font-mono text-[11px] font-bold text-white">
+              {user?.firstName?.slice(0, 1) || 'K'}
+              {user?.lastName?.slice(0, 1) || 'A'}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[12px] font-semibold">
+              <div className="truncate text-[12px] font-semibold text-stone-100">
                 {isLoaded
                   ? user?.fullName || user?.firstName || 'Signed in'
                   : 'Loading profile…'}
               </div>
-              <div className="truncate text-[10px] text-[#9b9994]">
-                {user?.primaryEmailAddress?.emailAddress || 'Collage workspace'}
+              <div className="truncate font-mono text-[10px] text-stone-500">
+                {user?.primaryEmailAddress?.emailAddress || 'Accra Desk'}
               </div>
             </div>
             <button
               aria-label="Sign out"
               title="Sign out"
               onClick={() => signOut({ redirectUrl: '/' })}
-              className="btn btn-quiet ml-auto !h-8 !min-h-8 !px-2 !text-[#aaa8a2] hover:!text-white"
+              className="ml-auto inline-flex h-8 w-8 items-center justify-center border border-transparent text-stone-400 hover:border-white/15 hover:text-white"
             >
-              <LogOut size={16} />
+              <LogOut size={14} />
             </button>
           </div>
         </div>
       </aside>
+
       <main className="min-w-0 flex-1">
-        <header className="no-print sticky top-0 z-20 flex h-[66px] items-center justify-between border-b border-[#e9e3dc] bg-[#f8f6f1]/95 px-4 backdrop-blur md:px-8">
+        <header className="no-print sticky top-0 z-20 flex h-[58px] items-center justify-between border-b border-stone-200 bg-[#F7F5F0]/95 px-4 backdrop-blur md:px-7">
           <div className="flex items-center gap-3">
             <button
               aria-label="Open navigation"
               onClick={() => setMobileOpen(true)}
               className="btn btn-quiet !px-2 md:hidden"
             >
-              <Menu size={19} />
+              <Menu size={18} />
             </button>
-            <div className="text-[12px] text-[#8a8580]">
-              Collage <ChevronRight size={13} className="mx-1 inline" />{' '}
-              <span className="font-semibold text-[#38383d]">{page}</span>
+            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-stone-500">
+              <span>COLLAGE</span>
+              <span>/</span>
+              <span>ACCRA DESK</span>
+              <span>/</span>
+              <span className="font-semibold text-stone-900">{page}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleResetDemo}
               title="Restore initial sample records (including Invoice 00211026.01)"
-              className="btn btn-quiet !h-8 !min-h-8 !px-2.5 text-[11px]"
+              className="inline-flex h-8 items-center gap-1.5 border border-stone-300 bg-white px-2.5 font-mono text-[11px] font-medium text-stone-700 transition-colors hover:border-stone-900 hover:bg-stone-900 hover:text-white"
             >
-              <RotateCcw size={13} />
+              <RotateCcw size={12} />
               <span className="hidden sm:inline">
-                {resetDone ? 'Records restored' : 'Restore sample data'}
+                {resetDone ? 'LEDGER RESTORED' : 'RESET DEMO DATA'}
               </span>
             </button>
-            <span className="hidden text-[11px] text-[#918c85] sm:block">
-              Operations desk
-            </span>
-            <div className="grid h-8 w-8 place-items-center rounded-full border border-[#e5ded6] bg-white text-[#55545a]">
-              <UserRound size={15} />
+            <div className="hidden items-center gap-1.5 border border-stone-200 bg-white px-2.5 py-1 font-mono text-[10.5px] uppercase tracking-[0.08em] text-stone-600 sm:flex">
+              <UserRound size={12} className="text-[#E02B20]" />
+              <span>OPS CLEARINGHOUSE</span>
             </div>
           </div>
         </header>
-        <div className="mx-auto max-w-[1360px] px-4 py-7 md:px-8 md:py-9">
+
+        <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-7 md:py-7">
           {accessPending ? (
             <AccessPending
               onRetry={() => {
@@ -1360,6 +1374,22 @@ function DocRow({ doc }: { doc: SalesDocument }) {
   );
 }
 
+function extractDocCode(detail: string): { code: string | null; rest: string } {
+  const parts = detail.split(' · ');
+  const first = parts[0]?.trim() || '';
+  if (/^(QT\d+|\d{6,}\.\d+|PDP-\d+)/i.test(first)) {
+    return { code: first, rest: parts.slice(1).join(' · ') };
+  }
+  const second = parts[1]?.trim() || '';
+  if (/^(QT\d+|\d{6,}\.\d+|PDP-\d+)/i.test(second)) {
+    return {
+      code: second,
+      rest: [parts[0], ...parts.slice(2)].filter(Boolean).join(' · '),
+    };
+  }
+  return { code: null, rest: detail };
+}
+
 function Dashboard() {
   const [, navigate] = useLocation();
   const q = useGetDashboardSummary();
@@ -1368,61 +1398,79 @@ function Dashboard() {
     'client' | 'quotation' | 'invoice' | null
   >(null);
   const [payingDoc, setPayingDoc] = useState<SalesDocument | null>(null);
+  const [auditFilter, setAuditFilter] = useState<
+    'all' | 'quotation' | 'invoice' | 'payment' | 'client'
+  >('all');
 
   const summary = q.data;
-  const openInvoices = (docsQuery.data || []).filter(
+  const allDocs = docsQuery.data || [];
+  const openInvoices = allDocs.filter(
     (d) => d.kind === 'invoice' && d.balance > 0 && d.status !== 'cancelled',
   );
   const ops = getOperationsData();
-  const activeRentalsCount = ops.rentals.filter((r) => r.status !== 'returned').length;
-  const activePrintCount = ops.productionOrders.filter(
+  const activeRentals = ops.rentals.filter((r) => r.status !== 'returned');
+  const activePrintOrders = ops.productionOrders.filter(
     (p) => p.status !== 'delivered',
-  ).length;
+  );
+
+  // Segmented Reconciliation Buckets: Cleared vs. Invoiced vs. Overdue
+  const nowIso = today();
+  const clearedBucket = summary ? summary.collectedThisMonth : 0;
+  const overdueBucket = openInvoices
+    .filter((inv) => inv.dueDate && inv.dueDate.slice(0, 10) <= nowIso)
+    .reduce((sum, inv) => sum + inv.balance, 0);
+  const invoicedCurrentBucket = Math.max(
+    0,
+    (summary ? summary.outstandingBalance : 0) - overdueBucket,
+  );
+  const totalReconciledPool =
+    clearedBucket + invoicedCurrentBucket + overdueBucket;
+
+  const clearedPct =
+    totalReconciledPool > 0
+      ? Math.round((clearedBucket / totalReconciledPool) * 100)
+      : 0;
+  const invoicedPct =
+    totalReconciledPool > 0
+      ? Math.round((invoicedCurrentBucket / totalReconciledPool) * 100)
+      : 0;
+  const overduePct =
+    totalReconciledPool > 0
+      ? Math.max(0, 100 - clearedPct - invoicedPct)
+      : 0;
 
   const metrics = summary
     ? [
         {
-          label: 'Total clients',
+          idx: '01',
+          label: 'TOTAL CLIENTS',
           value: String(summary.totalClients),
-          sub: 'In your client book',
-          icon: Users,
-          tint: 'ink',
+          sub: 'Registered corporate accounts',
           href: '/clients',
         },
         {
-          label: 'Active quotations',
+          idx: '02',
+          label: 'ACTIVE QUOTATIONS',
           value: String(summary.activeQuotes),
-          sub: 'Waiting on a decision',
-          icon: FileText,
-          tint: 'red',
+          sub: 'Awaiting client sign-off',
           href: '/quotations',
         },
         {
-          label: 'Open invoices',
+          idx: '03',
+          label: 'OPEN INVOICES',
           value: String(summary.openInvoices),
-          sub: 'Awaiting payment',
-          icon: ReceiptText,
-          tint: 'gold',
+          sub: 'Active receivable ledger',
           href: '/invoices',
         },
         {
-          label: 'Collected this month',
+          idx: '04',
+          label: 'COLLECTED (MTD)',
           value: fmt(summary.collectedThisMonth),
-          sub: 'Payments recorded',
-          icon: Banknote,
-          tint: 'green',
+          sub: 'Verified bank & MoMo receipts',
           href: '/invoices',
         },
       ]
     : [];
-
-  const totalPipeline = summary
-    ? summary.collectedThisMonth + summary.outstandingBalance
-    : 0;
-  const collectedPct =
-    totalPipeline > 0 && summary
-      ? Math.min(100, Math.round((summary.collectedThisMonth / totalPipeline) * 100))
-      : 0;
 
   function activityHref(id: string): string {
     if (id.startsWith('client:')) return `/clients/${id.split(':')[1]}`;
@@ -1437,41 +1485,40 @@ function Dashboard() {
     return '/dashboard';
   }
 
+  function activityTag(kind: string): {
+    label: string;
+    cls: string;
+  } {
+    if (kind === 'quotation') {
+      return {
+        label: '[QUOTE]',
+        cls: 'bg-amber-50 text-amber-900 border-amber-300/80',
+      };
+    }
+    if (kind === 'payment') {
+      return {
+        label: '[PAYMENT]',
+        cls: 'bg-emerald-50 text-emerald-900 border-emerald-300/80',
+      };
+    }
+    if (kind === 'invoice') {
+      return {
+        label: '[INVOICE]',
+        cls: 'bg-rose-50 text-[#E02B20] border-rose-300/80',
+      };
+    }
+    return {
+      label: '[CLIENT]',
+      cls: 'bg-stone-100 text-stone-800 border-stone-300',
+    };
+  }
+
+  const filteredActivity = (summary?.recentActivity || []).filter((item) =>
+    auditFilter === 'all' ? true : item.kind === auditFilter,
+  );
+
   return (
     <>
-      <PageTitle
-        eyebrow="Your operations desk"
-        title="Good morning."
-        description="A clear view of clients, proposals, rentals and collections moving through Collage."
-        action={
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setModalAction('client')}
-            >
-              <Users size={15} />
-              Add client
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setModalAction('quotation')}
-            >
-              <FilePlus2 size={15} />
-              New quotation
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setModalAction('invoice')}
-            >
-              <Plus size={16} />
-              New invoice
-            </button>
-          </div>
-        }
-      />
       {q.isError && (
         <div className="mb-4">
           <Alert>
@@ -1483,220 +1530,550 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {q.isLoading
-          ? [0, 1, 2, 3].map((i) => (
-              <div key={i} className="panel h-[132px] p-5">
-                <div className="skeleton h-3 w-24" />
-                <div className="skeleton mt-5 h-7 w-32" />
-                <div className="skeleton mt-3 h-3 w-28" />
-              </div>
-            ))
-          : metrics.map((m, i) => {
-              const Icon = m.icon;
-              return (
+      {/* SWISS-GRID ADMINISTRATIVE WORKSPACE CONTAINER */}
+      <div className="border border-stone-200 bg-white">
+        {/* Top Command Header Bar */}
+        <div className="flex flex-col justify-between gap-4 border-b border-stone-200 px-5 py-5 lg:flex-row lg:items-end md:px-6">
+          <div>
+            <div className="flex items-center gap-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#E02B20]">
+              <span>[00 / OPERATIONS LEDGER]</span>
+              <span className="text-stone-300">·</span>
+              <span className="text-stone-500">ACCRA CLEARINGHOUSE</span>
+            </div>
+            <h1 className="m-0 mt-1.5 font-sans text-[28px] font-extrabold tracking-[-0.035em] text-stone-950 md:text-[32px]">
+              Good morning.
+            </h1>
+            <p className="mb-0 mt-1 text-[13px] text-stone-600">
+              High-density financial telemetry, client proposals, equipment rentals, and collections.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setModalAction('client')}
+              className="inline-flex h-9 items-center gap-2 border border-stone-300 bg-white px-3.5 font-mono text-[11.5px] font-medium text-stone-900 transition-colors duration-150 hover:border-stone-900 hover:bg-stone-900 hover:text-white"
+            >
+              <Plus size={13} />
+              <span>Add Client</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalAction('quotation')}
+              className="inline-flex h-9 items-center gap-2 border border-stone-300 bg-white px-3.5 font-mono text-[11.5px] font-medium text-stone-900 transition-colors duration-150 hover:border-stone-900 hover:bg-stone-900 hover:text-white"
+            >
+              <FilePlus2 size={13} />
+              <span>New Quotation</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalAction('invoice')}
+              className="inline-flex h-9 items-center gap-2 border border-[#E02B20] bg-[#E02B20] px-4 font-mono text-[11.5px] font-semibold text-white transition-colors duration-150 hover:border-stone-950 hover:bg-stone-950"
+            >
+              <Plus size={13} />
+              <span>Issue Invoice →</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4-Cell Swiss-Grid KPI Strip */}
+        <div className="grid divide-y divide-stone-200 border-b border-stone-200 sm:grid-cols-2 sm:divide-y-0 sm:divide-x xl:grid-cols-4">
+          {q.isLoading
+            ? [0, 1, 2, 3].map((i) => (
+                <div key={i} className="p-5">
+                  <div className="skeleton h-3 w-24" />
+                  <div className="skeleton mt-4 h-7 w-32" />
+                  <div className="skeleton mt-3 h-3 w-28" />
+                </div>
+              ))
+            : metrics.map((m) => (
                 <Link
                   key={m.label}
                   href={m.href}
-                  className="panel slide-in block p-5 no-underline"
-                  style={{ animationDelay: `${i * 45}ms` }}
+                  className="group flex flex-col justify-between p-5 no-underline transition-colors hover:bg-stone-50/80"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#77736e]">
-                      {m.label}
+                  <div className="flex items-center justify-between font-mono text-[10.5px] font-semibold tracking-[0.12em] text-stone-500">
+                    <span>
+                      <strong className="text-[#E02B20]">{m.idx}</strong> / {m.label}
                     </span>
-                    <span
-                      className={`grid h-8 w-8 place-items-center rounded-lg ${
-                        m.tint === 'red'
-                          ? 'bg-[#fbeded] text-[#b92d41]'
-                          : m.tint === 'gold'
-                            ? 'bg-[#fbf1df] text-[#ae7a2d]'
-                            : m.tint === 'green'
-                              ? 'bg-[#e9f1eb] text-[#54805f]'
-                              : 'bg-[#efeee9] text-[#66666b]'
-                      }`}
-                    >
-                      <Icon size={16} />
-                    </span>
-                  </div>
-                  <div className="mt-3 font-sans text-[26px] font-bold tracking-[-.045em] text-[#292a2f]">
-                    {m.value}
-                  </div>
-                  <div className="mt-1 flex items-center justify-between text-[10px] text-[#969089]">
-                    <span>{m.sub}</span>
-                    <ArrowRight size={12} />
-                  </div>
-                </Link>
-              );
-            })}
-      </div>
-
-      {!q.isLoading && summary && (
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_.8fr]">
-          <section className="panel overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[#eee8e0] px-5 py-4">
-              <div>
-                <div className="text-[14px] font-bold">Recent activity</div>
-                <div className="mt-1 text-[11px] text-[#918b85]">
-                  Click any update to open the record
-                </div>
-              </div>
-              <Clock3 size={17} className="text-[#99938c]" />
-            </div>
-            {summary.recentActivity?.length ? (
-              summary.recentActivity.map((a) => (
-                <Link
-                  key={a.id}
-                  href={activityHref(a.id)}
-                  className="table-row flex items-center gap-3 border-b border-[#f1ede7] px-5 py-3.5 last:border-0 no-underline"
-                >
-                  <span
-                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-                      a.kind === 'payment'
-                        ? 'bg-[#e9f1eb] text-[#54805f]'
-                        : a.kind === 'client'
-                          ? 'bg-[#f1eee8] text-[#746c60]'
-                          : 'bg-[#fbeded] text-[#ad3545]'
-                    }`}
-                  >
-                    {a.kind === 'payment' ? (
-                      <Banknote size={15} />
-                    ) : a.kind === 'client' ? (
-                      <Building2 size={15} />
-                    ) : (
-                      <FileText size={15} />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[12px] font-semibold text-[#45434a]">
-                      {a.title}
-                    </div>
-                    <div className="mt-0.5 truncate text-[11px] text-[#89847e]">
-                      {a.detail}
-                    </div>
-                  </div>
-                  <time className="shrink-0 text-[10px] text-[#99928b]">
-                    {dateFmt(a.date)}
-                  </time>
-                </Link>
-              ))
-            ) : (
-              <Empty
-                icon={Clock3}
-                title="No activity yet"
-                detail="As work moves forward, the latest updates will land here."
-              />
-            )}
-          </section>
-
-          <div className="space-y-4">
-            <section className="panel p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[14px] font-bold">Accounts receivable</div>
-                  <div className="mt-1 text-[11px] text-[#918b85]">
-                    Open balance across active invoices
-                  </div>
-                </div>
-                <ArrowUpRight size={17} className="text-[#a62b3d]" />
-              </div>
-              <div className="mt-5 border-b border-[#eee8e0] pb-4">
-                <div className="mono text-[28px] font-semibold tracking-[-.04em] text-[#292a2f]">
-                  {fmt(summary.outstandingBalance)}
-                </div>
-                <div className="mt-3">
-                  <div className="flex justify-between text-[10px] font-semibold text-[#7b756e]">
-                    <span>{fmt(summary.collectedThisMonth)} collected</span>
-                    <span>{collectedPct}% settled</span>
-                  </div>
-                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#efeae2]">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#c61c2e] to-[#3d6e4d]"
-                      style={{ width: `${collectedPct}%` }}
+                    <ArrowUpRight
+                      size={14}
+                      className="text-stone-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#E02B20]"
                     />
                   </div>
-                </div>
-              </div>
-
-              {openInvoices.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#8e8881]">
-                    Awaiting collection
+                  <div className="mt-3 font-mono text-[26px] font-bold tracking-[-0.04em] tabular-nums text-stone-950">
+                    {m.value}
                   </div>
-                  {openInvoices.slice(0, 3).map((inv) => (
+                  <div className="mt-1.5 flex items-center justify-between text-[11px] text-stone-500">
+                    <span>{m.sub}</span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 group-hover:text-stone-900">
+                      Open →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+        </div>
+
+        {/* Main 2-Column Split Inside Workspace (Completes 3-Column Layout with Left Sidebar) */}
+        {!q.isLoading && summary && (
+          <div className="grid divide-y divide-stone-200 lg:grid-cols-[1.24fr_0.76fr] lg:divide-y-0 lg:divide-x">
+            {/* MIDDLE COLUMN: HIGH-DENSITY ACTIVITY LEDGER & DOCUMENT REGISTER */}
+            <div className="flex flex-col divide-y divide-stone-200 min-w-0">
+              {/* Section A: Authentic Audit Log with Vertical Timeline Thread */}
+              <section>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 bg-stone-50/70 px-5 py-3.5">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
+                        01 // AUDIT LOG
+                      </span>
+                      <h2 className="m-0 text-[13.5px] font-bold tracking-tight text-stone-900">
+                        Recent Activity & Transaction Ledger
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div
+                    className="flex flex-wrap items-center gap-1"
+                    role="group"
+                    aria-label="Filter audit log"
+                  >
+                    {(
+                      [
+                        ['all', 'ALL'],
+                        ['invoice', '[INVOICE]'],
+                        ['quotation', '[QUOTE]'],
+                        ['payment', '[PAYMENT]'],
+                        ['client', '[CLIENT]'],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setAuditFilter(key)}
+                        className={`px-2 py-0.5 font-mono text-[10px] font-medium transition-colors ${
+                          auditFilter === key
+                            ? 'bg-stone-900 text-white'
+                            : 'border border-stone-200 bg-white text-stone-600 hover:border-stone-400 hover:text-stone-900'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {filteredActivity.length ? (
+                  <div className="relative divide-y divide-stone-200 before:pointer-events-none before:absolute before:bottom-5 before:left-[26px] before:top-5 before:w-px before:bg-stone-200">
+                    {filteredActivity.map((a) => {
+                      const tag = activityTag(a.kind);
+                      const { code, rest } = extractDocCode(a.detail);
+                      return (
+                        <Link
+                          key={a.id}
+                          href={activityHref(a.id)}
+                          className="group relative flex items-start gap-3.5 px-5 py-3.5 no-underline transition-colors hover:bg-stone-50/90"
+                        >
+                          {/* Timeline Node Marker */}
+                          <span className="relative z-10 mt-1.5 flex h-3 w-3 shrink-0 items-center justify-center border border-stone-400 bg-white transition-colors group-hover:border-[#E02B20] group-hover:bg-[#E02B20]">
+                            <span className="h-1 w-1 bg-stone-500 group-hover:bg-white" />
+                          </span>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span
+                                className={`inline-flex items-center border px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider ${tag.cls}`}
+                              >
+                                {tag.label}
+                              </span>
+                              <span className="text-[12.5px] font-bold text-stone-900 group-hover:text-[#E02B20] transition-colors">
+                                {a.title}
+                              </span>
+                              {code && (
+                                <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
+                                  {code}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mt-1 truncate text-[12px] text-stone-600">
+                              {rest}
+                            </div>
+                          </div>
+
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <time className="font-mono text-[11px] tabular-nums text-stone-500">
+                              {dateFmt(a.date)}
+                            </time>
+                            <span className="font-mono text-[10px] text-stone-400 group-hover:text-stone-900">
+                              Inspect →
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Empty
+                    icon={Clock3}
+                    title="No matching audit entries"
+                    detail="Switch the transaction filter above or record a new workspace document."
+                  />
+                )}
+              </section>
+
+              {/* Section B: High-Density Document & Tax Ledger Register */}
+              <section>
+                <div className="flex items-center justify-between border-b border-stone-200 bg-stone-50/70 px-5 py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
+                      02 // DOCUMENT REGISTER
+                    </span>
+                    <h3 className="m-0 text-[13px] font-bold text-stone-900">
+                      Active Quotations & Tax Invoices
+                    </h3>
+                  </div>
+                  <Link
+                    href="/quotations"
+                    className="font-mono text-[11px] font-medium text-stone-600 no-underline hover:text-[#E02B20]"
+                  >
+                    Full Register ({allDocs.length}) →
+                  </Link>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[540px] border-collapse text-left">
+                    <thead>
+                      <tr className="border-b border-stone-200 bg-stone-50/40 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-stone-500">
+                        <th className="px-5 py-2.5">Code</th>
+                        <th className="px-3 py-2.5">Client & Subject</th>
+                        <th className="px-3 py-2.5 text-right">Total (Incl. Tax)</th>
+                        <th className="px-5 py-2.5 text-right">State</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-200">
+                      {allDocs.slice(0, 5).map((d) => {
+                        const docHref = `/${d.kind === 'quotation' ? 'quotations' : 'invoices'}/${d.id}`;
+                        return (
+                          <tr
+                            key={d.id}
+                            onClick={() => navigate(docHref)}
+                            className="cursor-pointer transition-colors hover:bg-stone-50"
+                          >
+                            <td className="px-5 py-3 whitespace-nowrap">
+                              <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
+                                {d.number}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3 max-w-[240px]">
+                              <div className="truncate text-[12.5px] font-bold text-stone-900">
+                                {d.clientName}
+                              </div>
+                              <div className="truncate text-[11px] text-stone-500">
+                                {d.subject}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-right font-mono text-[12.5px] font-semibold tabular-nums text-stone-900 whitespace-nowrap">
+                              {fmt(d.total)}
+                            </td>
+                            <td className="px-5 py-3 text-right whitespace-nowrap">
+                              <Status value={d.status} />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
+            {/* RIGHT COLUMN: QUICK-ACTION CLEARINGHOUSE */}
+            <div className="flex flex-col divide-y divide-stone-200 bg-stone-50/25 min-w-0">
+              {/* Block 1: Accounts Receivable & Segmented Reconciliation Strip */}
+              <section className="p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
+                      03 // ACCOUNTS RECEIVABLE
+                    </span>
+                    <h2 className="m-0 mt-0.5 text-[14px] font-bold text-stone-900">
+                      Open Balance & Reconciliation
+                    </h2>
+                  </div>
+                  <span className="border border-stone-300 bg-white px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-stone-800">
+                    {summary.outstandingBalance > 0 ? 'NET EXPOSURE' : 'SETTLED'}
+                  </span>
+                </div>
+
+                {/* Tight Tabular GH₵ Receivable Readout */}
+                <div className="mt-4 flex items-baseline justify-between gap-3 border-y border-stone-200 bg-white px-4 py-3.5">
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-stone-500">
+                      OUTSTANDING RECEIVABLES
+                    </div>
+                    <div className="mt-1 font-mono text-[30px] font-bold leading-none tracking-[-0.045em] tabular-nums text-stone-950">
+                      {fmt(summary.outstandingBalance)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block border border-[#E02B20]/30 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#E02B20]">
+                      {openInvoices.length} OPEN INV
+                    </span>
+                    <div className="mt-1 font-mono text-[11px] tabular-nums text-stone-500">
+                      Pool: {fmt(totalReconciledPool)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Segmented Reconciliation Strip: Cleared vs. Invoiced vs. Overdue */}
+                <div className="mt-4">
+                  <div className="mb-1.5 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.1em] text-stone-500">
+                    <span>RECONCILIATION STRIP</span>
+                    <span>{clearedPct}% CLEARED</span>
+                  </div>
+                  <div
+                    className="flex h-3 w-full gap-0.5 border border-stone-200 bg-stone-100 p-0.5"
+                    role="img"
+                    aria-label={`Cleared ${clearedPct}%, Invoiced ${invoicedPct}%, Overdue ${overduePct}%`}
+                  >
+                    {clearedPct > 0 && (
+                      <div
+                        className="h-full bg-emerald-700 transition-all duration-300"
+                        style={{ width: `${clearedPct}%` }}
+                        title={`Cleared: ${fmt(clearedBucket)}`}
+                      />
+                    )}
+                    {invoicedPct > 0 && (
+                      <div
+                        className="h-full bg-stone-800 transition-all duration-300"
+                        style={{ width: `${invoicedPct}%` }}
+                        title={`Invoiced (Current): ${fmt(invoicedCurrentBucket)}`}
+                      />
+                    )}
+                    {overduePct > 0 && (
+                      <div
+                        className="h-full bg-[#E02B20] transition-all duration-300"
+                        style={{ width: `${overduePct}%` }}
+                        title={`Overdue: ${fmt(overdueBucket)}`}
+                      />
+                    )}
+                  </div>
+
+                  {/* 3-Bucket Tabular Breakdown */}
+                  <div className="mt-2.5 grid grid-cols-3 divide-x divide-stone-200 border border-stone-200 bg-white">
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-emerald-800">
+                        <span className="h-2 w-2 bg-emerald-700" />
+                        <span>CLEARED</span>
+                      </div>
+                      <div className="mt-1 font-mono text-[11.5px] font-bold tabular-nums text-stone-900">
+                        {fmt(clearedBucket)}
+                      </div>
+                      <div className="font-mono text-[10px] text-stone-400">
+                        {clearedPct}% of pool
+                      </div>
+                    </div>
+
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-stone-700">
+                        <span className="h-2 w-2 bg-stone-800" />
+                        <span>INVOICED</span>
+                      </div>
+                      <div className="mt-1 font-mono text-[11.5px] font-bold tabular-nums text-stone-900">
+                        {fmt(invoicedCurrentBucket)}
+                      </div>
+                      <div className="font-mono text-[10px] text-stone-400">
+                        {invoicedPct}% current
+                      </div>
+                    </div>
+
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-wider text-[#E02B20]">
+                        <span className="h-2 w-2 bg-[#E02B20]" />
+                        <span>OVERDUE</span>
+                      </div>
+                      <div className="mt-1 font-mono text-[11.5px] font-bold tabular-nums text-[#E02B20]">
+                        {fmt(overdueBucket)}
+                      </div>
+                      <div className="font-mono text-[10px] text-stone-400">
+                        {overduePct}% past due
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Block 2: Awaiting Collection Clearinghouse */}
+              <section className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-700">
+                    AWAITING COLLECTION ({openInvoices.length})
+                  </span>
+                  <Link
+                    href="/invoices"
+                    className="font-mono text-[11px] font-medium text-stone-500 no-underline hover:text-[#E02B20]"
+                  >
+                    All Invoices →
+                  </Link>
+                </div>
+
+                {openInvoices.length > 0 ? (
+                  <div className="divide-y divide-stone-200 border border-stone-200 bg-white">
+                    {openInvoices.map((inv) => {
+                      const isOverdue =
+                        inv.dueDate && inv.dueDate.slice(0, 10) <= nowIso;
+                      return (
+                        <div
+                          key={inv.id}
+                          className="flex items-center justify-between gap-3 px-3.5 py-3 transition-colors hover:bg-stone-50/80"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Link
+                                href={`/invoices/${inv.id}`}
+                                className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800 no-underline hover:bg-stone-200"
+                              >
+                                {inv.number}
+                              </Link>
+                              <span className="truncate text-[12.5px] font-bold text-stone-900">
+                                {inv.clientName}
+                              </span>
+                              {isOverdue && (
+                                <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-[#E02B20]">
+                                  [OVERDUE]
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1 flex items-center gap-2 text-[11.5px] text-stone-600">
+                              <span>Balance due:</span>
+                              <strong className="font-mono tabular-nums text-stone-950">
+                                {fmt(inv.balance)}
+                              </strong>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setPayingDoc(inv)}
+                            className="shrink-0 border border-stone-300 bg-transparent px-3 py-1.5 font-mono text-[11.5px] font-medium tabular-nums text-stone-900 transition-colors duration-150 hover:border-[#E02B20] hover:bg-[#E02B20] hover:text-white cursor-pointer"
+                          >
+                            Collect →
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="border border-stone-200 bg-white p-4 font-mono text-[11.5px] text-stone-500">
+                    All issued invoices are reconciled in full.
+                  </div>
+                )}
+              </section>
+
+              {/* Block 3: Rentals & PrintD Pigh Dispatch Clearinghouse */}
+              <section className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#E02B20]">
+                      04 // RENTALS & DISPATCH
+                    </span>
+                    <h3 className="m-0 mt-0.5 text-[13.5px] font-bold text-stone-900">
+                      Field Equipment & PrintD Pigh Queue
+                    </h3>
+                  </div>
+                  <Layers size={15} className="text-stone-500" />
+                </div>
+
+                <div className="grid grid-cols-2 divide-x divide-stone-200 border border-stone-200 bg-white">
+                  <div className="p-3.5">
+                    <div className="font-mono text-[10px] font-semibold uppercase tracking-wider text-stone-500">
+                      ACTIVE RENTALS
+                    </div>
+                    <div className="mt-1 font-mono text-[22px] font-bold tabular-nums text-stone-950">
+                      {activeRentals.length}
+                    </div>
+                    <div className="text-[11px] text-stone-500">
+                      Poles, bases & truss kits
+                    </div>
+                  </div>
+                  <div className="p-3.5">
+                    <div className="font-mono text-[10px] font-semibold uppercase tracking-wider text-stone-500">
+                      PRINTD PIGH QUEUE
+                    </div>
+                    <div className="mt-1 font-mono text-[22px] font-bold tabular-nums text-[#E02B20]">
+                      {activePrintOrders.length}
+                    </div>
+                    <div className="text-[11px] text-stone-500">
+                      Active press work orders
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Dispatch Items with 12px Mono Document Codes */}
+                <div className="mt-3 divide-y divide-stone-200 border border-stone-200 bg-white">
+                  {activeRentals.slice(0, 2).map((r) => (
                     <div
-                      key={inv.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border border-[#eee8e0] bg-[#faf8f5] px-3 py-2"
+                      key={r.id}
+                      className="flex items-center justify-between gap-2 px-3 py-2.5 text-[11.5px]"
                     >
                       <div className="min-w-0">
-                        <Link
-                          href={`/invoices/${inv.id}`}
-                          className="mono text-[11px] font-bold text-[#a82b3e] hover:underline"
-                        >
-                          {inv.number}
-                        </Link>
-                        <div className="truncate text-[11px] text-[#555]">
-                          {inv.clientName} · <span className="mono font-semibold">{fmt(inv.balance)}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
+                            {r.documentNumber}
+                          </span>
+                          <strong className="truncate text-stone-900">
+                            {r.clientName}
+                          </strong>
+                        </div>
+                        <div className="mt-0.5 truncate text-[11px] text-stone-500">
+                          {r.itemName} ({r.quantity} × {r.days}d)
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setPayingDoc(inv)}
-                        className="btn btn-primary !h-7 !min-h-7 !px-2.5 text-[11px]"
-                      >
-                        Collect
-                      </button>
+                      <span className="shrink-0 font-mono text-[10px] font-semibold uppercase text-amber-800">
+                        [{r.status}]
+                      </span>
+                    </div>
+                  ))}
+                  {activePrintOrders.slice(0, 1).map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between gap-2 px-3 py-2.5 text-[11.5px]"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[12px] font-medium text-stone-800">
+                            {p.documentNumber}
+                          </span>
+                          <strong className="truncate text-stone-900">
+                            {p.clientName}
+                          </strong>
+                        </div>
+                        <div className="mt-0.5 truncate text-[11px] text-stone-500">
+                          {p.jobCode} · {p.specification}
+                        </div>
+                      </div>
+                      <span className="shrink-0 font-mono text-[10px] font-semibold uppercase text-[#E02B20]">
+                        [PRINT]
+                      </span>
                     </div>
                   ))}
                 </div>
-              )}
 
-              <div className="pt-4">
-                <Link href="/invoices" className="btn btn-secondary w-full justify-between">
-                  Review all invoices <ArrowRight size={15} />
-                </Link>
-              </div>
-            </section>
-
-            <section className="panel p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[14px] font-bold">Rentals & PrintD Pigh Dispatch</div>
-                  <div className="mt-1 text-[11px] text-[#918b85]">
-                    Field equipment & sister-company production
-                  </div>
+                <div className="mt-3">
+                  <Link
+                    href="/operations"
+                    className="flex w-full items-center justify-between border border-stone-300 bg-white px-3.5 py-2 font-mono text-[11.5px] font-medium text-stone-900 no-underline transition-colors duration-150 hover:border-[#E02B20] hover:bg-[#E02B20] hover:text-white"
+                  >
+                    <span>Open Rentals & Print Dispatch</span>
+                    <span>→</span>
+                  </Link>
                 </div>
-                <Layers size={16} className="text-[#c61c2e]" />
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2.5">
-                <div className="rounded-lg bg-[#faf7f2] p-3 border border-[#eee8e0]">
-                  <div className="text-[10px] font-bold uppercase text-[#88827a]">
-                    Active Rentals
-                  </div>
-                  <div className="mt-1 text-[20px] font-bold text-[#1e1f24]">
-                    {activeRentalsCount}
-                  </div>
-                  <div className="text-[10px] text-[#88827a]">Poles, bases & lighting</div>
-                </div>
-                <div className="rounded-lg bg-[#faf7f2] p-3 border border-[#eee8e0]">
-                  <div className="text-[10px] font-bold uppercase text-[#88827a]">
-                    PrintD Pigh Queue
-                  </div>
-                  <div className="mt-1 text-[20px] font-bold text-[#c61c2e]">
-                    {activePrintCount}
-                  </div>
-                  <div className="text-[10px] text-[#88827a]">Active print orders</div>
-                </div>
-              </div>
-              <div className="mt-3">
-                <Link href="/operations" className="btn btn-secondary w-full justify-between">
-                  Open Rentals & Print desk <ArrowRight size={15} />
-                </Link>
-              </div>
-            </section>
+              </section>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {modalAction === 'client' && (
         <Modal

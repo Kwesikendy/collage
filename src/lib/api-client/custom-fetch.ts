@@ -103,7 +103,7 @@ interface ErpStore {
   productionOrders: ProductionOrder[];
 }
 
-const STORAGE_KEY = 'collat_erp_store_v2';
+const STORAGE_KEY = 'collat_erp_store_v3';
 
 function createInitialStore(): ErpStore {
   const now = new Date();
@@ -430,7 +430,7 @@ function createInitialStore(): ErpStore {
     {
       id: 'pay-ecobank-dep',
       documentId: 'doc-inv-00221026-01',
-      amount: 6500,
+      amount: 6590,
       paymentDate: `${currentMonthPrefix}-22`,
       method: 'bank_transfer',
       reference: 'ECO-DEP-00221026',
@@ -778,7 +778,7 @@ function handleApiRequest(
         return {
           id: `payment:${doc?.id ?? p.id}`,
           title: 'Payment recorded',
-          detail: `${client?.companyName ?? 'Client'} · ${doc?.number ?? 'Invoice'} · GHS ${Number(p.amount).toFixed(2)}`,
+          detail: `${doc?.number ?? '00221026.01'} · ${client?.companyName ?? 'Client'} · GH₵ ${Number(p.amount).toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           date: p.createdAt,
           kind: 'payment',
         };
