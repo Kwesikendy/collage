@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ===================================================================
-   COLLAGE ERP — Design Token System (Smooth Glassmorphism & Simple Sans)
+   COLLAGE ERP - Design Token System (Smooth Glassmorphism & Simple Sans)
    =================================================================== */
 
 @theme inline {
@@ -40,7 +40,7 @@
   --muted: 34 20% 93%; --muted-foreground: 220 8% 46%;
   --accent: 9 55% 94%; --accent-foreground: 354 70% 32%;
   --destructive: 0 68% 45%; --destructive-foreground: 0 0% 100%;
-  /* Sidebar — light neutral */
+  /* Sidebar - light neutral */
   --sidebar: 210 18% 97%; --sidebar-foreground: 225 14% 22%; --sidebar-border: 214 18% 89%;
   --sidebar-primary: 354 83% 43%; --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 214 18% 93%; --sidebar-accent-foreground: 225 14% 20%;

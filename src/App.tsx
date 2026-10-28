@@ -50,6 +50,13 @@ import {
   deleteDocumentById,
   resetErpDemoData,
   calculateDocumentPricing,
+  loginWithNeon,
+  registerWithNeon,
+  logoutWithNeon,
+  fetchNeonSession,
+  getStoredAuthUser,
+  syncStoreFromNeon,
+  type NeonAuthUser,
   type Client,
   type ClientInput,
   type DocumentInput,
@@ -94,6 +101,8 @@ import {
 import collageLogo from './assets/collage-logo.png';
 import { Brand } from '@/components/brand';
 import { Welcome } from '@/pages/welcome';
+import { PrivacyPolicyPage } from '@/pages/privacy';
+import { CookieConsentBanner } from '@/components/cookie-consent-banner';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -117,12 +126,16 @@ const mockUser = {
 };
 
 type AppUser = typeof mockUser;
-type AppClerkCtx = { signOut: (opts?: unknown) => void };
+type AppClerkCtx = {
+  signOut: (opts?: unknown) => void;
+  setNeonUser?: (user: NeonAuthUser | null) => void;
+};
 
 const AppUserContext = createContext<AppUser>(mockUser);
 const AppClerkContext = createContext<AppClerkCtx>({
   signOut: () => {
-    window.location.href = basePath || '/';
+    void logoutWithNeon();
+    window.location.href = `${basePath}/sign-in`;
   },
 });
 
@@ -131,6 +144,54 @@ function useAppUser() {
 }
 function useAppClerk() {
   return useContext(AppClerkContext);
+}
+
+function mapNeonUserToAppUser(u: NeonAuthUser | null): AppUser {
+  if (!u) return mockUser;
+  return {
+    isLoaded: true as const,
+    isSignedIn: true as const,
+    user: {
+      firstName: u.firstName || 'Kojo',
+      lastName: u.lastName || 'Nathan',
+      fullName: u.fullName || `${u.firstName} ${u.lastName}`.trim() || 'Kojo Nathan',
+      primaryEmailAddress: { emailAddress: u.office || u.email || 'Accra HQ' },
+    },
+  };
+}
+
+function NeonAuthProvider({ children }: { children: ReactNode }) {
+  const [neonUser, setNeonUser] = useState<NeonAuthUser | null>(() => getStoredAuthUser());
+
+  useEffect(() => {
+    void syncStoreFromNeon().then((synced) => {
+      if (synced) {
+        queryClient.invalidateQueries();
+      }
+    });
+    void fetchNeonSession().then((u) => {
+      if (u) setNeonUser(u);
+    });
+  }, []);
+
+  const signOut = (opts?: unknown) => {
+    void logoutWithNeon().finally(() => {
+      setNeonUser(null);
+      const redirectUrl =
+        typeof opts === 'object' && opts !== null && 'redirectUrl' in opts
+          ? String((opts as { redirectUrl?: string }).redirectUrl || `${basePath}/sign-in`)
+          : `${basePath}/sign-in`;
+      window.location.href = redirectUrl;
+    });
+  };
+
+  return (
+    <AppUserContext.Provider value={mapNeonUserToAppUser(neonUser)}>
+      <AppClerkContext.Provider value={{ signOut, setNeonUser }}>
+        {children}
+      </AppClerkContext.Provider>
+    </AppUserContext.Provider>
+  );
 }
 
 function ClerkDataProvider({ children }: { children: ReactNode }) {
@@ -173,14 +234,18 @@ const fmt = (n: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-const dateFmt = (date?: string | null) =>
-  date
-    ? new Intl.DateTimeFormat('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }).format(new Date(date))
-    : '-';
+const dateFmt = (date?: string | null) => {
+  if (!date || isNaN(Date.parse(date))) return '-';
+  try {
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(date));
+  } catch {
+    return '-';
+  }
+};
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -343,7 +408,19 @@ function Shell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto border-t border-white/[0.08] p-4">
+        <div className="mt-auto px-4 py-2 border-t border-white/[0.05]">
+          <Link
+            href="/privacy"
+            data-testid="link-privacy"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] text-neutral-400 no-underline transition-colors hover:bg-white/[0.04] hover:text-neutral-200"
+          >
+            <ShieldCheck size={14} className="text-neutral-500" />
+            <span>Privacy Policy</span>
+          </Link>
+        </div>
+
+        <div className="border-t border-white/[0.08] p-4">
           <div className="flex items-center gap-3">
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.05] font-mono text-[11px] font-semibold text-white">
               {user?.firstName?.slice(0, 1) || 'K'}
@@ -629,19 +706,29 @@ function ClientForm({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    setError('');
+    setSuccess(false);
+  }, [client]);
+
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
     const f = new FormData(e.currentTarget);
-    const value = {
-      companyName: String(f.get('companyName')).trim(),
-      contactName: String(f.get('contactName') || '').trim() || null,
-      email: String(f.get('email') || '').trim() || null,
-      phone: String(f.get('phone') || '').trim() || null,
-      address: String(f.get('address') || '').trim() || null,
-      city: String(f.get('city') || '').trim() || null,
-      country: String(f.get('country') || 'Ghana').trim(),
-      status: String(f.get('status') || 'active') as ClientInput['status'],
+    const companyName = String(f.get('companyName') || '').trim();
+    if (!companyName) {
+      setError('Company name is required.');
+      return;
+    }
+    const value: ClientInput = {
+      companyName: companyName.slice(0, 180),
+      contactName: String(f.get('contactName') || '').trim().slice(0, 180) || null,
+      email: String(f.get('email') || '').trim().slice(0, 180) || null,
+      phone: String(f.get('phone') || '').trim().slice(0, 60) || null,
+      address: String(f.get('address') || '').trim().slice(0, 400) || null,
+      city: String(f.get('city') || '').trim().slice(0, 100) || null,
+      country: String(f.get('country') || 'Ghana').trim().slice(0, 100),
+      status: (String(f.get('status') || 'active') as ClientInput['status']) || 'active',
     };
     const finish = (savedClient?: Client) => {
       setSuccess(true);
@@ -651,15 +738,27 @@ function ClientForm({
       if (savedClient && onCreated) onCreated(savedClient);
       setTimeout(onClose, 450);
     };
+
+    const extractErr = (err: unknown, defaultMsg: string) => {
+      if (typeof err === 'object' && err !== null) {
+        const apiErr = err as { data?: { error?: string }; message?: string };
+        return apiErr.data?.error || apiErr.message || defaultMsg;
+      }
+      return defaultMsg;
+    };
+
     try {
       if (client)
         update.mutate(
           { id: client.id, data: value },
           {
             onSuccess: (res) => finish(res),
-            onError: () =>
+            onError: (err) =>
               setError(
-                'Could not save this client. Please check the details and try again.',
+                extractErr(
+                  err,
+                  'Could not save this client. Please check the details and try again.',
+                ),
               ),
           },
         );
@@ -668,28 +767,32 @@ function ClientForm({
           { data: value },
           {
             onSuccess: (res) => finish(res),
-            onError: () =>
-              setError('Could not create this client. Please try again.'),
+            onError: (err) =>
+              setError(
+                extractErr(err, 'Could not create this client. Please try again.'),
+              ),
           },
         );
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (err) {
+      setError(extractErr(err, 'Something went wrong. Please try again.'));
     }
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form key={client?.id ?? 'new-client'} onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           label="Company or client name"
           name="companyName"
           required
+          maxLength={180}
           defaultValue={client?.companyName}
           placeholder="e.g. Eugenia / Ecobank Ghana"
         />
         <Input
           label="Contact person (Attn)"
           name="contactName"
+          maxLength={180}
           defaultValue={client?.contactName || ''}
           placeholder="Primary contact name"
         />
@@ -697,18 +800,21 @@ function ClientForm({
           label="Email"
           name="email"
           type="email"
+          maxLength={180}
           defaultValue={client?.email || ''}
           placeholder="name@company.com"
         />
         <Input
           label="Phone"
           name="phone"
+          maxLength={60}
           defaultValue={client?.phone || ''}
           placeholder="+233 24 000 0000"
         />
         <Input
           label="City"
           name="city"
+          maxLength={100}
           defaultValue={client?.city || 'Accra'}
           placeholder="Accra"
         />
@@ -720,11 +826,12 @@ function ClientForm({
       <Input
         label="Address"
         name="address"
+        maxLength={400}
         defaultValue={client?.address || ''}
         placeholder="Street address or landmark"
       />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Country" name="country" defaultValue={client?.country || 'Ghana'} />
+        <Input label="Country" name="country" maxLength={100} defaultValue={client?.country || 'Ghana'} />
         <div className="flex items-end justify-end gap-2">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Cancel
@@ -764,14 +871,18 @@ function PaymentModal({
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const parsedAmount = Number(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return;
+    }
     payment.mutate(
       {
         id: doc.id,
         data: {
-          amount: Number(amount),
-          paymentDate,
+          amount: parsedAmount,
+          paymentDate: String(paymentDate || '').slice(0, 30),
           method,
-          reference: reference.trim() || null,
+          reference: reference.trim().slice(0, 100) || null,
         },
       },
       {
@@ -846,6 +957,7 @@ function PaymentModal({
           <Input
             label="Reference / Receipt No."
             name="reference"
+            maxLength={100}
             value={reference}
             onChange={(e) => setReference(e.target.value)}
             placeholder="e.g. MoMo / Bank reference"
@@ -1004,7 +1116,13 @@ function ClientList() {
             }
             action={
               !search && (
-                <button className="btn btn-primary" onClick={() => setModal(true)}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setEditing(undefined);
+                    setModal(true);
+                  }}
+                >
                   <Plus size={15} />
                   Add first client
                 </button>
@@ -1111,7 +1229,11 @@ function ClientList() {
           subtitle="A single source of truth for every piece of work."
           onClose={() => setModal(false)}
         >
-          <ClientForm client={editing} onClose={() => setModal(false)} />
+          <ClientForm
+            key={editing?.id ?? 'new-client'}
+            client={editing}
+            onClose={() => setModal(false)}
+          />
         </Modal>
       )}
       {confirmArchive && (
@@ -1305,7 +1427,7 @@ function ClientDetail() {
       )}
       {edit && client && (
         <Modal title="Edit client" onClose={() => setEdit(false)}>
-          <ClientForm client={client} onClose={() => setEdit(false)} />
+          <ClientForm key={client.id} client={client} onClose={() => setEdit(false)} />
         </Modal>
       )}
       {newDocKind && client && (
@@ -1385,95 +1507,31 @@ function Dashboard() {
     allDocs.find((d) => d.number === '00211026.01') ||
     openInvoices[1];
 
-  const customDocs = allDocs.filter(
-    (d) =>
-      ![
-        'QT00241026.01',
-        'QT00231026.01',
-        '00221026.01',
-        '00211026.01',
-        '00181026.01',
-      ].includes(d.number),
-  );
-
-  const ledgerRows = [
-    ...customDocs.map((d) => ({
-      id: d.id,
-      date: dateFmt(d.issueDate).replace(/\s\d{4}$/, ''),
-      reference: d.number,
-      scope: `${d.clientName} · ${d.subject}`,
-      amount: fmt(d.total),
-      statusLabel:
-        d.status === 'paid'
-          ? 'Reconciled'
-          : d.status === 'accepted'
-            ? 'Pending Approval'
-            : 'Sent',
-      statusTone:
-        d.status === 'paid'
-          ? ('green' as const)
-          : d.status === 'accepted'
-            ? ('amber' as const)
-            : ('blue' as const),
-      actionLabel: d.kind === 'invoice' && d.status === 'paid' ? 'Receipt →' : 'Open →',
-      href: `/${d.kind === 'quotation' ? 'quotations' : 'invoices'}/${d.id}`,
-    })),
-    {
-      id: 'row-qt-24',
-      date: '24 Oct',
-      reference: 'QT00241026.01',
-      scope: 'Ecobank Ghana PLC · Outdoor Billboard Skin',
-      amount: 'GH₵ 12,190.00',
-      statusLabel: 'Pending Approval',
-      statusTone: 'amber' as const,
-      actionLabel: 'Open →',
-      href: '/quotations/doc-qt-00241026-01',
-    },
-    {
-      id: 'row-qt-23',
-      date: '23 Oct',
-      reference: 'QT00231026.01',
-      scope: 'Executive Summit Wayfinding & Wall Branding',
-      amount: 'GH₵ 6,840.00',
-      statusLabel: 'Sent',
-      statusTone: 'blue' as const,
-      actionLabel: 'Open →',
-      href: '/quotations/doc-qt-00231026-01',
-    },
-    {
-      id: 'row-inv-22',
-      date: '22 Oct',
-      reference: '00221026.01',
-      scope: 'Ecobank Ghana PLC · Payment Received',
-      amount: 'GH₵ 6,590.00',
-      statusLabel: 'Reconciled',
-      statusTone: 'green' as const,
-      actionLabel: 'Receipt →',
-      href: '/invoices/doc-inv-00221026-01',
-    },
-    {
-      id: 'row-inv-21',
-      date: '21 Oct',
-      reference: '00211026.01',
-      scope: 'Eugenia · Telescopic Flag Print & Pole Rentals',
-      amount: 'GH₵ 1,896.00',
-      statusLabel: 'Sent',
-      statusTone: 'blue' as const,
-      actionLabel: 'Open →',
-      href: '/invoices/doc-inv-00211026-01',
-    },
-    {
-      id: 'row-inv-18',
-      date: '18 Oct',
-      reference: '00181026.01',
-      scope: 'Scancom PLC (MTN Ghana) · AGM Stage & Lighting',
-      amount: 'GH₵ 10,305.60',
-      statusLabel: 'Reconciled',
-      statusTone: 'green' as const,
-      actionLabel: 'Receipt →',
-      href: '/invoices/doc-inv-00181026-01',
-    },
-  ];
+  const ledgerRows = allDocs.slice(0, 10).map((d) => ({
+    id: d.id,
+    date: dateFmt(d.issueDate).replace(/\s\d{4}$/, ''),
+    reference: d.number,
+    scope: `${d.clientName || 'Client'} · ${d.subject || 'Project'}`,
+    amount: fmt(d.total),
+    statusLabel:
+      d.status === 'paid'
+        ? 'Reconciled'
+        : d.status === 'accepted'
+          ? 'Pending Approval'
+          : d.status === 'cancelled'
+            ? 'Cancelled'
+            : d.status === 'draft'
+              ? 'Draft'
+              : 'Sent',
+    statusTone:
+      d.status === 'paid'
+        ? ('green' as const)
+        : d.status === 'accepted'
+          ? ('amber' as const)
+          : ('blue' as const),
+    actionLabel: d.kind === 'invoice' && d.status === 'paid' ? 'Receipt →' : 'Open →',
+    href: `/${d.kind === 'quotation' ? 'quotations' : 'invoices'}/${d.id}`,
+  }));
 
   const badgeStyles = {
     amber: 'bg-amber-500/10 text-amber-800 border border-amber-500/20',
@@ -1503,6 +1561,14 @@ function Dashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setModalAction('client')}
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-neutral-300/80 bg-white/75 px-4 text-[13px] font-medium text-neutral-800 backdrop-blur-md transition-all duration-200 hover:border-neutral-400 hover:bg-white cursor-pointer"
+          >
+            <Users size={14} />
+            <span>+ Add Client</span>
+          </button>
           <button
             type="button"
             onClick={() => setModalAction('quotation')}
@@ -1651,12 +1717,22 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ledgerRows.map((row) => (
-                    <tr
-                      key={row.id}
-                      onClick={() => navigate(row.href)}
-                      className="border-b border-neutral-200/50 last:border-b-0 transition-colors hover:bg-white/80 cursor-pointer"
-                    >
+                  {ledgerRows.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="py-8 text-center text-[13px] text-neutral-500"
+                      >
+                        No operations records found. Issue a quotation or invoice to populate the ledger.
+                      </td>
+                    </tr>
+                  ) : (
+                    ledgerRows.map((row) => (
+                      <tr
+                        key={row.id}
+                        onClick={() => navigate(row.href)}
+                        className="border-b border-neutral-200/50 last:border-b-0 transition-colors hover:bg-white/80 cursor-pointer"
+                      >
                       <td className="py-3.5 pl-5 pr-3 text-[12.5px] text-neutral-500 whitespace-nowrap tabular-nums">
                         {row.date}
                       </td>
@@ -1686,7 +1762,7 @@ function Dashboard() {
                         </Link>
                       </td>
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>
@@ -1736,15 +1812,15 @@ function Dashboard() {
                         href={ecobankInvoice ? `/invoices/${ecobankInvoice.id}` : '/invoices'}
                         className="truncate text-[13.5px] font-medium text-neutral-900 no-underline hover:text-[#E02B20]"
                       >
-                        Ecobank Ghana PLC
+                        {ecobankInvoice ? ecobankInvoice.clientName : 'Ecobank Ghana PLC'}
                       </Link>
                       <span className="text-neutral-300">·</span>
                       <span className="text-[13px] font-semibold text-neutral-900 tabular-nums">
-                        {ecobankInvoice ? fmt(ecobankInvoice.balance) : 'GH₵ 6,004.00'}
+                        {ecobankInvoice ? fmt(ecobankInvoice.balance) : 'GH₵ 0.00'}
                       </span>
                     </div>
                     <div className="mt-0.5 text-[12px] text-neutral-500">
-                      Due in 4 days · Invoice 00221026.01
+                      {ecobankInvoice ? `Due in 4 days · Invoice ${ecobankInvoice.number}` : 'Reconciled · No pending balance'}
                     </div>
                   </div>
 
@@ -1769,17 +1845,23 @@ function Dashboard() {
                         href={eugeniaInvoice ? `/invoices/${eugeniaInvoice.id}` : '/invoices'}
                         className="truncate text-[13.5px] font-medium text-neutral-900 no-underline hover:text-[#E02B20]"
                       >
-                        Eugenia
+                        {eugeniaInvoice ? eugeniaInvoice.clientName : 'Eugenia'}
                       </Link>
                       <span className="text-neutral-300">·</span>
                       <span className="text-[13px] font-semibold text-neutral-900 tabular-nums">
-                        {eugeniaInvoice ? fmt(eugeniaInvoice.balance) : 'GH₵ 1,896.00'}
+                        {eugeniaInvoice ? fmt(eugeniaInvoice.balance) : 'GH₵ 0.00'}
                       </span>
                     </div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-[12px]">
-                      <span className="font-medium text-[#E02B20]">Overdue</span>
-                      <span className="text-neutral-300">·</span>
-                      <span className="text-neutral-500">Invoice 00211026.01</span>
+                      {eugeniaInvoice ? (
+                        <>
+                          <span className="font-medium text-[#E02B20]">Overdue</span>
+                          <span className="text-neutral-300">·</span>
+                          <span className="text-neutral-500">{`Invoice ${eugeniaInvoice.number}`}</span>
+                        </>
+                      ) : (
+                        <span className="text-neutral-500">Reconciled · No pending balance</span>
+                      )}
                     </div>
                   </div>
 
@@ -1936,15 +2018,17 @@ function DocumentForm({
 
   const livePricing = calculateDocumentPricing({
     items: items.map((it) => ({
-      description: it.description || 'Item',
-      quantity: Number(it.quantity) || 0,
-      days: Number(it.days) || 0,
-      unitPrice: Number(it.unitPrice) || 0,
+      description: String(it.description || '').slice(0, 300) || 'Item',
+      quantity: Number.isFinite(Number(it.quantity)) ? Math.max(0, Number(it.quantity)) : 0,
+      days: Number.isFinite(Number(it.days)) ? Math.max(0, Number(it.days)) : 0,
+      unitPrice: Number.isFinite(Number(it.unitPrice)) ? Math.max(0, Number(it.unitPrice)) : 0,
     })),
-    discountPercent: Number(rates.discount) || 0,
-    getfundRate: Number(rates.getfund) || 0,
-    nhilRate: Number(rates.nhil) || 0,
-    vatRate: Number(rates.vat) || 0,
+    discountPercent: Number.isFinite(Number(rates.discount))
+      ? Math.min(100, Math.max(0, Number(rates.discount)))
+      : 0,
+    getfundRate: Number.isFinite(Number(rates.getfund)) ? Math.max(0, Number(rates.getfund)) : 0,
+    nhilRate: Number.isFinite(Number(rates.nhil)) ? Math.max(0, Number(rates.nhil)) : 0,
+    vatRate: Number.isFinite(Number(rates.vat)) ? Math.max(0, Number(rates.vat)) : 0,
   });
 
   function updateItem(
@@ -1971,14 +2055,21 @@ function DocumentForm({
       return;
     }
     const cleanedItems = items.map((it) => ({
-      description: it.description.trim(),
+      description: String(it.description || '').trim().slice(0, 300),
       quantity: Number(it.quantity),
       days: Number(it.days),
       unitPrice: Number(it.unitPrice),
     }));
     if (
       cleanedItems.some(
-        (it) => !it.description || it.quantity <= 0 || it.days <= 0 || it.unitPrice < 0,
+        (it) =>
+          !it.description ||
+          !Number.isFinite(it.quantity) ||
+          it.quantity <= 0 ||
+          !Number.isFinite(it.days) ||
+          it.days <= 0 ||
+          !Number.isFinite(it.unitPrice) ||
+          it.unitPrice < 0,
       )
     ) {
       setError('Add a description and valid quantity and days for each line item.');
@@ -1986,20 +2077,27 @@ function DocumentForm({
     }
 
     const f = new FormData(e.currentTarget);
+    const rawSubject = String(f.get('subject') || '').trim().slice(0, 180);
+    const rawDiscount = Number(rates.discount);
+    const clampedDiscount = Number.isFinite(rawDiscount)
+      ? Math.min(100, Math.max(0, rawDiscount))
+      : 0;
     const input: DocumentInput = {
       kind,
       clientId,
-      subject: String(f.get('subject')).trim(),
+      subject: rawSubject,
       issueDate: String(f.get('issueDate')),
       dueDate: String(f.get('dueDate') || '') || null,
       status,
       items: cleanedItems,
-      discountPercent: Number(rates.discount),
-      getfundRate: Number(rates.getfund),
-      nhilRate: Number(rates.nhil),
-      vatRate: Number(rates.vat),
-      paymentTerms: String(f.get('paymentTerms') || '').trim(),
-      validityDays: Number(f.get('validityDays') || 5),
+      discountPercent: clampedDiscount,
+      getfundRate: Number.isFinite(Number(rates.getfund)) ? Math.max(0, Number(rates.getfund)) : 2.5,
+      nhilRate: Number.isFinite(Number(rates.nhil)) ? Math.max(0, Number(rates.nhil)) : 2.5,
+      vatRate: Number.isFinite(Number(rates.vat)) ? Math.max(0, Number(rates.vat)) : 15,
+      paymentTerms: String(f.get('paymentTerms') || '').trim().slice(0, 100),
+      validityDays: Number.isFinite(Number(f.get('validityDays')))
+        ? Math.max(1, Number(f.get('validityDays')))
+        : 5,
     };
     const ok = (resultDoc: SalesDocument) => {
       setSaved(true);
@@ -2064,6 +2162,7 @@ function DocumentForm({
           label="Subject / Project title"
           name="subject"
           required
+          maxLength={180}
           defaultValue={doc?.subject}
           placeholder="e.g. TELESCOPIC FLAG PRINT AND POLE RENTALS"
         />
@@ -2135,6 +2234,7 @@ function DocumentForm({
                 <input
                   aria-label="Item description"
                   className="field"
+                  maxLength={300}
                   value={item.description}
                   onChange={(e) => updateItem(idx, { description: e.target.value })}
                   placeholder="Description of work or rental"
@@ -2822,12 +2922,14 @@ function DocumentDetail() {
         {/* Date & Reference */}
         <div className="mt-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-[#ece6de] pb-3 text-[12px]">
           <div className="font-medium text-[#2d2c31]">
-            {new Date(doc.issueDate).toLocaleDateString('en-GB', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            {doc.issueDate && !isNaN(Date.parse(doc.issueDate))
+              ? new Date(doc.issueDate).toLocaleDateString('en-GB', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              : dateFmt(doc.issueDate)}
           </div>
           <div className="flex items-center gap-3">
             <span className="mono font-semibold text-[#555]">
@@ -2877,7 +2979,7 @@ function DocumentDetail() {
               </tr>
             </thead>
             <tbody>
-              {doc.items.map((item, i) => (
+              {(doc.items || []).map((item, i) => (
                 <tr
                   key={`${item.description}-${i}`}
                   className="border-b border-[#ece6de] text-[11px] even:bg-[#faf7f2]"
@@ -3086,15 +3188,18 @@ function OperationsView() {
   function submitRental(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    const rawQty = Number(f.get('quantity') || 1);
+    const rawDays = Number(f.get('days') || 1);
+    const rawRate = Number(f.get('unitRate') || 70);
     const updated = createRentalBooking({
-      itemName: String(f.get('itemName')).trim(),
-      clientName: String(f.get('clientName')).trim(),
-      documentNumber: String(f.get('documentNumber') || 'Direct').trim(),
-      quantity: Number(f.get('quantity') || 1),
-      days: Number(f.get('days') || 1),
-      unitRate: Number(f.get('unitRate') || 70),
-      startDate: String(f.get('startDate')),
-      returnDate: String(f.get('returnDate')),
+      itemName: String(f.get('itemName') || '').trim().slice(0, 180),
+      clientName: String(f.get('clientName') || '').trim().slice(0, 180),
+      documentNumber: String(f.get('documentNumber') || 'Direct').trim().slice(0, 60),
+      quantity: Number.isFinite(rawQty) && rawQty > 0 ? Math.min(100000, rawQty) : 1,
+      days: Number.isFinite(rawDays) && rawDays > 0 ? Math.min(365, rawDays) : 1,
+      unitRate: Number.isFinite(rawRate) && rawRate >= 0 ? rawRate : 70,
+      startDate: String(f.get('startDate') || '').trim().slice(0, 30),
+      returnDate: String(f.get('returnDate') || '').trim().slice(0, 30),
       status: 'deployed',
     });
     setOps((prev) => ({ ...prev, rentals: [...updated] }));
@@ -3104,13 +3209,14 @@ function OperationsView() {
   function submitPrint(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    const rawQty = Number(f.get('quantity') || 1);
     const updated = createProductionOrder({
-      clientName: String(f.get('clientName')).trim(),
-      documentNumber: String(f.get('documentNumber') || 'Direct').trim(),
-      specification: String(f.get('specification')).trim(),
-      quantity: Number(f.get('quantity') || 1),
-      assignedTo: String(f.get('assignedTo') || 'PrintD Pigh · Large Format Press'),
-      dueDate: String(f.get('dueDate')),
+      clientName: String(f.get('clientName') || '').trim().slice(0, 180),
+      documentNumber: String(f.get('documentNumber') || 'Direct').trim().slice(0, 60),
+      specification: String(f.get('specification') || '').trim().slice(0, 300),
+      quantity: Number.isFinite(rawQty) && rawQty > 0 ? Math.min(100000, rawQty) : 1,
+      assignedTo: String(f.get('assignedTo') || 'PrintD Pigh · Large Format Press').trim().slice(0, 180),
+      dueDate: String(f.get('dueDate') || '').trim().slice(0, 30),
       status: 'queued',
     });
     setOps((prev) => ({ ...prev, productionOrders: [...updated] }));
@@ -3490,6 +3596,35 @@ function MoneyRow({
 }
 
 function AuthScreen({ signup = false }: { signup?: boolean }) {
+  const [, setLocation] = useLocation();
+  const { setNeonUser } = useAppClerk();
+  const [email, setEmail] = useState(signup ? '' : 'kojo@collage.com.gh');
+  const [password, setPassword] = useState(signup ? '' : 'Collage2026!');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [office, setOffice] = useState('Accra HQ');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setErrorMsg(null);
+    setLoading(true);
+    try {
+      const result = signup
+        ? await registerWithNeon({ email, password, firstName, lastName, office })
+        : await loginWithNeon({ email, password });
+      setNeonUser?.(result.user);
+      await syncStoreFromNeon();
+      queryClient.invalidateQueries();
+      setLocation('/dashboard');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Authentication failed.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="grid min-h-[100dvh] lg:grid-cols-[1.1fr_1fr]">
       {/* Left Hero Panel */}
@@ -3520,7 +3655,7 @@ function AuthScreen({ signup = false }: { signup?: boolean }) {
             </div>
             <div className="flex items-center gap-2.5">
               <Check size={16} className="text-[#e04555]" />
-              <span>Access waits on admin approval</span>
+              <span>Live Neon PostgreSQL persistence and workspace authentication</span>
             </div>
           </div>
         </div>
@@ -3531,7 +3666,7 @@ function AuthScreen({ signup = false }: { signup?: boolean }) {
 
       {/* Right Form Section */}
       <section className="flex items-center justify-center bg-[#faf8f5] p-6 md:p-12">
-        <div className="w-full max-w-[400px]">
+        <div className="w-full max-w-[420px]">
           <Link
             href="/"
             className="mb-8 inline-flex items-center gap-2 text-[12px] text-[#7d7770] hover:text-[#c61c2e] transition-colors"
@@ -3547,9 +3682,9 @@ function AuthScreen({ signup = false }: { signup?: boolean }) {
               {signup ? 'Create your workspace' : 'Sign in to Collage'}
             </h2>
             <p className="mb-0 mt-2 text-[12px] leading-5 text-[#7a746d]">
-              {hasClerk
-                ? 'Access is protected. New accounts wait on admin approval.'
-                : 'Open the workspace to continue.'}
+              {signup
+                ? 'Enroll your Collage operations account in Neon PostgreSQL.'
+                : 'Authenticate with your Collage workspace credentials.'}
             </p>
 
             {hasClerk ? (
@@ -3562,14 +3697,90 @@ function AuthScreen({ signup = false }: { signup?: boolean }) {
                 />
               </div>
             ) : (
-              <Link href="/dashboard" className="btn btn-primary mt-6 w-full !h-11">
-                Enter your workspace
-              </Link>
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+                {errorMsg && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-700">
+                    {errorMsg}
+                  </div>
+                )}
+
+                {signup && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="First name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Kojo"
+                      required
+                    />
+                    <Input
+                      label="Last name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Nathan"
+                    />
+                  </div>
+                )}
+
+                {signup && (
+                  <Input
+                    label="Desk / Office"
+                    value={office}
+                    onChange={(e) => setOffice(e.target.value)}
+                    placeholder="Accra HQ"
+                  />
+                )}
+
+                <Input
+                  label="Work Email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="kojo@collage.com.gh"
+                  required
+                />
+
+                <Input
+                  label="Password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary w-full !h-11"
+                >
+                  {loading
+                    ? 'Authenticating...'
+                    : signup
+                      ? 'Create Workspace Account'
+                      : 'Sign In to Operations Desk'}
+                </button>
+
+                <div className="flex items-center justify-between pt-2 text-[12px] text-[#7a746d]">
+                  {signup ? (
+                    <Link href="/sign-in" className="font-medium text-[#c61c2e] hover:underline">
+                      Already registered? Sign in
+                    </Link>
+                  ) : (
+                    <Link href="/sign-up" className="font-medium text-[#c61c2e] hover:underline">
+                      New operator? Create account
+                    </Link>
+                  )}
+                  <Link href="/dashboard" className="text-[#7a746d] hover:text-neutral-900">
+                    Continue to desk →
+                  </Link>
+                </div>
+              </form>
             )}
           </div>
 
           <div className="mt-5 text-center text-[11px] text-[#9c958c]">
-            Secure Workspace · Collage Ghana
+            Secure Workspace · Collage Ghana · Neon PostgreSQL
           </div>
         </div>
       </section>
@@ -3642,6 +3853,7 @@ function Router() {
             </Shell>
           )}
         </Route>
+        <Route path="/privacy" component={() => <PrivacyPolicyPage />} />
         <Route>
           <div className="grid min-h-[100dvh] place-items-center">
             <div className="text-center">
@@ -3668,6 +3880,7 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Router />
+          <CookieConsentBanner />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
@@ -3680,7 +3893,7 @@ function App() {
       </ClerkProvider>
     );
   }
-  return inner;
+  return <NeonAuthProvider>{inner}</NeonAuthProvider>;
 }
 
 export default App;

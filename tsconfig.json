@@ -26,6 +26,7 @@
     "src/App.tsx",
     "src/vite-env.d.ts",
     "src/components/brand.tsx",
+    "src/components/cookie-consent-banner.tsx",
     "src/components/error-boundary.tsx",
     "src/components/landing/**/*",
     "src/components/ui/toast.tsx",

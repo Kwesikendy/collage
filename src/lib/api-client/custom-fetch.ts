@@ -536,24 +536,263 @@ function loadStore(): ErpStore {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const seed = createInitialStore();
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      } catch {
+        // Ignore storage write issues
+      }
       return seed;
     }
-    const parsed = JSON.parse(raw) as ErpStore;
-    if (!Array.isArray(parsed.clients) || !Array.isArray(parsed.documents)) {
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      // Corrupt JSON in localStorage: immediately re-seed and overwrite corrupted storage
       const seed = createInitialStore();
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      } catch {
+        // Ignore storage write issues
+      }
       return seed;
     }
-    if (!Array.isArray(parsed.rentals) || !Array.isArray(parsed.productionOrders)) {
+
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       const seed = createInitialStore();
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      } catch {
+        // Ignore storage write issues
+      }
+      return seed;
+    }
+
+    const seed = createInitialStore();
+    let needsResave = false;
+
+    if (!Array.isArray(parsed.clients)) {
+      parsed.clients = seed.clients;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.documents)) {
+      parsed.documents = seed.documents;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.payments)) {
+      parsed.payments = seed.payments;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.rentals)) {
       parsed.rentals = seed.rentals;
-      parsed.productionOrders = seed.productionOrders;
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      needsResave = true;
     }
-    return parsed;
+    if (!Array.isArray(parsed.productionOrders)) {
+      parsed.productionOrders = seed.productionOrders;
+      needsResave = true;
+    }
+
+    // Filter out corrupted elements inside collections if any
+    parsed.clients = parsed.clients.filter(
+      (c: any) =>
+        c &&
+        typeof c === 'object' &&
+        typeof c.id === 'string' &&
+        typeof c.companyName === 'string',
+    );
+    parsed.documents = parsed.documents.filter(
+      (d: any) =>
+        d &&
+        typeof d === 'object' &&
+        typeof d.id === 'string' &&
+        typeof d.number === 'string',
+    );
+    parsed.payments = parsed.payments.filter(
+      (p: any) =>
+        p &&
+        typeof p === 'object' &&
+        typeof p.id === 'string' &&
+        typeof p.documentId === 'string',
+    );
+
+    if (needsResave) {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      } catch {
+        // Ignore storage quota errors
+      }
+    }
+
+    return parsed as ErpStore;
   } catch {
-    return createInitialStore();
+    const seed = createInitialStore();
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+    } catch {
+      // Ignore storage write issues
+    }
+    return seed;
+  }
+}
+
+function isBrowserRuntime(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.document !== 'undefined' &&
+    typeof fetch === 'function'
+  );
+}
+
+const AUTH_TOKEN_KEY = 'collat_auth_token_v1';
+const AUTH_USER_KEY = 'collat_auth_user_v1';
+
+export interface NeonAuthUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  role: 'admin' | 'staff';
+  office: string;
+  createdAt: string;
+}
+
+export function getStoredAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredAuthUser(): NeonAuthUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(AUTH_USER_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as NeonAuthUser;
+  } catch {
+    return null;
+  }
+}
+
+function saveAuthSession(token: string, user: NeonAuthUser): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+    window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function clearAuthSession(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+    window.localStorage.removeItem(AUTH_USER_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export async function loginWithNeon(input: {
+  email: string;
+  password: string;
+}): Promise<{ token: string; user: NeonAuthUser }> {
+  const res = await fetch(`${_baseUrl || ''}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(res.status, data?.error || 'Sign-in failed.', data, {
+      method: 'POST',
+      url: '/api/auth/login',
+    });
+  }
+  saveAuthSession(data.token, data.user);
+  return data as { token: string; user: NeonAuthUser };
+}
+
+export async function registerWithNeon(input: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName?: string;
+  office?: string;
+}): Promise<{ token: string; user: NeonAuthUser }> {
+  const res = await fetch(`${_baseUrl || ''}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(res.status, data?.error || 'Registration failed.', data, {
+      method: 'POST',
+      url: '/api/auth/register',
+    });
+  }
+  saveAuthSession(data.token, data.user);
+  return data as { token: string; user: NeonAuthUser };
+}
+
+export async function logoutWithNeon(): Promise<void> {
+  const token = getStoredAuthToken();
+  clearAuthSession();
+  if (isBrowserRuntime() && token) {
+    try {
+      await fetch(`${_baseUrl || ''}/api/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // Ignore network errors on logout
+    }
+  }
+}
+
+export async function fetchNeonSession(): Promise<NeonAuthUser | null> {
+  const token = getStoredAuthToken();
+  if (!token || !isBrowserRuntime()) return getStoredAuthUser();
+  try {
+    const res = await fetch(`${_baseUrl || ''}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.status === 401) {
+      clearAuthSession();
+      return null;
+    }
+    if (!res.ok) return getStoredAuthUser();
+    const data = await res.json();
+    if (data?.user) {
+      saveAuthSession(token, data.user);
+      return data.user as NeonAuthUser;
+    }
+    return null;
+  } catch {
+    return getStoredAuthUser();
+  }
+}
+
+export async function syncStoreFromNeon(): Promise<boolean> {
+  if (!isBrowserRuntime()) return false;
+  try {
+    const res = await fetch(`${_baseUrl || ''}/api/sync`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return false;
+    const snapshot = await res.json();
+    if (snapshot && Array.isArray(snapshot.clients) && Array.isArray(snapshot.documents)) {
+      saveStore(snapshot as ErpStore);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
   }
 }
 
@@ -570,11 +809,22 @@ export function resetErpDemoData(): void {
   if (typeof window === 'undefined') return;
   const seed = createInitialStore();
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+  if (isBrowserRuntime()) {
+    void fetch(`${_baseUrl || ''}/api/reset-demo`, { method: 'POST' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((snapshot) => {
+        if (snapshot && Array.isArray(snapshot.clients)) {
+          saveStore(snapshot as ErpStore);
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 export function getDocumentPayments(documentId: string): Payment[] {
   const store = loadStore();
-  return store.payments
+  const payments = Array.isArray(store.payments) ? store.payments : [];
+  return payments
     .filter((p) => p.documentId === documentId)
     .sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
 }
@@ -585,8 +835,8 @@ export function getOperationsData(): {
 } {
   const store = loadStore();
   return {
-    rentals: store.rentals,
-    productionOrders: store.productionOrders,
+    rentals: Array.isArray(store.rentals) ? store.rentals : [],
+    productionOrders: Array.isArray(store.productionOrders) ? store.productionOrders : [],
   };
 }
 
@@ -600,6 +850,22 @@ export function updateRentalStatus(
     rental.status = status;
     saveStore(store);
   }
+  if (isBrowserRuntime()) {
+    void fetch(`${_baseUrl || ''}/api/operations/rentals/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.rentals) {
+          const latest = loadStore();
+          latest.rentals = data.rentals;
+          saveStore(latest);
+        }
+      })
+      .catch(() => {});
+  }
   return store.rentals;
 }
 
@@ -612,6 +878,22 @@ export function createRentalBooking(
     id: genId('rent'),
   });
   saveStore(store);
+  if (isBrowserRuntime()) {
+    void fetch(`${_baseUrl || ''}/api/operations/rentals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.rentals) {
+          const latest = loadStore();
+          latest.rentals = data.rentals;
+          saveStore(latest);
+        }
+      })
+      .catch(() => {});
+  }
   return store.rentals;
 }
 
@@ -624,6 +906,22 @@ export function updateProductionOrderStatus(
   if (order) {
     order.status = status;
     saveStore(store);
+  }
+  if (isBrowserRuntime()) {
+    void fetch(`${_baseUrl || ''}/api/operations/production/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.productionOrders) {
+          const latest = loadStore();
+          latest.productionOrders = data.productionOrders;
+          saveStore(latest);
+        }
+      })
+      .catch(() => {});
   }
   return store.productionOrders;
 }
@@ -639,14 +937,37 @@ export function createProductionOrder(
     jobCode: `PDP-2610-${nextNum}`,
   });
   saveStore(store);
+  if (isBrowserRuntime()) {
+    void fetch(`${_baseUrl || ''}/api/operations/production`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.productionOrders) {
+          const latest = loadStore();
+          latest.productionOrders = data.productionOrders;
+          saveStore(latest);
+        }
+      })
+      .catch(() => {});
+  }
   return store.productionOrders;
 }
 
 export function deleteDocumentById(id: string): void {
   const store = loadStore();
-  store.documents = store.documents.filter((d) => d.id !== id);
-  store.payments = store.payments.filter((p) => p.documentId !== id);
+  store.documents = (Array.isArray(store.documents) ? store.documents : []).filter((d) => d.id !== id);
+  store.payments = (Array.isArray(store.payments) ? store.payments : []).filter((p) => p.documentId !== id);
   saveStore(store);
+  if (isBrowserRuntime()) {
+    void fetch(`${_baseUrl || ''}/api/documents/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    })
+      .then(() => syncStoreFromNeon())
+      .catch(() => {});
+  }
 }
 
 function genId(prefix: string): string {
@@ -671,8 +992,8 @@ function nextDocumentNumber(
   kind: 'quotation' | 'invoice',
 ): string {
   const prefix = documentPrefix(issueDate, kind);
-  const existing = store.documents.filter(
-    (doc) => doc.issueDate.slice(0, 10) === issueDate && doc.kind === kind,
+  const existing = (Array.isArray(store.documents) ? store.documents : []).filter(
+    (doc) => (typeof doc.issueDate === 'string' ? doc.issueDate.slice(0, 10) : '') === issueDate && doc.kind === kind,
   );
   const next =
     existing.reduce((max, row) => {
@@ -683,15 +1004,18 @@ function nextDocumentNumber(
 }
 
 function hydrateDocument(store: ErpStore, doc: StoredDocument): SalesDocument {
-  const client = store.clients.find((c) => c.id === doc.clientId);
-  const paidCents = store.payments
+  const clients = Array.isArray(store.clients) ? store.clients : [];
+  const client = clients.find((c) => c.id === doc.clientId);
+  const payments = Array.isArray(store.payments) ? store.payments : [];
+  const paidCents = payments
     .filter((p) => p.documentId === doc.id)
     .reduce((sum, p) => sum + amountToCents(p.amount), 0);
-  const totalCents = amountToCents(doc.total);
+  const totalCents = amountToCents(doc.total ?? 0);
   const balanceCents = Math.max(0, totalCents - paidCents);
 
   return {
     ...doc,
+    items: Array.isArray(doc.items) ? doc.items : [],
     clientName: client?.companyName ?? 'Client',
     amountPaid: Number(centsToAmount(paidCents)),
     balance: Number(centsToAmount(balanceCents)),
@@ -721,8 +1045,12 @@ function handleApiRequest(
 
   // GET /api/dashboard/summary
   if (method === 'GET' && pathname === '/api/dashboard/summary') {
-    const activeClients = store.clients.filter((c) => c.status !== 'archived');
-    const invoiceDocs = store.documents
+    const clients = Array.isArray(store.clients) ? store.clients : [];
+    const documents = Array.isArray(store.documents) ? store.documents : [];
+    const payments = Array.isArray(store.payments) ? store.payments : [];
+
+    const activeClients = clients.filter((c) => c.status !== 'archived');
+    const invoiceDocs = documents
       .filter(
         (d) =>
           d.kind === 'invoice' &&
@@ -731,13 +1059,13 @@ function handleApiRequest(
       )
       .map((d) => hydrateDocument(store, d));
 
-    const activeQuotes = store.documents.filter(
+    const activeQuotes = documents.filter(
       (d) =>
         d.kind === 'quotation' &&
         ['draft', 'issued', 'accepted'].includes(d.status),
     );
 
-    const collectedCents = store.payments.reduce(
+    const collectedCents = payments.reduce(
       (sum, p) => sum + amountToCents(p.amount),
       0,
     );
@@ -747,7 +1075,7 @@ function handleApiRequest(
       0,
     );
 
-    const recentClients: ActivityItem[] = [...store.clients]
+    const recentClients: ActivityItem[] = [...clients]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 4)
       .map((c) => ({
@@ -758,7 +1086,7 @@ function handleApiRequest(
         kind: 'client',
       }));
 
-    const recentDocs: ActivityItem[] = [...store.documents]
+    const recentDocs: ActivityItem[] = [...documents]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 4)
       .map((d) => ({
@@ -769,12 +1097,12 @@ function handleApiRequest(
         kind: d.kind,
       }));
 
-    const recentPayments: ActivityItem[] = [...store.payments]
+    const recentPayments: ActivityItem[] = [...payments]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 4)
       .map((p) => {
-        const doc = store.documents.find((d) => d.id === p.documentId);
-        const client = store.clients.find((c) => c.id === doc?.clientId);
+        const doc = documents.find((d) => d.id === p.documentId);
+        const client = clients.find((c) => c.id === doc?.clientId);
         return {
           id: `payment:${doc?.id ?? p.id}`,
           title: 'Payment recorded',
@@ -912,6 +1240,9 @@ function handleApiRequest(
     if (!issueDate) {
       throw new ApiError(400, 'An issue date is required.', { error: 'An issue date is required.' }, { method, url: rawUrl });
     }
+    if (!Array.isArray(input.items)) {
+      throw new ApiError(400, 'Items must be an array.', { error: 'Items must be an array.' }, { method, url: rawUrl });
+    }
     const pricing = calculateDocumentPricing({
       items: input.items,
       discountPercent: input.discountPercent ?? 0,
@@ -1010,11 +1341,12 @@ function handleApiRequest(
       throw new ApiError(400, 'Payments can only be recorded against invoices.', { error: 'Payments can only be recorded against invoices.' }, { method, url: rawUrl });
     }
     const input = parseBody<PaymentInput>();
-    const paidCents = store.payments
+    const payments = Array.isArray(store.payments) ? store.payments : [];
+    const paidCents = payments
       .filter((p) => p.documentId === doc.id)
       .reduce((sum, p) => sum + amountToCents(p.amount), 0);
     const amountCents = amountToCents(input.amount);
-    if (amountCents < 1) {
+    if (typeof input.amount !== 'number' || !Number.isFinite(input.amount) || isNaN(input.amount) || amountCents < 1) {
       throw new ApiError(400, 'Payments must be at least GHS 0.01.', { error: 'Payments must be at least GHS 0.01.' }, { method, url: rawUrl });
     }
     const totalCents = amountToCents(doc.total);
@@ -1033,6 +1365,9 @@ function handleApiRequest(
       reference: input.reference?.trim() || null,
       createdAt: nowIso,
     };
+    if (!Array.isArray(store.payments)) {
+      store.payments = [];
+    }
     store.payments.unshift(payment);
 
     const nextPaidCents = paidCents + amountCents;
@@ -1121,24 +1456,44 @@ export async function customFetch<T = unknown>(
         : input.url;
   const method = (options.method || 'GET').toUpperCase();
 
-  // If a remote API base URL is explicitly configured in production, try it first
-  if (_baseUrl && rawUrl.startsWith('/api/')) {
+  // In browser runtime or when _baseUrl is configured, route /api/* to the live Neon PostgreSQL backend
+  if ((isBrowserRuntime() || Boolean(_baseUrl)) && rawUrl.startsWith('/api/')) {
+    const finalUrl = _baseUrl ? `${_baseUrl}${rawUrl}` : rawUrl;
+    const headers = new Headers(options.headers);
+    if (typeof options.body === 'string' && !headers.has('content-type')) {
+      headers.set('content-type', 'application/json');
+    }
+    if (!headers.has('authorization')) {
+      const token = _authTokenGetter ? await _authTokenGetter() : getStoredAuthToken();
+      if (token) headers.set('authorization', `Bearer ${token}`);
+    }
+
+    let response: Response | null = null;
     try {
-      const finalUrl = `${_baseUrl}${rawUrl}`;
-      const headers = new Headers(options.headers);
-      if (typeof options.body === 'string' && !headers.has('content-type')) {
-        headers.set('content-type', 'application/json');
-      }
-      if (_authTokenGetter && !headers.has('authorization')) {
-        const token = await _authTokenGetter();
-        if (token) headers.set('authorization', `Bearer ${token}`);
-      }
-      const response = await fetch(finalUrl, { ...options, method, headers });
-      if (response.ok) {
-        return (await response.json()) as T;
-      }
+      response = await fetch(finalUrl, { ...options, method, headers });
     } catch {
-      // Fall back to local store if remote server is unreachable
+      response = null;
+    }
+
+    if (response) {
+      if (response.ok) {
+        const data = (await response.json()) as T;
+        if (method !== 'GET') {
+          await syncStoreFromNeon();
+        }
+        return data;
+      }
+      // If server returned a 4xx validation/not-found error, surface it directly
+      if (response.status >= 400 && response.status < 500) {
+        const errData = await response.json().catch(() => null);
+        const message =
+          (errData && typeof errData === 'object' && 'error' in errData && String((errData as { error?: unknown }).error)) ||
+          response.statusText;
+        throw new ApiError(response.status, message, errData, {
+          method,
+          url: finalUrl,
+        });
+      }
     }
   }
 

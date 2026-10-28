@@ -67,3 +67,4 @@ Thumbs.db
 *.tar
 *.tar.gz
 scripts/extracted_ref/
+.agents/teamwork/

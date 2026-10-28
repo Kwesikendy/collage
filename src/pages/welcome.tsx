@@ -75,7 +75,7 @@ function formatGhs(amount: number) {
 }
 
 /* ============================================================================
-   SECTION 02: THE LIVING THREAD — AUTHENTIC FINANCIAL DOCUMENT & LEDGER
+   SECTION 02: THE LIVING THREAD - AUTHENTIC FINANCIAL DOCUMENT & LEDGER
    ============================================================================ */
 
 interface QuoteLineItem {
@@ -926,7 +926,13 @@ function ClosingWorkspaceFrame({
         {/* Minimal Editorial Colophon */}
         <footer className="mt-20 border-t border-white/[0.08] pt-7 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] text-neutral-500">
           <span>Collage · Corporate Marketing, Events, Advertising & Equipment Rentals</span>
-          <span>Accra, Ghana · GETFund 2.5% · NHIL 2.5% · GRA VAT 15.0%</span>
+          <div className="flex items-center gap-3">
+            <Link href="/privacy" className="hover:text-neutral-300 transition-colors">
+              Privacy Policy
+            </Link>
+            <span aria-hidden="true">·</span>
+            <span>Accra, Ghana · GETFund 2.5% · NHIL 2.5% · GRA VAT 15.0%</span>
+          </div>
         </footer>
       </div>
     </section>
