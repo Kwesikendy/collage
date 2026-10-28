@@ -17,6 +17,31 @@ import {
   centsToAmount,
   type LineInput,
 } from './document-finance';
+import type {
+  MarketingCampaign,
+  ShowcaseLink,
+  StaffMember,
+  InternalNotice,
+  AttendanceRecord,
+  LeaveRequest,
+  WorkspaceUser,
+  AuditLogItem,
+  SystemDiagnosticMetrics,
+  ServiceCategory,
+  StaffDepartment,
+  StaffStatus,
+  NoticePriority,
+  NoticeCategory,
+  AttendanceStatus,
+  LeaveType,
+  WorkspaceRole,
+} from '../../types/workflows';
+import {
+  sortInternalNotices,
+  computeSystemStorageMetrics,
+  getCapabilitiesForRole,
+  generateShowcaseLink,
+} from '../../types/workflows';
 
 export type CustomFetchOptions = RequestInit & {
   responseType?: 'json' | 'text' | 'blob' | 'auto';
@@ -101,6 +126,14 @@ interface ErpStore {
   payments: Payment[];
   rentals: RentalBooking[];
   productionOrders: ProductionOrder[];
+  campaigns: MarketingCampaign[];
+  showcaseLinks: ShowcaseLink[];
+  staff: StaffMember[];
+  notices: InternalNotice[];
+  attendance: AttendanceRecord[];
+  leaveRequests: LeaveRequest[];
+  users: WorkspaceUser[];
+  auditLogs: AuditLogItem[];
 }
 
 const STORAGE_KEY = 'collat_erp_store_v3';
@@ -525,7 +558,427 @@ function createInitialStore(): ErpStore {
     },
   ];
 
-  return { clients, documents, payments, rentals, productionOrders };
+  const campaigns: MarketingCampaign[] = [
+    {
+      id: 'camp-accra-billboards',
+      name: 'Q4 Nationwide Billboard Campaign',
+      targetService: 'billboards',
+      budget: 65000,
+      spent: 48000,
+      startDate: '2026-10-01',
+      endDate: '2026-12-31',
+      status: 'active',
+      leadsGenerated: 28,
+      conversions: 8,
+      notes: 'Accra-Tema Motorway, Ring Road, and Kumasi bypass prime unipoles.',
+    },
+    {
+      id: 'camp-summit-flags',
+      name: 'AICC Corporate Summit Flag Displays',
+      targetService: 'telescopic_flags',
+      budget: 25000,
+      spent: 22500,
+      startDate: '2026-10-10',
+      endDate: '2026-11-15',
+      status: 'active',
+      leadsGenerated: 18,
+      conversions: 6,
+      notes: '5m telescopic flags with heavy water ballast for coastal diplomatic summits.',
+    },
+    {
+      id: 'camp-ridge-wayfinding',
+      name: 'Ridge Financial District Wayfinding Totems',
+      targetService: 'wayfinding',
+      budget: 38000,
+      spent: 19000,
+      startDate: '2026-09-15',
+      endDate: '2026-11-30',
+      status: 'active',
+      leadsGenerated: 9,
+      conversions: 3,
+      notes: 'Architectural brushed aluminium totems and directional monoliths.',
+    },
+    {
+      id: 'camp-event-branding',
+      name: 'Ghana Energy and Mining Expo Media Walls',
+      targetService: 'event_branding',
+      budget: 42000,
+      spent: 35000,
+      startDate: '2026-08-01',
+      endDate: '2026-10-25',
+      status: 'completed',
+      leadsGenerated: 24,
+      conversions: 7,
+      notes: 'Grand Arena photo media walls, tension fabric backdrops, and modular trussing.',
+    },
+    {
+      id: 'camp-print-festival',
+      name: 'National Festival Large Format Sublimation',
+      targetService: 'large_format_print',
+      budget: 30000,
+      spent: 12000,
+      startDate: '2026-10-20',
+      endDate: '2026-12-20',
+      status: 'active',
+      leadsGenerated: 15,
+      conversions: 4,
+      notes: 'UV-resistant double-stitched fabric banners for Independence Square.',
+    },
+  ];
+
+  const showcaseLinks: ShowcaseLink[] = [
+    {
+      id: 'showcase-billboards',
+      title: 'Outdoor Billboard Skins and Gantries Showcase',
+      serviceCategory: 'billboards',
+      slug: 'outdoor-billboards',
+      shareUrl: 'https://collagenmosaic.com/portfolio?category=billboards',
+      clientName: 'Ecobank Ghana PLC',
+      clicks: 142,
+    },
+    {
+      id: 'showcase-flags',
+      title: 'Telescopic Flagpoles and Water Base Kit Showcase',
+      serviceCategory: 'telescopic_flags',
+      slug: 'telescopic-flags',
+      shareUrl: 'https://collagenmosaic.com/portfolio?category=telescopic_flags',
+      clientName: 'MTN Ghana',
+      clicks: 98,
+    },
+    {
+      id: 'showcase-wayfinding',
+      title: 'Corporate Campus Wayfinding and Monoliths',
+      serviceCategory: 'wayfinding',
+      slug: 'wayfinding',
+      shareUrl: 'https://collagenmosaic.com/portfolio?category=wayfinding',
+      clientName: 'Kempinski Gold Coast City',
+      clicks: 76,
+    },
+    {
+      id: 'showcase-event-branding',
+      title: 'Executive Media Walls and Stage Backdrops',
+      serviceCategory: 'event_branding',
+      slug: 'event-branding',
+      shareUrl: 'https://collagenmosaic.com/portfolio?category=event_branding',
+      clicks: 115,
+    },
+    {
+      id: 'showcase-all',
+      title: 'Collage Ghana Master Capabilities Portfolio',
+      serviceCategory: 'all',
+      slug: 'all-services',
+      shareUrl: 'https://collagenmosaic.com/portfolio',
+      clicks: 320,
+    },
+  ];
+
+  const staff: StaffMember[] = [
+    {
+      id: 'staff-1',
+      employeeId: 'COL-001',
+      fullName: 'Kojo Nathan',
+      email: 'kojo@collage.com.gh',
+      phone: '+233 24 736 1133',
+      role: 'Executive Director and Operations Lead',
+      department: 'Executive',
+      status: 'active',
+      joinDate: '2018-03-01',
+      location: 'Accra HQ',
+    },
+    {
+      id: 'staff-2',
+      employeeId: 'COL-008',
+      fullName: 'Kwame Mensah',
+      email: 'kwame.m@collage.com.gh',
+      phone: '+233 24 411 9900',
+      role: 'Senior Rigging and Height Safety Master',
+      department: 'Field & Rigging',
+      status: 'active',
+      joinDate: '2020-06-15',
+      location: 'Accra HQ',
+    },
+    {
+      id: 'staff-3',
+      employeeId: 'COL-014',
+      fullName: 'Nana Mensah',
+      email: 'marketer@collage.com.gh',
+      phone: '+233 24 332 5566',
+      role: 'Lead Marketing and Accounts Strategist',
+      department: 'Marketing',
+      status: 'active',
+      joinDate: '2021-04-12',
+      location: 'Accra HQ',
+    },
+    {
+      id: 'staff-4',
+      employeeId: 'COL-021',
+      fullName: 'Abena Osei',
+      email: 'abena.o@collage.com.gh',
+      phone: '+233 24 555 1212',
+      role: 'Sublimation and Large Format Print Specialist',
+      department: 'Production',
+      status: 'active',
+      joinDate: '2022-01-10',
+      location: 'Spintex Print Yard',
+    },
+    {
+      id: 'staff-5',
+      employeeId: 'COL-028',
+      fullName: 'Efua Baffour',
+      email: 'hr@collage.com.gh',
+      phone: '+233 24 667 8899',
+      role: 'People and Culture Manager',
+      department: 'HR',
+      status: 'active',
+      joinDate: '2021-09-01',
+      location: 'Accra HQ',
+    },
+    {
+      id: 'staff-6',
+      employeeId: 'COL-035',
+      fullName: 'Emmanuel Boateng',
+      email: 'e.boateng@collage.com.gh',
+      phone: '+233 24 112 3344',
+      role: 'Structural Welder and Pylon Fabricator',
+      department: 'Production',
+      status: 'active',
+      joinDate: '2022-08-15',
+      location: 'Spintex Print Yard',
+    },
+    {
+      id: 'staff-7',
+      employeeId: 'COL-042',
+      fullName: 'Kofi Owusu',
+      email: 'k.owusu@collage.com.gh',
+      phone: '+233 24 998 7766',
+      role: 'Senior Architectural Wayfinding Designer',
+      department: 'Creative',
+      status: 'active',
+      joinDate: '2023-02-01',
+      location: 'Osu Design Studio',
+    },
+  ];
+
+  const notices: InternalNotice[] = [
+    {
+      id: 'not-1',
+      title: 'High-Altitude Rigging Safety: Double-Harness Inspections Mandatory',
+      content: 'All crew deployed to motorway gantries and rooftop unipoles must conduct dual-lanyard inspections and sign the safety clearance log before ascent.',
+      priority: 'urgent',
+      category: 'safety',
+      author: 'Kwame Mensah (Rigging Master)',
+      datePosted: '2026-10-27',
+      pinned: true,
+    },
+    {
+      id: 'not-2',
+      title: 'Production Schedule: Q4 Festive Rush and Stage Backdrops',
+      content: 'The Spintex Print Yard is operating extended day-shifts for December festival media walls. Please route rush job requests via the operations queue.',
+      priority: 'high',
+      category: 'operations',
+      author: 'Kojo Nathan (Operations)',
+      datePosted: '2026-10-26',
+      pinned: true,
+    },
+    {
+      id: 'not-3',
+      title: 'Annual Staff Medical and Height Certification at Ridge Clinic',
+      content: 'Rigging and workshop fabrication staff are scheduled for wellness screenings and certified medical fitness renewals on Thursday.',
+      priority: 'medium',
+      category: 'policy',
+      author: 'Efua Baffour (HR)',
+      datePosted: '2026-10-25',
+      pinned: false,
+    },
+    {
+      id: 'not-4',
+      title: 'New Eco-Solvent Dye Sublimation Press Commissioned',
+      content: 'Training sessions for the new 3.2m textile printer will take place Wednesday 10:00 GMT at the Spintex facility.',
+      priority: 'low',
+      category: 'general',
+      author: 'Abena Osei (Production)',
+      datePosted: '2026-10-24',
+      pinned: false,
+    },
+  ];
+
+  const attendance: AttendanceRecord[] = [
+    {
+      id: 'att-1',
+      staffId: 'staff-1',
+      staffName: 'Kojo Nathan',
+      department: 'Executive',
+      date: '2026-10-28',
+      checkInTime: '07:30 GMT',
+      status: 'present',
+      notes: 'Morning operations review and sign-off.',
+    },
+    {
+      id: 'att-2',
+      staffId: 'staff-2',
+      staffName: 'Kwame Mensah',
+      department: 'Field & Rigging',
+      date: '2026-10-28',
+      checkInTime: '06:45 GMT',
+      status: 'on_field',
+      notes: 'AICC Summit site survey and gantry inspection.',
+    },
+    {
+      id: 'att-3',
+      staffId: 'staff-3',
+      staffName: 'Nana Mensah',
+      department: 'Marketing',
+      date: '2026-10-28',
+      checkInTime: '08:00 GMT',
+      status: 'present',
+      notes: 'Client proposal briefing.',
+    },
+    {
+      id: 'att-4',
+      staffId: 'staff-4',
+      staffName: 'Abena Osei',
+      department: 'Production',
+      date: '2026-10-28',
+      checkInTime: '07:15 GMT',
+      status: 'present',
+      notes: 'Large format textile sublimation batch run.',
+    },
+    {
+      id: 'att-5',
+      staffId: 'staff-5',
+      staffName: 'Efua Baffour',
+      department: 'HR',
+      date: '2026-10-28',
+      checkInTime: '07:50 GMT',
+      status: 'present',
+      notes: 'Workforce compliance and clinic scheduling.',
+    },
+    {
+      id: 'att-6',
+      staffId: 'staff-6',
+      staffName: 'Emmanuel Boateng',
+      department: 'Production',
+      date: '2026-10-28',
+      checkInTime: '07:40 GMT',
+      status: 'present',
+      notes: 'Structural steel pylon frame welding.',
+    },
+    {
+      id: 'att-7',
+      staffId: 'staff-7',
+      staffName: 'Kofi Owusu',
+      department: 'Creative',
+      date: '2026-10-28',
+      checkInTime: '08:15 GMT',
+      status: 'excused',
+      notes: 'Remote architectural Wayfinding 3D elevations rendering.',
+    },
+  ];
+
+  const leaveRequests: LeaveRequest[] = [
+    {
+      id: 'leave-1',
+      staffId: 'staff-4',
+      staffName: 'Abena Osei',
+      department: 'Production',
+      leaveType: 'annual',
+      startDate: '2026-11-03',
+      endDate: '2026-11-07',
+      days: 5,
+      status: 'pending',
+      reason: 'Annual family break after heavy quarter run.',
+      submittedAt: '2026-10-25T09:00:00.000Z',
+    },
+    {
+      id: 'leave-2',
+      staffId: 'staff-6',
+      staffName: 'Emmanuel Boateng',
+      department: 'Production',
+      leaveType: 'casual',
+      startDate: '2026-11-10',
+      endDate: '2026-11-12',
+      days: 2,
+      status: 'approved',
+      reason: 'Family ceremony attendance in Kumasi.',
+      submittedAt: '2026-10-20T11:30:00.000Z',
+    },
+  ];
+
+  const users: WorkspaceUser[] = [
+    {
+      id: 'usr-admin-kojo',
+      email: 'admin@collage.com.gh',
+      fullName: 'Kojo Nathan',
+      role: 'admin',
+      status: 'active',
+      office: 'Accra HQ (Ridge)',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      lastLogin: '2026-10-28T07:30:00.000Z',
+    },
+    {
+      id: 'usr-marketer-nana',
+      email: 'marketer@collage.com.gh',
+      fullName: 'Nana Mensah',
+      role: 'marketer',
+      status: 'active',
+      office: 'Brand & Marketing Desk',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      lastLogin: '2026-10-28T08:00:00.000Z',
+    },
+    {
+      id: 'usr-hr-efua',
+      email: 'hr@collage.com.gh',
+      fullName: 'Efua Baffour',
+      role: 'hr',
+      status: 'active',
+      office: 'People & Culture Desk',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      lastLogin: '2026-10-28T07:50:00.000Z',
+    },
+  ];
+
+  const auditLogs: AuditLogItem[] = [
+    {
+      id: 'audit-init-01',
+      timestamp: '2026-10-28T07:00:00.000Z',
+      actorEmail: 'system@collage.com.gh',
+      action: 'SYSTEM_INITIALIZED',
+      target: 'collat_erp_store_v3',
+      status: 'success',
+    },
+    {
+      id: 'audit-init-02',
+      timestamp: '2026-10-28T07:30:00.000Z',
+      actorEmail: 'admin@collage.com.gh',
+      action: 'OPERATOR_LOGIN',
+      target: 'Kojo Nathan (Executive)',
+      status: 'success',
+    },
+    {
+      id: 'audit-init-03',
+      timestamp: '2026-10-28T07:50:00.000Z',
+      actorEmail: 'hr@collage.com.gh',
+      action: 'SAFETY_AUDIT_VERIFIED',
+      target: 'Double-Harness Rigging Protocol',
+      status: 'success',
+    },
+  ];
+
+  return {
+    clients,
+    documents,
+    payments,
+    rentals,
+    productionOrders,
+    campaigns,
+    showcaseLinks,
+    staff,
+    notices,
+    attendance,
+    leaveRequests,
+    users,
+    auditLogs,
+  };
 }
 
 function loadStore(): ErpStore {
@@ -591,6 +1044,38 @@ function loadStore(): ErpStore {
       parsed.productionOrders = seed.productionOrders;
       needsResave = true;
     }
+    if (!Array.isArray(parsed.campaigns)) {
+      parsed.campaigns = seed.campaigns;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.showcaseLinks)) {
+      parsed.showcaseLinks = seed.showcaseLinks;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.staff)) {
+      parsed.staff = seed.staff;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.notices)) {
+      parsed.notices = seed.notices;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.attendance)) {
+      parsed.attendance = seed.attendance;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.leaveRequests)) {
+      parsed.leaveRequests = seed.leaveRequests;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.users)) {
+      parsed.users = seed.users;
+      needsResave = true;
+    }
+    if (!Array.isArray(parsed.auditLogs)) {
+      parsed.auditLogs = seed.auditLogs;
+      needsResave = true;
+    }
 
     // Filter out corrupted elements inside collections if any
     parsed.clients = parsed.clients.filter(
@@ -613,6 +1098,30 @@ function loadStore(): ErpStore {
         typeof p === 'object' &&
         typeof p.id === 'string' &&
         typeof p.documentId === 'string',
+    );
+    parsed.campaigns = parsed.campaigns.filter(
+      (c: any) => c && typeof c === 'object' && typeof c.id === 'string',
+    );
+    parsed.showcaseLinks = parsed.showcaseLinks.filter(
+      (s: any) => s && typeof s === 'object' && typeof s.id === 'string',
+    );
+    parsed.staff = parsed.staff.filter(
+      (s: any) => s && typeof s === 'object' && typeof s.id === 'string',
+    );
+    parsed.notices = parsed.notices.filter(
+      (n: any) => n && typeof n === 'object' && typeof n.id === 'string',
+    );
+    parsed.attendance = parsed.attendance.filter(
+      (a: any) => a && typeof a === 'object' && typeof a.id === 'string',
+    );
+    parsed.leaveRequests = parsed.leaveRequests.filter(
+      (l: any) => l && typeof l === 'object' && typeof l.id === 'string',
+    );
+    parsed.users = parsed.users.filter(
+      (u: any) => u && typeof u === 'object' && typeof u.id === 'string',
+    );
+    parsed.auditLogs = parsed.auditLogs.filter(
+      (a: any) => a && typeof a === 'object' && typeof a.id === 'string',
     );
 
     if (needsResave) {
@@ -643,6 +1152,8 @@ function isBrowserRuntime(): boolean {
   );
 }
 
+export type UserRole = 'admin' | 'marketer' | 'hr';
+
 const AUTH_TOKEN_KEY = 'collat_auth_token_v1';
 const AUTH_USER_KEY = 'collat_auth_user_v1';
 
@@ -652,10 +1163,68 @@ export interface NeonAuthUser {
   firstName: string;
   lastName: string;
   fullName: string;
-  role: 'admin' | 'staff';
+  role: UserRole;
   office: string;
   createdAt: string;
 }
+
+export const PRESEEDED_AUTH_ACCOUNTS: Record<
+  string,
+  { user: NeonAuthUser; plainPassword: string }
+> = {
+  'admin@collage.com.gh': {
+    user: {
+      id: 'usr-admin-kojo',
+      email: 'admin@collage.com.gh',
+      firstName: 'Kojo',
+      lastName: 'Nathan',
+      fullName: 'Kojo Nathan',
+      role: 'admin',
+      office: 'Accra HQ',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    plainPassword: 'Collage2026!',
+  },
+  'kojo@collage.com.gh': {
+    user: {
+      id: 'usr-kojo-nathan',
+      email: 'kojo@collage.com.gh',
+      firstName: 'Kojo',
+      lastName: 'Nathan',
+      fullName: 'Kojo Nathan',
+      role: 'admin',
+      office: 'Accra HQ',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    plainPassword: 'Collage2026!',
+  },
+  'marketer@collage.com.gh': {
+    user: {
+      id: 'usr-marketer-nana',
+      email: 'marketer@collage.com.gh',
+      firstName: 'Nana',
+      lastName: 'Mensah',
+      fullName: 'Nana Mensah',
+      role: 'marketer',
+      office: 'Brand & Marketing Desk',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    plainPassword: 'Collage2026!',
+  },
+  'hr@collage.com.gh': {
+    user: {
+      id: 'usr-hr-efua',
+      email: 'hr@collage.com.gh',
+      firstName: 'Efua',
+      lastName: 'Baffour',
+      fullName: 'Efua Baffour',
+      role: 'hr',
+      office: 'People & Culture Desk',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    plainPassword: 'Collage2026!',
+  },
+};
 
 export function getStoredAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -671,13 +1240,17 @@ export function getStoredAuthUser(): NeonAuthUser | null {
   try {
     const raw = window.localStorage.getItem(AUTH_USER_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as NeonAuthUser;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.email && parsed.role) {
+      return parsed as NeonAuthUser;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-function saveAuthSession(token: string, user: NeonAuthUser): void {
+export function saveAuthSession(token: string, user: NeonAuthUser): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -687,7 +1260,7 @@ function saveAuthSession(token: string, user: NeonAuthUser): void {
   }
 }
 
-function clearAuthSession(): void {
+export function clearAuthSession(): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -701,20 +1274,68 @@ export async function loginWithNeon(input: {
   email: string;
   password: string;
 }): Promise<{ token: string; user: NeonAuthUser }> {
-  const res = await fetch(`${_baseUrl || ''}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new ApiError(res.status, data?.error || 'Sign-in failed.', data, {
+  const normalizedEmail = (input.email || '').trim().toLowerCase();
+  const trimmedPassword = (input.password || '').trim();
+
+  // Try live backend fetch if baseUrl is set or browser runtime has server
+  if (isBrowserRuntime() && _baseUrl) {
+    try {
+      const res = await fetch(`${_baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.user) {
+        saveAuthSession(data.token, data.user);
+        return data as { token: string; user: NeonAuthUser };
+      }
+      if (res.status >= 400 && res.status < 500) {
+        throw new ApiError(res.status, data?.error || 'Sign-in failed.', data, {
+          method: 'POST',
+          url: '/api/auth/login',
+        });
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        throw err;
+      }
+      // If network unreachable, proceed to offline fallback
+    }
+  }
+
+  // Offline / mock authentication fallback
+  if (!normalizedEmail) {
+    throw new ApiError(400, 'Email address is required.', { error: 'Email address is required.' }, {
       method: 'POST',
       url: '/api/auth/login',
     });
   }
-  saveAuthSession(data.token, data.user);
-  return data as { token: string; user: NeonAuthUser };
+  if (!trimmedPassword) {
+    throw new ApiError(400, 'Password is required.', { error: 'Password is required.' }, {
+      method: 'POST',
+      url: '/api/auth/login',
+    });
+  }
+
+  const account = PRESEEDED_AUTH_ACCOUNTS[normalizedEmail];
+  if (!account) {
+    throw new ApiError(401, 'Invalid work email or account not found.', { error: 'Invalid work email or account not found.' }, {
+      method: 'POST',
+      url: '/api/auth/login',
+    });
+  }
+
+  if (account.plainPassword !== trimmedPassword) {
+    throw new ApiError(401, 'Invalid password. Please check your credentials.', { error: 'Invalid password. Please check your credentials.' }, {
+      method: 'POST',
+      url: '/api/auth/login',
+    });
+  }
+
+  const token = `token-${account.user.role}-${Date.now().toString(36)}`;
+  saveAuthSession(token, account.user);
+  return { token, user: account.user };
 }
 
 export async function registerWithNeon(input: {
@@ -724,28 +1345,44 @@ export async function registerWithNeon(input: {
   lastName?: string;
   office?: string;
 }): Promise<{ token: string; user: NeonAuthUser }> {
-  const res = await fetch(`${_baseUrl || ''}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new ApiError(res.status, data?.error || 'Registration failed.', data, {
+  if (isBrowserRuntime() && _baseUrl) {
+    const res = await fetch(`${_baseUrl}/api/auth/register`, {
       method: 'POST',
-      url: '/api/auth/register',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new ApiError(res.status, data?.error || 'Registration failed.', data, {
+        method: 'POST',
+        url: '/api/auth/register',
+      });
+    }
+    saveAuthSession(data.token, data.user);
+    return data as { token: string; user: NeonAuthUser };
   }
-  saveAuthSession(data.token, data.user);
-  return data as { token: string; user: NeonAuthUser };
+
+  const newUser: NeonAuthUser = {
+    id: genId('usr'),
+    email: input.email.trim().toLowerCase(),
+    firstName: input.firstName.trim(),
+    lastName: (input.lastName || '').trim(),
+    fullName: `${input.firstName} ${input.lastName || ''}`.trim(),
+    role: 'admin',
+    office: input.office || 'Accra HQ',
+    createdAt: new Date().toISOString(),
+  };
+  const token = `token-registered-${Date.now().toString(36)}`;
+  saveAuthSession(token, newUser);
+  return { token, user: newUser };
 }
 
 export async function logoutWithNeon(): Promise<void> {
   const token = getStoredAuthToken();
   clearAuthSession();
-  if (isBrowserRuntime() && token) {
+  if (isBrowserRuntime() && token && _baseUrl) {
     try {
-      await fetch(`${_baseUrl || ''}/api/auth/logout`, {
+      await fetch(`${_baseUrl}/api/auth/logout`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -757,9 +1394,9 @@ export async function logoutWithNeon(): Promise<void> {
 
 export async function fetchNeonSession(): Promise<NeonAuthUser | null> {
   const token = getStoredAuthToken();
-  if (!token || !isBrowserRuntime()) return getStoredAuthUser();
+  if (!token || !isBrowserRuntime() || !_baseUrl) return getStoredAuthUser();
   try {
-    const res = await fetch(`${_baseUrl || ''}/api/auth/me`, {
+    const res = await fetch(`${_baseUrl}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status === 401) {
@@ -1441,7 +2078,573 @@ function handleApiRequest(
     }
   }
 
+  // ==========================================================================
+  // MARKETER WORKFLOW ENDPOINTS (/api/marketer/*)
+  // ==========================================================================
+
+  // GET /api/marketer/leads
+  if (method === 'GET' && pathname === '/api/marketer/leads') {
+    const search = searchParams.get('search')?.trim().toLowerCase();
+    const leads = (Array.isArray(store.clients) ? store.clients : []).filter((c) => c.status === 'lead');
+    if (!search) return leads;
+    return leads.filter((c) => {
+      const hay = `${c.companyName} ${c.contactName ?? ''} ${c.email ?? ''} ${c.phone ?? ''}`.toLowerCase();
+      return hay.includes(search);
+    });
+  }
+
+  // POST /api/marketer/leads
+  if (method === 'POST' && pathname === '/api/marketer/leads') {
+    const input = parseBody<ClientInput>();
+    if (!input.companyName?.trim()) {
+      throw new ApiError(400, 'Company name is required.', { error: 'Company name is required.' }, { method, url: rawUrl });
+    }
+    const nowIso = new Date().toISOString();
+    const createdLead: Client = {
+      id: genId('cli'),
+      companyName: input.companyName.trim(),
+      contactName: input.contactName?.trim() || null,
+      email: input.email?.trim() || null,
+      phone: input.phone?.trim() || null,
+      address: input.address?.trim() || null,
+      city: input.city?.trim() || null,
+      country: input.country?.trim() || 'Ghana',
+      status: 'lead',
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+    store.clients.unshift(createdLead);
+    saveStore(store);
+    return createdLead;
+  }
+
+  // POST /api/marketer/leads/:id/convert
+  const leadConvertMatch = pathname.match(/^\/api\/marketer\/leads\/([^/]+)\/convert$/);
+  if (method === 'POST' && leadConvertMatch) {
+    const id = decodeURIComponent(leadConvertMatch[1]);
+    const client = store.clients.find((c) => c.id === id);
+    if (!client) {
+      throw new ApiError(404, 'Client lead not found.', { error: 'Client lead not found.' }, { method, url: rawUrl });
+    }
+    client.status = 'active';
+    client.updatedAt = new Date().toISOString();
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'marketer@collage.com.gh',
+      action: 'CLIENT_CONVERTED',
+      target: client.companyName,
+      status: 'success',
+    });
+    saveStore(store);
+    return client;
+  }
+
+  // GET /api/marketer/campaigns
+  if (method === 'GET' && pathname === '/api/marketer/campaigns') {
+    return Array.isArray(store.campaigns) ? store.campaigns : [];
+  }
+
+  // POST /api/marketer/campaigns
+  if (method === 'POST' && pathname === '/api/marketer/campaigns') {
+    const input = parseBody<Partial<MarketingCampaign>>();
+    if (!input.name?.trim()) {
+      throw new ApiError(400, 'Campaign name is required.', { error: 'Campaign name is required.' }, { method, url: rawUrl });
+    }
+    const newCamp: MarketingCampaign = {
+      id: genId('camp'),
+      name: input.name.trim(),
+      targetService: input.targetService || 'billboards',
+      budget: Number(input.budget) || 0,
+      spent: Number(input.spent) || 0,
+      startDate: input.startDate || new Date().toISOString().slice(0, 10),
+      endDate: input.endDate || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+      status: input.status || 'planning',
+      leadsGenerated: Number(input.leadsGenerated) || 0,
+      conversions: Number(input.conversions) || 0,
+      notes: input.notes?.trim() || '',
+    };
+    if (!Array.isArray(store.campaigns)) store.campaigns = [];
+    store.campaigns.unshift(newCamp);
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'marketer@collage.com.gh',
+      action: 'CAMPAIGN_CREATED',
+      target: newCamp.name,
+      status: 'success',
+    });
+    saveStore(store);
+    return newCamp;
+  }
+
+  // GET, PATCH, DELETE /api/marketer/campaigns/:id
+  const campMatch = pathname.match(/^\/api\/marketer\/campaigns\/([^/]+)$/);
+  if (campMatch) {
+    const id = decodeURIComponent(campMatch[1]);
+    const camp = (Array.isArray(store.campaigns) ? store.campaigns : []).find((c) => c.id === id);
+    if (!camp) {
+      throw new ApiError(404, 'Campaign not found.', { error: 'Campaign not found.' }, { method, url: rawUrl });
+    }
+    if (method === 'GET') return camp;
+    if (method === 'PATCH') {
+      const input = parseBody<Partial<MarketingCampaign>>();
+      if (input.name !== undefined) camp.name = input.name.trim();
+      if (input.targetService !== undefined) camp.targetService = input.targetService;
+      if (input.budget !== undefined) camp.budget = Number(input.budget);
+      if (input.spent !== undefined) camp.spent = Number(input.spent);
+      if (input.startDate !== undefined) camp.startDate = input.startDate;
+      if (input.endDate !== undefined) camp.endDate = input.endDate;
+      if (input.status !== undefined) camp.status = input.status;
+      if (input.leadsGenerated !== undefined) camp.leadsGenerated = Number(input.leadsGenerated);
+      if (input.conversions !== undefined) camp.conversions = Number(input.conversions);
+      if (input.notes !== undefined) camp.notes = input.notes.trim();
+      saveStore(store);
+      return camp;
+    }
+    if (method === 'DELETE') {
+      store.campaigns = (Array.isArray(store.campaigns) ? store.campaigns : []).filter((c) => c.id !== id);
+      saveStore(store);
+      return { success: true };
+    }
+  }
+
+  // GET /api/marketer/showcase
+  if (method === 'GET' && pathname === '/api/marketer/showcase') {
+    return Array.isArray(store.showcaseLinks) ? store.showcaseLinks : [];
+  }
+
+  // POST /api/marketer/showcase
+  if (method === 'POST' && pathname === '/api/marketer/showcase') {
+    const input = parseBody<{ serviceCategory: ServiceCategory | 'all'; clientName?: string }>();
+    const link = generateShowcaseLink(input.serviceCategory || 'all', input.clientName);
+    if (!Array.isArray(store.showcaseLinks)) store.showcaseLinks = [];
+    store.showcaseLinks.unshift(link);
+    saveStore(store);
+    return link;
+  }
+
+  // POST /api/marketer/showcase/:id/click
+  const showcaseClickMatch = pathname.match(/^\/api\/marketer\/showcase\/([^/]+)\/click$/);
+  if (method === 'POST' && showcaseClickMatch) {
+    const id = decodeURIComponent(showcaseClickMatch[1]);
+    const link = (Array.isArray(store.showcaseLinks) ? store.showcaseLinks : []).find((l) => l.id === id);
+    if (link) {
+      link.clicks += 1;
+      saveStore(store);
+      return link;
+    }
+    throw new ApiError(404, 'Showcase link not found.', { error: 'Showcase link not found.' }, { method, url: rawUrl });
+  }
+
+  // ==========================================================================
+  // HR WORKFLOW ENDPOINTS (/api/hr/*)
+  // ==========================================================================
+
+  // GET /api/hr/staff
+  if (method === 'GET' && pathname === '/api/hr/staff') {
+    const dept = searchParams.get('department');
+    const stat = searchParams.get('status');
+    const search = searchParams.get('search')?.trim().toLowerCase();
+    const staffList = Array.isArray(store.staff) ? store.staff : [];
+    return staffList.filter((s) => {
+      if (dept && s.department !== dept) return false;
+      if (stat && s.status !== stat) return false;
+      if (search) {
+        const hay = `${s.fullName} ${s.employeeId} ${s.role} ${s.email} ${s.location}`.toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+  }
+
+  // POST /api/hr/staff
+  if (method === 'POST' && pathname === '/api/hr/staff') {
+    const input = parseBody<Partial<StaffMember>>();
+    if (!input.fullName?.trim()) {
+      throw new ApiError(400, 'Full name is required.', { error: 'Full name is required.' }, { method, url: rawUrl });
+    }
+    const staffList = Array.isArray(store.staff) ? store.staff : [];
+    const nextColNum = String(staffList.length + 50).padStart(3, '0');
+    const createdStaff: StaffMember = {
+      id: genId('staff'),
+      employeeId: input.employeeId?.trim() || `COL-${nextColNum}`,
+      fullName: input.fullName.trim(),
+      email: input.email?.trim() || `staff.${Date.now()}@collage.com.gh`,
+      phone: input.phone?.trim() || '+233 24 000 0000',
+      role: input.role?.trim() || 'Operations Specialist',
+      department: (input.department as StaffDepartment) || 'Production',
+      status: (input.status as StaffStatus) || 'active',
+      joinDate: input.joinDate || new Date().toISOString().slice(0, 10),
+      location: input.location?.trim() || 'Accra HQ',
+    };
+    if (!Array.isArray(store.staff)) store.staff = [];
+    store.staff.unshift(createdStaff);
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'hr@collage.com.gh',
+      action: 'STAFF_CREATED',
+      target: createdStaff.fullName,
+      status: 'success',
+    });
+    saveStore(store);
+    return createdStaff;
+  }
+
+  // GET, PATCH, DELETE /api/hr/staff/:id
+  const staffMatch = pathname.match(/^\/api\/hr\/staff\/([^/]+)$/);
+  if (staffMatch) {
+    const id = decodeURIComponent(staffMatch[1]);
+    const member = (Array.isArray(store.staff) ? store.staff : []).find((s) => s.id === id);
+    if (!member) {
+      throw new ApiError(404, 'Staff member not found.', { error: 'Staff member not found.' }, { method, url: rawUrl });
+    }
+    if (method === 'GET') return member;
+    if (method === 'PATCH') {
+      const input = parseBody<Partial<StaffMember>>();
+      if (input.fullName !== undefined) member.fullName = input.fullName.trim();
+      if (input.email !== undefined) member.email = input.email.trim();
+      if (input.phone !== undefined) member.phone = input.phone.trim();
+      if (input.role !== undefined) member.role = input.role.trim();
+      if (input.department !== undefined) member.department = input.department as StaffDepartment;
+      if (input.status !== undefined) member.status = input.status as StaffStatus;
+      if (input.location !== undefined) member.location = input.location.trim();
+      saveStore(store);
+      return member;
+    }
+    if (method === 'DELETE') {
+      store.staff = (Array.isArray(store.staff) ? store.staff : []).filter((s) => s.id !== id);
+      saveStore(store);
+      return { success: true };
+    }
+  }
+
+  // GET /api/hr/notices
+  if (method === 'GET' && pathname === '/api/hr/notices') {
+    const notices = Array.isArray(store.notices) ? store.notices : [];
+    return sortInternalNotices(notices);
+  }
+
+  // POST /api/hr/notices
+  if (method === 'POST' && pathname === '/api/hr/notices') {
+    const input = parseBody<Partial<InternalNotice>>();
+    if (!input.title?.trim() || !input.content?.trim()) {
+      throw new ApiError(400, 'Title and content are required.', { error: 'Title and content are required.' }, { method, url: rawUrl });
+    }
+    const notice: InternalNotice = {
+      id: genId('not'),
+      title: input.title.trim(),
+      content: input.content.trim(),
+      priority: (input.priority as NoticePriority) || 'medium',
+      category: (input.category as NoticeCategory) || 'general',
+      author: input.author?.trim() || 'People & Culture Desk',
+      datePosted: input.datePosted || new Date().toISOString().slice(0, 10),
+      pinned: Boolean(input.pinned),
+    };
+    if (!Array.isArray(store.notices)) store.notices = [];
+    store.notices.unshift(notice);
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'hr@collage.com.gh',
+      action: 'NOTICE_POSTED',
+      target: notice.title,
+      status: 'success',
+    });
+    saveStore(store);
+    return notice;
+  }
+
+  // DELETE /api/hr/notices/:id
+  const noticeMatch = pathname.match(/^\/api\/hr\/notices\/([^/]+)$/);
+  if (method === 'DELETE' && noticeMatch) {
+    const id = decodeURIComponent(noticeMatch[1]);
+    store.notices = (Array.isArray(store.notices) ? store.notices : []).filter((n) => n.id !== id);
+    saveStore(store);
+    return { success: true };
+  }
+
+  // GET /api/hr/attendance
+  if (method === 'GET' && pathname === '/api/hr/attendance') {
+    const dateParam = searchParams.get('date');
+    const staffIdParam = searchParams.get('staffId');
+    const records = Array.isArray(store.attendance) ? store.attendance : [];
+    return records.filter((a) => {
+      if (dateParam && a.date !== dateParam) return false;
+      if (staffIdParam && a.staffId !== staffIdParam) return false;
+      return true;
+    });
+  }
+
+  // POST /api/hr/attendance
+  if (method === 'POST' && pathname === '/api/hr/attendance') {
+    const input = parseBody<Partial<AttendanceRecord>>();
+    if (!input.staffId || !input.staffName) {
+      throw new ApiError(400, 'Staff identity is required for attendance check-in.', { error: 'Staff identity is required.' }, { method, url: rawUrl });
+    }
+    const record: AttendanceRecord = {
+      id: genId('att'),
+      staffId: input.staffId,
+      staffName: input.staffName,
+      department: (input.department as StaffDepartment) || 'Production',
+      date: input.date || new Date().toISOString().slice(0, 10),
+      checkInTime: input.checkInTime || '08:00 GMT',
+      checkOutTime: input.checkOutTime || null,
+      status: (input.status as AttendanceStatus) || 'present',
+      notes: input.notes?.trim() || null,
+    };
+    if (!Array.isArray(store.attendance)) store.attendance = [];
+    store.attendance.unshift(record);
+    saveStore(store);
+    return record;
+  }
+
+  // GET /api/hr/leave
+  if (method === 'GET' && pathname === '/api/hr/leave') {
+    return Array.isArray(store.leaveRequests) ? store.leaveRequests : [];
+  }
+
+  // POST /api/hr/leave
+  if (method === 'POST' && pathname === '/api/hr/leave') {
+    const input = parseBody<Partial<LeaveRequest>>();
+    if (!input.startDate || !input.endDate) {
+      throw new ApiError(400, 'Start date and end date are required.', { error: 'Dates required.' }, { method, url: rawUrl });
+    }
+    if (new Date(input.endDate).getTime() < new Date(input.startDate).getTime()) {
+      throw new ApiError(400, 'End date cannot precede start date.', { error: 'Invalid dates.' }, { method, url: rawUrl });
+    }
+    if (!input.days || Number(input.days) <= 0) {
+      throw new ApiError(400, 'Leave days must be greater than zero.', { error: 'Invalid days.' }, { method, url: rawUrl });
+    }
+    const leave: LeaveRequest = {
+      id: genId('leave'),
+      staffId: input.staffId || 'staff-1',
+      staffName: input.staffName || 'Staff Member',
+      department: (input.department as StaffDepartment) || 'Production',
+      leaveType: (input.leaveType as LeaveType) || 'annual',
+      startDate: input.startDate,
+      endDate: input.endDate,
+      days: Number(input.days),
+      status: 'pending',
+      reason: input.reason?.trim() || 'Personal leave request.',
+      submittedAt: new Date().toISOString(),
+    };
+    if (!Array.isArray(store.leaveRequests)) store.leaveRequests = [];
+    store.leaveRequests.unshift(leave);
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'hr@collage.com.gh',
+      action: 'LEAVE_REQUEST_SUBMITTED',
+      target: `${leave.staffName} (${leave.days} days)`,
+      status: 'success',
+    });
+    saveStore(store);
+    return leave;
+  }
+
+  // PATCH /api/hr/leave/:id
+  const leaveMatch = pathname.match(/^\/api\/hr\/leave\/([^/]+)$/);
+  if (method === 'PATCH' && leaveMatch) {
+    const id = decodeURIComponent(leaveMatch[1]);
+    const leave = (Array.isArray(store.leaveRequests) ? store.leaveRequests : []).find((l) => l.id === id);
+    if (!leave) {
+      throw new ApiError(404, 'Leave request not found.', { error: 'Leave request not found.' }, { method, url: rawUrl });
+    }
+    const input = parseBody<Partial<LeaveRequest>>();
+    if (input.status) {
+      leave.status = input.status;
+      if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+      store.auditLogs.unshift({
+        id: genId('audit'),
+        timestamp: new Date().toISOString(),
+        actorEmail: 'hr@collage.com.gh',
+        action: `LEAVE_${input.status.toUpperCase()}`,
+        target: `${leave.staffName} (${leave.days} days)`,
+        status: 'success',
+      });
+    }
+    saveStore(store);
+    return leave;
+  }
+
+  // ==========================================================================
+  // ADMIN WORKFLOW ENDPOINTS (/api/admin/*)
+  // ==========================================================================
+
+  // GET /api/admin/users
+  if (method === 'GET' && pathname === '/api/admin/users') {
+    return Array.isArray(store.users) ? store.users : [];
+  }
+
+  // POST /api/admin/users
+  if (method === 'POST' && pathname === '/api/admin/users') {
+    const input = parseBody<Partial<WorkspaceUser>>();
+    if (!input.email?.trim() || !input.fullName?.trim()) {
+      throw new ApiError(400, 'Email and full name are required.', { error: 'Missing fields.' }, { method, url: rawUrl });
+    }
+    const validRoles: WorkspaceRole[] = ['admin', 'marketer', 'hr'];
+    const role = (input.role as WorkspaceRole) || 'marketer';
+    if (!validRoles.includes(role)) {
+      throw new ApiError(400, `Invalid role: ${input.role}. Must be admin, marketer, or hr.`, { error: 'Invalid role.' }, { method, url: rawUrl });
+    }
+    const newUser: WorkspaceUser = {
+      id: genId('usr'),
+      email: input.email.trim().toLowerCase(),
+      fullName: input.fullName.trim(),
+      role,
+      status: input.status || 'active',
+      office: input.office?.trim() || 'Accra HQ',
+      createdAt: new Date().toISOString(),
+    };
+    if (!Array.isArray(store.users)) store.users = [];
+    store.users.unshift(newUser);
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'admin@collage.com.gh',
+      action: 'USER_CREATED',
+      target: newUser.email,
+      status: 'success',
+    });
+    saveStore(store);
+    return newUser;
+  }
+
+  // PATCH /api/admin/users/:id
+  const userMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)$/);
+  if (method === 'PATCH' && userMatch) {
+    const id = decodeURIComponent(userMatch[1]);
+    const user = (Array.isArray(store.users) ? store.users : []).find((u) => u.id === id);
+    if (!user) {
+      throw new ApiError(404, 'User not found.', { error: 'User not found.' }, { method, url: rawUrl });
+    }
+    const input = parseBody<Partial<WorkspaceUser>>();
+    if (input.role !== undefined) {
+      const validRoles: WorkspaceRole[] = ['admin', 'marketer', 'hr'];
+      if (!validRoles.includes(input.role as WorkspaceRole)) {
+        throw new ApiError(400, `Invalid role: ${input.role}. Must be admin, marketer, or hr.`, { error: 'Invalid role.' }, { method, url: rawUrl });
+      }
+      user.role = input.role as WorkspaceRole;
+    }
+    if (input.status !== undefined) {
+      user.status = input.status;
+    }
+    if (input.office !== undefined) {
+      user.office = input.office.trim();
+    }
+    if (input.fullName !== undefined) {
+      user.fullName = input.fullName.trim();
+    }
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = [];
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'admin@collage.com.gh',
+      action: 'USER_ROLE_CHANGED',
+      target: `${user.email} -> ${user.role} (${user.status})`,
+      status: 'success',
+    });
+    saveStore(store);
+    return user;
+  }
+
+  // GET /api/admin/permissions
+  if (method === 'GET' && pathname === '/api/admin/permissions') {
+    return {
+      admin: getCapabilitiesForRole('admin'),
+      marketer: getCapabilitiesForRole('marketer'),
+      hr: getCapabilitiesForRole('hr'),
+    };
+  }
+
+  // GET /api/admin/audit-logs
+  if (method === 'GET' && pathname === '/api/admin/audit-logs') {
+    const logs = Array.isArray(store.auditLogs) ? store.auditLogs : [];
+    return [...logs].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  }
+
+  // GET /api/admin/system-status
+  if (method === 'GET' && pathname === '/api/admin/system-status') {
+    return computeSystemStorageMetrics();
+  }
+
+  // POST /api/admin/self-heal
+  if (method === 'POST' && pathname === '/api/admin/self-heal') {
+    const initial = createInitialStore();
+    if (!Array.isArray(store.campaigns)) store.campaigns = initial.campaigns;
+    if (!Array.isArray(store.showcaseLinks)) store.showcaseLinks = initial.showcaseLinks;
+    if (!Array.isArray(store.staff)) store.staff = initial.staff;
+    if (!Array.isArray(store.notices)) store.notices = initial.notices;
+    if (!Array.isArray(store.attendance)) store.attendance = initial.attendance;
+    if (!Array.isArray(store.leaveRequests)) store.leaveRequests = initial.leaveRequests;
+    if (!Array.isArray(store.users)) store.users = initial.users;
+    if (!Array.isArray(store.auditLogs)) store.auditLogs = initial.auditLogs;
+    store.auditLogs.unshift({
+      id: genId('audit'),
+      timestamp: new Date().toISOString(),
+      actorEmail: 'admin@collage.com.gh',
+      action: 'STORAGE_SELF_HEALED',
+      target: 'collat_erp_store_v3',
+      status: 'success',
+    });
+    saveStore(store);
+    return {
+      status: 'healed',
+      message: 'Storage collections and structural integrity verified and restored.',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   throw new ApiError(404, `Endpoint not found: ${method} ${pathname}`, { error: 'Not found' }, { method, url: rawUrl });
+}
+
+export function getMarketerData(): {
+  campaigns: MarketingCampaign[];
+  showcaseLinks: ShowcaseLink[];
+  leads: Client[];
+} {
+  const store = loadStore();
+  return {
+    campaigns: Array.isArray(store.campaigns) ? store.campaigns : [],
+    showcaseLinks: Array.isArray(store.showcaseLinks) ? store.showcaseLinks : [],
+    leads: (Array.isArray(store.clients) ? store.clients : []).filter((c) => c.status === 'lead'),
+  };
+}
+
+export function getHrData(): {
+  staff: StaffMember[];
+  notices: InternalNotice[];
+  attendance: AttendanceRecord[];
+  leaveRequests: LeaveRequest[];
+} {
+  const store = loadStore();
+  return {
+    staff: Array.isArray(store.staff) ? store.staff : [],
+    notices: Array.isArray(store.notices) ? sortInternalNotices(store.notices) : [],
+    attendance: Array.isArray(store.attendance) ? store.attendance : [],
+    leaveRequests: Array.isArray(store.leaveRequests) ? store.leaveRequests : [],
+  };
+}
+
+export function getAdminData(): {
+  users: WorkspaceUser[];
+  auditLogs: AuditLogItem[];
+  systemMetrics: SystemDiagnosticMetrics;
+} {
+  const store = loadStore();
+  return {
+    users: Array.isArray(store.users) ? store.users : [],
+    auditLogs: Array.isArray(store.auditLogs) ? store.auditLogs : [],
+    systemMetrics: computeSystemStorageMetrics(),
+  };
 }
 
 export async function customFetch<T = unknown>(

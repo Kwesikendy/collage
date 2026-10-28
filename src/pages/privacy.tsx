@@ -62,7 +62,7 @@ export function PrivacyPolicyPage() {
         <div className="mb-12 border-b border-neutral-200 pb-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11.5px] font-medium text-neutral-600 shadow-sm">
             <ShieldCheck size={14} className="text-[#E02B20]" />
-            <span>Collat Invoice System · Privacy & Data Governance</span>
+            <span>Collage Invoice System · Privacy & Data Governance</span>
           </div>
           <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-[#111110] sm:text-4xl">
             Privacy Policy
@@ -71,7 +71,7 @@ export function PrivacyPolicyPage() {
             Effective Date: October 2026 · Version 1.0 · Collage Workspace
           </p>
           <p className="mt-4 max-w-3xl text-sm leading-relaxed text-neutral-700">
-            At Collage, we are committed to upholding transparency, data integrity, and strict confidentiality across all our financial operations, quotation systems, and equipment rental workflows. This document explains how client data is handled within the Collat Invoice System.
+            At Collage, we are committed to upholding transparency, data integrity, and strict confidentiality across all our financial operations, quotation systems, and equipment rental workflows. This document explains how client data is handled within the Collage Invoice System.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export function PrivacyPolicyPage() {
             </div>
             <div className="mt-4 space-y-3 text-neutral-700">
               <p>
-                The data controller responsible for the Collat Invoice System is:
+                The data controller responsible for the Collage Invoice System is:
               </p>
               <div className="rounded-lg bg-[#F9F8F6] p-4 text-xs font-mono text-neutral-800 space-y-1">
                 <div><strong>Organization:</strong> Collage (Corporate Marketing, Events, Advertising & Equipment Rentals)</div>
@@ -118,7 +118,7 @@ export function PrivacyPolicyPage() {
             </div>
             <div className="mt-4 space-y-4 text-neutral-700">
               <p>
-                Collat processes operational data strictly required to prepare quotations, issue proforma and commercial invoices, schedule rentals, and track payment receipts:
+                Collage processes operational data strictly required to prepare quotations, issue proforma and commercial invoices, schedule rentals, and track payment receipts:
               </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
@@ -150,7 +150,7 @@ export function PrivacyPolicyPage() {
             </div>
             <div className="mt-4 space-y-3 text-neutral-700">
               <p>
-                All data entered into Collat is utilized exclusively for business administration and contract fulfillment:
+                All data entered into Collage is utilized exclusively for business administration and contract fulfillment:
               </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
@@ -179,7 +179,7 @@ export function PrivacyPolicyPage() {
             </div>
             <div className="mt-4 space-y-3 text-neutral-700">
               <p>
-                The Collat Invoice System utilizes browser storage mechanisms (specifically <code>window.localStorage</code>) to enable high-speed, client-side resilience and zero-latency document authoring:
+                The Collage Invoice System utilizes browser storage mechanisms (specifically <code>window.localStorage</code>) to enable high-speed, client-side resilience and zero-latency document authoring:
               </p>
               <div className="space-y-3 pt-1">
                 <div className="rounded-lg border border-neutral-200 bg-[#F9F8F6] p-4 text-xs">
@@ -241,7 +241,7 @@ export function PrivacyPolicyPage() {
             </div>
             <div className="mt-4 space-y-3 text-neutral-700">
               <p>
-                Because Collat prioritizes local sovereign storage, you have full custody of your client and financial records:
+                Because Collage prioritizes local sovereign storage, you have full custody of your client and financial records:
               </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li>

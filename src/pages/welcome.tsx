@@ -7,7 +7,7 @@ import {
   useReducedMotion,
   useSpring,
 } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Check } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Compass, Flag, Layers } from 'lucide-react';
 import { Brand } from '@/components/brand';
 import { LandingMark } from '@/components/landing/mark';
 
@@ -590,6 +590,110 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
 }
 
 /* ============================================================================
+   SECTION 02.5: FEATURED CLIENT PORTFOLIO SHOWCASE
+   ============================================================================ */
+
+function PortfolioTeaserStage() {
+  const featuredCases = [
+    {
+      id: 'ecobank-wayfinding',
+      client: 'Ecobank Ghana PLC',
+      title: 'Head Office & Nationwide Branch Wayfinding Totems',
+      category: 'Wayfinding & Signage',
+      highlight: '14 Branches Retrofitted · Anti-Corrosion Marine Spec',
+      icon: Compass,
+    },
+    {
+      id: 'mtn-billboard-skins',
+      client: 'Scancom PLC (MTN Ghana)',
+      title: 'Yellow Summer 550gsm Highway Billboard Skins',
+      category: 'Billboard Skins',
+      highlight: '12 Highway Unipoles · 72h Emergency Mobilization',
+      icon: Layers,
+    },
+    {
+      id: 'african-protocol-flags',
+      client: 'African Protocol Summit',
+      title: 'Telescopic Anodized Flagpole Deployment',
+      category: 'Telescopic Flag Fleet',
+      highlight: '48 Poles Deployed · 32 Sovereign Nations Represented',
+      icon: Flag,
+    },
+  ];
+
+  return (
+    <section className="relative border-t border-white/[0.08] py-24 sm:py-32" aria-labelledby="portfolio-teaser-heading">
+      <div className="landing-wrap">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <span className="font-mono text-xs uppercase tracking-widest text-red-500">
+              02.5 // Client Portfolio Showcase
+            </span>
+            <h2
+              id="portfolio-teaser-heading"
+              className="mt-3 font-sans text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            >
+              Proven Deployments Across Ghana.
+            </h2>
+            <p className="mt-4 font-sans text-sm leading-relaxed text-neutral-400 sm:text-base">
+              Beyond internal ledger reconciliation, Collage engineers physical brand assets across the country: 550gsm highway billboard skins, high-wind telescopic flags, and architectural corporate wayfinding.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/portfolio"
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-white shadow-lg shadow-red-950 transition-all hover:bg-red-500"
+            >
+              <span>Explore Full Portfolio</span>
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {featuredCases.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.id}
+                href={`/portfolio/${item.id}`}
+                className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-neutral-900/40 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-neutral-700/80 hover:bg-neutral-900/70"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-wider text-red-400">
+                      <Icon size={12} aria-hidden="true" />
+                      {item.category}
+                    </span>
+                    <ArrowUpRight
+                      size={15}
+                      className="text-neutral-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <p className="mt-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                    {item.client}
+                  </p>
+                  <h3 className="mt-1 text-base font-bold text-white transition-colors group-hover:text-red-300">
+                    {item.title}
+                  </h3>
+                </div>
+
+                <div className="mt-6 border-t border-white/5 pt-3 font-mono text-[11px] text-neutral-400">
+                  {item.highlight}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================================
    SECTION 03: THE FOUR WORKSPACE ROOMS (INTERACTIVE DIRECTORY)
    ============================================================================ */
 
@@ -888,6 +992,15 @@ function ClosingWorkspaceFrame({
             className="mt-8 flex flex-wrap items-center justify-center gap-4 font-mono text-[11.5px] tracking-[0.06em] text-neutral-500"
           >
             <Link
+              href="/portfolio"
+              className="text-neutral-400 no-underline transition-colors duration-150 hover:text-white"
+            >
+              Portfolio
+            </Link>
+            <span aria-hidden="true" className="text-white/15">
+              ·
+            </span>
+            <Link
               href={hasClerk ? '/sign-in' : '/clients'}
               className="text-neutral-400 no-underline transition-colors duration-150 hover:text-white"
             >
@@ -927,6 +1040,10 @@ function ClosingWorkspaceFrame({
         <footer className="mt-20 border-t border-white/[0.08] pt-7 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] text-neutral-500">
           <span>Collage · Corporate Marketing, Events, Advertising & Equipment Rentals</span>
           <div className="flex items-center gap-3">
+            <Link href="/portfolio" className="hover:text-neutral-300 transition-colors">
+              Client Portfolio
+            </Link>
+            <span aria-hidden="true">·</span>
             <Link href="/privacy" className="hover:text-neutral-300 transition-colors">
               Privacy Policy
             </Link>
@@ -944,7 +1061,7 @@ function ClosingWorkspaceFrame({
    ============================================================================ */
 
 export function Welcome({ hasClerk }: { hasClerk: boolean }) {
-  const workspaceHref = hasClerk ? '/sign-in' : '/dashboard';
+  const workspaceHref = '/sign-in';
   const reduce = useReducedMotion();
 
   return (
@@ -955,6 +1072,15 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
             <Brand />
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2" aria-label="Landing">
+            <Link href="/portfolio" className="landing-link">
+              Portfolio
+            </Link>
+            <Link href="/portfolio#services" className="landing-link hidden md:inline-flex">
+              Services
+            </Link>
+            <Link href="/portfolio#about" className="landing-link hidden md:inline-flex">
+              About
+            </Link>
             <a href="#workspace" className="landing-link hidden sm:inline-flex">
               Workspace
             </a>
@@ -968,9 +1094,14 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
                 </Link>
               </>
             ) : (
-              <Link href="/dashboard" className="landing-cta landing-cta--solid">
-                Enter your workspace
-              </Link>
+              <>
+                <Link href="/sign-in" className="landing-link">
+                  Sign in
+                </Link>
+                <Link href="/sign-in" className="landing-cta landing-cta--solid">
+                  Enter workspace
+                </Link>
+              </>
             )}
           </nav>
         </div>
@@ -980,7 +1111,7 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
         <section className="landing-hero landing-wrap">
           <div className="landing-hero__copy">
             <FadeIn delay={0.06}>
-              <p className="landing-kicker">Collat</p>
+              <p className="landing-kicker">Collage</p>
             </FadeIn>
             <h1 className="landing-headline">
               <LineReveal delay={0.16}>From first brief</LineReveal>
@@ -996,6 +1127,9 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
             <FadeIn delay={0.84} className="landing-actions" y={8}>
               <Link href={workspaceHref} className="landing-cta landing-cta--solid">
                 Enter your workspace <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+              <Link href="/portfolio" className="landing-cta landing-cta--ghost">
+                View Client Portfolio
               </Link>
               {hasClerk && (
                 <Link href="/sign-up" className="landing-cta landing-cta--ghost">
@@ -1014,7 +1148,7 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
           </motion.div>
         </section>
 
-        <section className="landing-marquee" aria-label="Collat capabilities">
+        <section className="landing-marquee" aria-label="Collage capabilities">
           <div className="landing-marquee__track">
             {[...services, ...services].map((service, i) => (
               <span key={`${service}-${i}`} className="landing-marquee__item">
@@ -1029,6 +1163,9 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
         <div className="relative bg-[#0E0D0C] text-[#F5F3ED]">
           {/* Section 02: The Living Thread Document & Financial Ledger */}
           <LivingThreadStage workspaceHref={workspaceHref} />
+
+          {/* Section 02.5: Featured Client Portfolio Teaser */}
+          <PortfolioTeaserStage />
 
           {/* Section 03: The Four Workspace Rooms */}
           <WorkspaceRoomsDirectory hasClerk={hasClerk} />

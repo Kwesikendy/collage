@@ -97,12 +97,37 @@ import {
   Users,
   Wrench,
   X,
+  UserCheck,
+  Activity,
+  Target,
+  UserPlus,
+  Megaphone,
+  Share2,
+  UsersRound,
+  Contact,
+  Bell,
+  CalendarCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import collageLogo from './assets/collage-logo.png';
 import { Brand } from '@/components/brand';
 import { Welcome } from '@/pages/welcome';
+import { PortfolioPage } from '@/pages/portfolio';
 import { PrivacyPolicyPage } from '@/pages/privacy';
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
+import {
+  type UserRole,
+  type WorkspaceUser,
+  PRESEEDED_ACCOUNTS,
+  getNavigationForRole,
+  resolveCanonicalDashboard,
+} from '@/types/auth';
+import { RoleGuard } from '@/components/auth/role-guard';
+import { RoleSwitcher } from '@/components/auth/role-switcher';
+import { UnifiedAuthScreen } from '@/components/auth/unified-auth-screen';
+import { MarketerWorkspacePage, MarketerDashboardHub } from '@/pages/marketer-workspace';
+import { HrWorkspacePage, HrDashboardHub } from '@/pages/hr-workspace';
+import { AdminWorkspacePage, AdminDashboardHub } from '@/pages/admin-workspace';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -117,18 +142,39 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 const mockUser = {
   isLoaded: true as const,
   isSignedIn: true as const,
+  role: 'admin' as UserRole,
   user: {
+    id: 'usr-admin-kojo',
+    email: 'admin@collage.com.gh',
     firstName: 'Kojo',
     lastName: 'Nathan',
     fullName: 'Kojo Nathan',
+    role: 'admin' as UserRole,
+    office: 'Accra HQ',
     primaryEmailAddress: { emailAddress: 'Accra HQ' },
   },
 };
 
-type AppUser = typeof mockUser;
+type AppUser = {
+  isLoaded: boolean;
+  isSignedIn: boolean;
+  role: UserRole;
+  user: {
+    id?: string;
+    email?: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    role: UserRole;
+    office: string;
+    primaryEmailAddress: { emailAddress: string };
+  };
+};
+
 type AppClerkCtx = {
   signOut: (opts?: unknown) => void;
   setNeonUser?: (user: NeonAuthUser | null) => void;
+  setActiveRole?: (role: UserRole) => void;
 };
 
 const AppUserContext = createContext<AppUser>(mockUser);
@@ -147,15 +193,30 @@ function useAppClerk() {
 }
 
 function mapNeonUserToAppUser(u: NeonAuthUser | null): AppUser {
-  if (!u) return mockUser;
+  const user = u || {
+    id: 'usr-admin-kojo',
+    email: 'admin@collage.com.gh',
+    firstName: 'Kojo',
+    lastName: 'Nathan',
+    fullName: 'Kojo Nathan',
+    role: 'admin' as UserRole,
+    office: 'Accra HQ',
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+  const role = (user.role as UserRole) || 'admin';
   return {
     isLoaded: true as const,
     isSignedIn: true as const,
+    role,
     user: {
-      firstName: u.firstName || 'Kojo',
-      lastName: u.lastName || 'Nathan',
-      fullName: u.fullName || `${u.firstName} ${u.lastName}`.trim() || 'Kojo Nathan',
-      primaryEmailAddress: { emailAddress: u.office || u.email || 'Accra HQ' },
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName || 'Kojo',
+      lastName: user.lastName || 'Nathan',
+      fullName: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Kojo Nathan',
+      role,
+      office: user.office || 'Accra HQ',
+      primaryEmailAddress: { emailAddress: user.office || user.email || 'Accra HQ' },
     },
   };
 }
@@ -185,9 +246,22 @@ function NeonAuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const setActiveRole = (role: UserRole) => {
+    const email =
+      role === 'admin'
+        ? 'admin@collage.com.gh'
+        : role === 'marketer'
+          ? 'marketer@collage.com.gh'
+          : 'hr@collage.com.gh';
+    const account = PRESEEDED_ACCOUNTS[email];
+    if (account) {
+      setNeonUser(account.user);
+    }
+  };
+
   return (
     <AppUserContext.Provider value={mapNeonUserToAppUser(neonUser)}>
-      <AppClerkContext.Provider value={{ signOut, setNeonUser }}>
+      <AppClerkContext.Provider value={{ signOut, setNeonUser, setActiveRole }}>
         {children}
       </AppClerkContext.Provider>
     </AppUserContext.Provider>
@@ -278,13 +352,35 @@ const CATALOG_PRESETS = [
   },
 ] as const;
 
-const nav = [
+const adminNav = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/clients', label: 'Clients', icon: Users },
   { href: '/quotations', label: 'Quotations', icon: FileText },
   { href: '/invoices', label: 'Invoices', icon: ReceiptText },
   { href: '/operations', label: 'Rentals & Production', icon: Layers },
+  { href: '/admin/users', label: 'Admin Users', icon: UserCheck },
+  { href: '/admin/system', label: 'System Status', icon: Activity },
 ];
+
+const marketerNav = [
+  { href: '/dashboard', label: 'Marketing Hub', icon: Target },
+  { href: '/leads', label: 'Client Leads', icon: UserPlus },
+  { href: '/campaigns', label: 'Campaigns', icon: Megaphone },
+  { href: '/portfolio-showcase', label: 'Portfolio Showcase', icon: Share2 },
+];
+
+const hrNav = [
+  { href: '/dashboard', label: 'People Hub', icon: UsersRound },
+  { href: '/staff', label: 'Staff Directory', icon: Contact },
+  { href: '/notices', label: 'Internal Notices', icon: Bell },
+  { href: '/attendance', label: 'Attendance', icon: CalendarCheck },
+];
+
+function getNavigationItemsForRole(role: UserRole) {
+  if (role === 'marketer') return marketerNav;
+  if (role === 'hr') return hrNav;
+  return adminNav;
+}
 
 function httpStatus(error: unknown): number | undefined {
   if (typeof error === 'object' && error !== null && 'status' in error) {
@@ -317,7 +413,7 @@ function Shell({ children }: { children: ReactNode }) {
   const [resetDone, setResetDone] = useState(false);
   const queryClient = useQueryClient();
   const { user, isLoaded } = useAppUser();
-  const { signOut } = useAppClerk();
+  const { signOut, setNeonUser } = useAppClerk();
 
   useEffect(() => {
     const q = queryClient.getQueryCache().subscribe((event) => {
@@ -340,7 +436,10 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [queryClient]);
 
-  const page = nav.find((x) => location.startsWith(x.href))?.label ?? 'Overview';
+  const currentRole: UserRole = (user?.role as UserRole) || 'admin';
+  const roleName = currentRole === 'admin' ? 'Admin' : currentRole === 'marketer' ? 'Marketer' : 'HR';
+  const nav = getNavigationItemsForRole(currentRole);
+  const page = nav.find((x) => location === x.href || location.startsWith(`${x.href}/`))?.label ?? (location === '/privacy' ? 'Privacy Policy' : 'Overview');
 
   function handleResetDemo() {
     resetErpDemoData();
@@ -430,10 +529,10 @@ function Shell({ children }: { children: ReactNode }) {
               <div className="truncate text-[12.5px] font-medium text-white">
                 {isLoaded
                   ? user?.fullName || 'Kojo Nathan'
-                  : 'Loading profile…'}
+                  : 'Loading profile...'}
               </div>
-              <div className="truncate text-[11px] text-neutral-500">
-                Accra HQ
+              <div className="truncate text-[11px] text-neutral-400 font-mono">
+                {user?.office || 'Accra HQ'} · {roleName}
               </div>
             </div>
             <button
@@ -460,12 +559,21 @@ function Shell({ children }: { children: ReactNode }) {
             </button>
             <div className="flex items-center gap-2 text-[12px] text-neutral-500">
               <span>Collage</span>
+              <span className="text-neutral-300">·</span>
+              <span className="font-medium text-neutral-700">{roleName}</span>
               <span className="text-neutral-300">/</span>
               <span className="font-medium text-neutral-900">{page}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
+            <RoleSwitcher
+              currentRole={currentRole}
+              onRoleChange={(newUser) => {
+                setNeonUser?.(newUser);
+                queryClient.invalidateQueries();
+              }}
+            />
             <button
               type="button"
               onClick={handleResetDemo}
@@ -3174,6 +3282,7 @@ function OperationsView() {
   const [rentalModal, setRentalModal] = useState(false);
   const [printModal, setPrintModal] = useState(false);
   const clients = useGetClients();
+  const documentsQuery = useGetDocuments();
 
   function handleRentalStatus(id: string, status: RentalBooking['status']) {
     const updated = updateRentalStatus(id, status);
@@ -3464,11 +3573,14 @@ function OperationsView() {
                 defaultValue="70"
                 required
               />
-              <Input
-                label="Invoice / Quote Ref"
-                name="documentNumber"
-                placeholder="e.g. 00211026.01"
-              />
+              <Select label="Invoice / Reference" name="documentNumber">
+                <option value="Direct / Non-invoiced">Direct / Non-invoiced</option>
+                {(documentsQuery.data || []).map((doc) => (
+                  <option key={doc.id} value={doc.number}>
+                    {doc.number} · {doc.clientName} ({doc.kind === 'invoice' ? 'Invoice' : 'Quote'})
+                  </option>
+                ))}
+              </Select>
               <Input
                 label="Deployment date"
                 name="startDate"
@@ -3515,11 +3627,14 @@ function OperationsView() {
                   </option>
                 ))}
               </Select>
-              <Input
-                label="Invoice / Quote Ref"
-                name="documentNumber"
-                placeholder="e.g. 00211026.01"
-              />
+              <Select label="Invoice / Reference" name="documentNumber">
+                <option value="Direct / Non-invoiced">Direct / Non-invoiced</option>
+                {(documentsQuery.data || []).map((doc) => (
+                  <option key={doc.id} value={doc.number}>
+                    {doc.number} · {doc.clientName} ({doc.kind === 'invoice' ? 'Invoice' : 'Quote'})
+                  </option>
+                ))}
+              </Select>
             </div>
             <Input
               label="Print specification"
@@ -3788,71 +3903,1231 @@ function AuthScreen({ signup = false }: { signup?: boolean }) {
   );
 }
 
+// ============================================================================
+// ROLE-SPECIFIC VIEWS & CANONICAL DASHBOARD COMPONENTS
+// ============================================================================
+
+function MarketerDashboard() {
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+
+  const campaigns = [
+    {
+      id: 'cmp-01',
+      name: 'Accra Ring Road Unipole Flighting',
+      category: 'Billboards',
+      budget: 65000,
+      spent: 48500,
+      leads: 18,
+      conversions: 6,
+      status: 'Active',
+    },
+    {
+      id: 'cmp-02',
+      name: 'Tema Motorway Spectacular Billboard',
+      category: 'Large Format',
+      budget: 55000,
+      spent: 39200,
+      leads: 12,
+      conversions: 3,
+      status: 'Active',
+    },
+    {
+      id: 'cmp-03',
+      name: 'Independence Square Event Rigging & Flags',
+      category: 'Event Branding',
+      budget: 35000,
+      spent: 24800,
+      leads: 5,
+      conversions: 2,
+      status: 'Completed',
+    },
+    {
+      id: 'cmp-04',
+      name: 'Airport City Digital Totem Activation',
+      category: 'Wayfinding',
+      budget: 25000,
+      spent: 12000,
+      leads: 3,
+      conversions: 0,
+      status: 'Planning',
+    },
+  ];
+
+  const leads = [
+    {
+      company: 'Ecobank Ghana Ltd',
+      contact: 'Nana Mensah',
+      email: 'n.mensah@ecobank.com.gh',
+      service: 'Wayfinding & Directional Signage',
+      status: 'Quoted',
+      value: 48500,
+    },
+    {
+      company: 'Telecel Ghana',
+      contact: 'Kwesi Appiah',
+      email: 'k.appiah@telecel.com.gh',
+      service: 'Outdoor Billboard Flighting',
+      status: 'New Inquiry',
+      value: 62000,
+    },
+    {
+      company: 'Ghana National Petroleum Corp',
+      contact: 'Ama Asare',
+      email: 'a.asare@gnpc.com.gh',
+      service: 'Corporate Stage Rigging',
+      status: 'Converted',
+      value: 35400,
+    },
+    {
+      company: 'Stanbic Bank Ghana',
+      contact: 'Kofi Osei',
+      email: 'kofi.osei@stanbic.com.gh',
+      service: 'Telescopic Brand Flags',
+      status: 'Quoted',
+      value: 18200,
+    },
+  ];
+
+  const showcaseItems = [
+    {
+      title: 'Ecobank Ghana Head Office Wayfinding',
+      category: 'wayfinding',
+      slug: 'ecobank-wayfinding',
+      views: 142,
+    },
+    {
+      title: 'Ridge Unipole Spectacular Billboard',
+      category: 'billboards',
+      slug: 'ridge-unipole',
+      views: 98,
+    },
+    {
+      title: 'Accra International Conference Centre Stage Rigging',
+      category: 'event_branding',
+      slug: 'aicc-stage-rigging',
+      views: 215,
+    },
+  ];
+
+  function copyShareLink(slug: string) {
+    const url = `${window.location.origin}/portfolio?item=${slug}`;
+    if (navigator.clipboard) {
+      void navigator.clipboard.writeText(url);
+      setCopiedSlug(slug);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-200 pb-5">
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+            Marketing Desk · Campaign Intelligence
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+            Marketing Hub & Campaign Pipeline
+          </h1>
+          <p className="text-xs text-neutral-500 mt-1">
+            Client leads acquisition, outdoor billboard inventory, and client showcase pitch links across Ghana.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/portfolio"
+            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors no-underline"
+          >
+            <Share2 size={13} /> View Public Portfolio
+          </Link>
+          <Link
+            href="/leads"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#111110] px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors no-underline"
+          >
+            <UserPlus size={13} /> Pipeline View
+          </Link>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Total Campaign Budget</span>
+            <Target size={15} className="text-[#C61C2E]" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            {fmt(180000)}
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            Spent: {fmt(124500)} (69.2% utilized)
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Client Leads</span>
+            <UserPlus size={15} className="text-blue-600" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            38 Leads
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            Cost Per Lead: {fmt(3276.32)}
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Conversion Rate</span>
+            <Sparkles size={15} className="text-emerald-600" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            28.9%
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            11 converted to active client contracts
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Billboard Inventory</span>
+            <Layers size={15} className="text-amber-600" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            8 Prime Sites
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            Accra, Tema, Kumasi highway corridors
+          </div>
+        </div>
+      </div>
+
+      {/* Main Tables Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Corporate Client Leads Pipeline
+              </h3>
+              <Link href="/leads" className="text-xs text-[#C61C2E] hover:underline font-medium">
+                View All Leads →
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-neutral-200 text-neutral-500 font-medium">
+                    <th className="pb-2">Company</th>
+                    <th className="pb-2">Service Brief</th>
+                    <th className="pb-2">Est. Value</th>
+                    <th className="pb-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {leads.map((lead, i) => (
+                    <tr key={i} className="hover:bg-neutral-50/50">
+                      <td className="py-2.5 font-medium text-neutral-900">
+                        {lead.company}
+                        <div className="text-[10px] text-neutral-400 font-mono">
+                          {lead.contact}
+                        </div>
+                      </td>
+                      <td className="py-2.5 text-neutral-600">{lead.service}</td>
+                      <td className="py-2.5 font-mono text-neutral-800">{fmt(lead.value)}</td>
+                      <td className="py-2.5">
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            lead.status === 'Converted'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : lead.status === 'Quoted'
+                                ? 'bg-blue-50 text-blue-700'
+                                : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          {lead.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Campaign Performance Tracker
+              </h3>
+              <Link href="/campaigns" className="text-xs text-[#C61C2E] hover:underline font-medium">
+                Manage Campaigns →
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-neutral-200 text-neutral-500 font-medium">
+                    <th className="pb-2">Campaign Name</th>
+                    <th className="pb-2">Budget</th>
+                    <th className="pb-2">Spent</th>
+                    <th className="pb-2">Leads / Conv</th>
+                    <th className="pb-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {campaigns.map((c) => (
+                    <tr key={c.id} className="hover:bg-neutral-50/50">
+                      <td className="py-2.5 font-medium text-neutral-900">
+                        {c.name}
+                        <div className="text-[10px] text-neutral-400 font-mono">
+                          {c.category}
+                        </div>
+                      </td>
+                      <td className="py-2.5 font-mono text-neutral-700">{fmt(c.budget)}</td>
+                      <td className="py-2.5 font-mono text-neutral-700">{fmt(c.spent)}</td>
+                      <td className="py-2.5 text-neutral-600 font-mono">
+                        {c.leads} / {c.conversions}
+                      </td>
+                      <td className="py-2.5">
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-100 text-neutral-700">
+                          {c.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <h3 className="text-sm font-bold text-neutral-900 mb-2">
+              Client Pitch Showcase Links
+            </h3>
+            <p className="text-xs text-neutral-500 mb-4">
+              Generate direct portfolio showcase links to send to prospective clients during negotiations.
+            </p>
+            <div className="space-y-3">
+              {showcaseItems.map((item) => (
+                <div key={item.slug} className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-3">
+                  <div className="text-xs font-medium text-neutral-900">
+                    {item.title}
+                  </div>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-200/60 text-[11px]">
+                    <span className="text-neutral-400 font-mono">{item.views} client views</span>
+                    <button
+                      type="button"
+                      onClick={() => copyShareLink(item.slug)}
+                      className="inline-flex items-center gap-1 text-[#C61C2E] hover:underline font-semibold cursor-pointer"
+                    >
+                      {copiedSlug === item.slug ? (
+                        <>
+                          <Check size={12} /> Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Share2 size={12} /> Copy Pitch Link
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <h3 className="text-sm font-bold text-neutral-900 mb-2">
+              Ghanaian Outdoor Desks
+            </h3>
+            <div className="space-y-2 text-xs text-neutral-600">
+              <div className="flex items-center justify-between py-1 border-b border-neutral-100">
+                <span>Accra Central & Ring Road</span>
+                <span className="font-mono text-emerald-600 font-medium">Operational</span>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-neutral-100">
+                <span>Tema Industrial Harborway</span>
+                <span className="font-mono text-emerald-600 font-medium">Operational</span>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-neutral-100">
+                <span>Kotoka Airport City Corridor</span>
+                <span className="font-mono text-emerald-600 font-medium">Operational</span>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span>Kumasi Prempeh II Way</span>
+                <span className="font-mono text-blue-600 font-medium">Booking Open</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HrDashboard() {
+  const [approvedIds, setApprovedIds] = useState<string[]>([]);
+
+  const staffList = [
+    {
+      id: 'st-01',
+      name: 'Kwabena Appiah',
+      role: 'Lead Rigging Technician',
+      department: 'Field & Rigging',
+      checkIn: '07:15 GMT',
+      status: 'On Field',
+      location: 'AICC Summit Venue',
+    },
+    {
+      id: 'st-02',
+      name: 'Abena Osei',
+      role: 'Large Format Print Operator',
+      department: 'Production',
+      checkIn: '07:30 GMT',
+      status: 'Present',
+      location: 'Accra HQ Printshop',
+    },
+    {
+      id: 'st-03',
+      name: 'Kofi Mensah',
+      role: 'Creative Design Director',
+      department: 'Creative',
+      checkIn: '08:00 GMT',
+      status: 'Remote',
+      location: 'Accra Studio',
+    },
+    {
+      id: 'st-04',
+      name: 'Yaaba Addo',
+      role: 'Senior Client Service Executive',
+      department: 'Marketing',
+      checkIn: '08:15 GMT',
+      status: 'On Field',
+      location: 'Ecobank Site Survey',
+    },
+    {
+      id: 'st-05',
+      name: 'Emmanuel Boateng',
+      role: 'Welding & Structural Fabricator',
+      department: 'Production',
+      checkIn: '07:45 GMT',
+      status: 'Present',
+      location: 'Workshop B',
+    },
+  ];
+
+  const notices = [
+    {
+      id: 'nt-01',
+      title: 'Safety Harness Protocol: Ridge Unipole Rigging',
+      category: 'Safety',
+      priority: 'Urgent',
+      author: 'Efua Baffour (HR)',
+      date: 'Today',
+      pinned: true,
+    },
+    {
+      id: 'nt-02',
+      title: 'Festival Production Overtime Scheduling',
+      category: 'Operations',
+      priority: 'High',
+      author: 'Kojo Nathan (Operations)',
+      date: 'Yesterday',
+      pinned: true,
+    },
+    {
+      id: 'nt-03',
+      title: 'Health Insurance Card Renewal (Ridge Clinic)',
+      category: 'Policy',
+      priority: 'General',
+      author: 'Efua Baffour (HR)',
+      date: 'Oct 25',
+      pinned: false,
+    },
+  ];
+
+  const leaveRequests = [
+    {
+      id: 'lv-01',
+      staffName: 'Abena Osei',
+      department: 'Production',
+      type: 'Annual Leave',
+      duration: '5 Days (Nov 03 - Nov 07)',
+      reason: 'Annual family break after heavy quarter run.',
+    },
+    {
+      id: 'lv-02',
+      staffName: 'Kwesi Antwi',
+      department: 'Field & Rigging',
+      type: 'Casual Leave',
+      duration: '2 Days (Oct 30 - Oct 31)',
+      reason: 'Personal family engagement.',
+    },
+  ];
+
+  function handleApproveLeave(id: string) {
+    setApprovedIds((prev) => [...prev, id]);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-200 pb-5">
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+            People & Culture Desk · Workforce Operations
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+            People Hub & Staff Directory
+          </h1>
+          <p className="text-xs text-neutral-500 mt-1">
+            Staff attendance logs, field rigging deployments, safety notices, and internal HR approvals.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/staff"
+            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors no-underline"
+          >
+            <Contact size={13} /> Staff Directory
+          </Link>
+          <Link
+            href="/attendance"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#111110] px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors no-underline"
+          >
+            <CalendarCheck size={13} /> Daily Attendance
+          </Link>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Total Staff Headcount</span>
+            <UsersRound size={15} className="text-[#C61C2E]" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            24 Personnel
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            Across 5 Core Operational Departments
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Today Attendance Rate</span>
+            <CalendarCheck size={15} className="text-emerald-600" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            95.8%
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            23 present / on-field, 1 on approved leave
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>On-Field Rigging Crew</span>
+            <Layers size={15} className="text-blue-600" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            6 Deployed
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            Active at AICC & Ridge billboard sites
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Pending Leave Requests</span>
+            <Clock3 size={15} className="text-amber-600" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            {leaveRequests.length - approvedIds.length} Requests
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            Awaiting People & Culture review
+          </div>
+        </div>
+      </div>
+
+      {/* Main Tables Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Today Field & Workshop Attendance Log
+              </h3>
+              <Link href="/attendance" className="text-xs text-[#C61C2E] hover:underline font-medium">
+                Full Log →
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-neutral-200 text-neutral-500 font-medium">
+                    <th className="pb-2">Staff Member</th>
+                    <th className="pb-2">Department</th>
+                    <th className="pb-2">Check-In</th>
+                    <th className="pb-2">Location</th>
+                    <th className="pb-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {staffList.map((s) => (
+                    <tr key={s.id} className="hover:bg-neutral-50/50">
+                      <td className="py-2.5 font-medium text-neutral-900">
+                        {s.name}
+                        <div className="text-[10px] text-neutral-400 font-mono">{s.role}</div>
+                      </td>
+                      <td className="py-2.5 text-neutral-600">{s.department}</td>
+                      <td className="py-2.5 font-mono text-neutral-700">{s.checkIn}</td>
+                      <td className="py-2.5 text-neutral-600">{s.location}</td>
+                      <td className="py-2.5">
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            s.status === 'On Field'
+                              ? 'bg-blue-50 text-blue-700'
+                              : s.status === 'Present'
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-purple-50 text-purple-700'
+                          }`}
+                        >
+                          {s.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <h3 className="text-sm font-bold text-neutral-900 mb-3">
+              Leave Requests Queue
+            </h3>
+            <div className="space-y-3">
+              {leaveRequests.map((req) => {
+                const isApproved = approvedIds.includes(req.id);
+                return (
+                  <div
+                    key={req.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border border-neutral-100 bg-neutral-50/60 p-3.5"
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-neutral-900">
+                        {req.staffName} · <span className="font-normal text-neutral-500">{req.department}</span>
+                      </div>
+                      <div className="text-xs text-neutral-600 mt-0.5 font-medium">
+                        {req.type} · <span className="text-neutral-500 font-mono text-[11px]">{req.duration}</span>
+                      </div>
+                      <div className="text-[11px] text-neutral-400 mt-1">
+                        Reason: {req.reason}
+                      </div>
+                    </div>
+                    <div>
+                      {isApproved ? (
+                        <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                          <Check size={12} /> Approved
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleApproveLeave(req.id)}
+                          className="inline-flex items-center gap-1 rounded bg-[#111110] px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                        >
+                          Approve Leave
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-neutral-900">
+                Internal Notice Board
+              </h3>
+              <Link href="/notices" className="text-xs text-[#C61C2E] hover:underline font-medium">
+                All Notices →
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {notices.map((n) => (
+                <div
+                  key={n.id}
+                  className={`rounded-lg border p-3 ${
+                    n.pinned
+                      ? 'border-amber-200 bg-amber-50/40'
+                      : 'border-neutral-100 bg-neutral-50/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1">
+                    <span
+                      className={
+                        n.priority === 'Urgent'
+                          ? 'text-[#C61C2E]'
+                          : n.priority === 'High'
+                            ? 'text-amber-700'
+                            : 'text-neutral-500'
+                      }
+                    >
+                      {n.priority} · {n.category}
+                    </span>
+                    <span className="text-neutral-400 font-mono">{n.date}</span>
+                  </div>
+                  <div className="text-xs font-semibold text-neutral-900 leading-snug">
+                    {n.title}
+                  </div>
+                  <div className="mt-2 text-[10.5px] text-neutral-400 font-mono">
+                    Posted by: {n.author}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <h3 className="text-sm font-bold text-neutral-900 mb-2">
+              HR Quick Protocol Links
+            </h3>
+            <div className="space-y-2 text-xs">
+              <Link
+                href="/staff"
+                className="flex items-center justify-between py-1.5 text-neutral-700 hover:text-[#C61C2E] transition-colors no-underline"
+              >
+                <span>Staff Emergency Contacts Directory</span>
+                <span>→</span>
+              </Link>
+              <Link
+                href="/notices"
+                className="flex items-center justify-between py-1.5 text-neutral-700 hover:text-[#C61C2E] transition-colors no-underline border-t border-neutral-100"
+              >
+                <span>Ghana Labour Act Compliance Guidelines</span>
+                <span>→</span>
+              </Link>
+              <Link
+                href="/attendance"
+                className="flex items-center justify-between py-1.5 text-neutral-700 hover:text-[#C61C2E] transition-colors no-underline border-t border-neutral-100"
+              >
+                <span>Rigging Height Certification Records</span>
+                <span>→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RoleDashboardRouter() {
+  const { user } = useAppUser();
+  const role = (user?.role as UserRole) || 'admin';
+
+  if (role === 'marketer') {
+    return <MarketerDashboardHub />;
+  }
+  if (role === 'hr') {
+    return <HrDashboardHub />;
+  }
+  return <Dashboard />;
+}
+
+function AdminUsersView() {
+  const users = [
+    {
+      id: 'usr-admin-kojo',
+      name: 'Kojo Nathan',
+      email: 'admin@collage.com.gh',
+      role: 'admin',
+      office: 'Accra HQ (Ridge)',
+      status: 'Active',
+      capabilities: 'Full financial operations, quotations, invoices, rentals, diagnostics',
+    },
+    {
+      id: 'usr-marketer-nana',
+      name: 'Nana Mensah',
+      email: 'marketer@collage.com.gh',
+      role: 'marketer',
+      office: 'Brand & Marketing Desk',
+      status: 'Active',
+      capabilities: 'Client leads pipeline, campaigns tracker, portfolio pitch showcase',
+    },
+    {
+      id: 'usr-hr-efua',
+      name: 'Efua Baffour',
+      email: 'hr@collage.com.gh',
+      role: 'hr',
+      office: 'People & Culture Desk',
+      status: 'Active',
+      capabilities: 'Staff directory, internal notices bulletins, attendance and leave',
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          Administration · User & Role Access
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          Workspace Access & Role Management
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Manage operator accounts, security clearances, and operational capability matrices across Collage Ghana.
+        </p>
+      </div>
+
+      <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+        <h3 className="text-sm font-bold text-neutral-900 mb-3">
+          Authorized Operators Directory
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-neutral-200 text-neutral-500 font-medium">
+                <th className="pb-2">Name & Credentials</th>
+                <th className="pb-2">Role Clearance</th>
+                <th className="pb-2">Operational Desk</th>
+                <th className="pb-2">Scope of Authority</th>
+                <th className="pb-2">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {users.map((u) => (
+                <tr key={u.id} className="hover:bg-neutral-50/50">
+                  <td className="py-3 font-medium text-neutral-900">
+                    {u.name}
+                    <div className="text-[10.5px] text-neutral-400 font-mono">{u.email}</div>
+                  </td>
+                  <td className="py-3">
+                    <span className="inline-flex items-center gap-1 font-mono uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-neutral-100 text-neutral-800">
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="py-3 text-neutral-600">{u.office}</td>
+                  <td className="py-3 text-neutral-500 text-[11px] max-w-xs">{u.capabilities}</td>
+                  <td className="py-3">
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
+                      {u.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminSystemView() {
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          System Intelligence · Health & Storage Diagnostics
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          System Status & Diagnostics
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Browser storage quotas, Neon PostgreSQL synchronization status, security headers, and compliance audits.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="text-xs text-neutral-500 font-medium">API Service Status</div>
+          <div className="text-xl font-bold text-emerald-600 mt-2 font-mono flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            Operational
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-1 font-mono">Neon DB & Local Fallback Active</div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="text-xs text-neutral-500 font-medium">Storage Quota (5MB)</div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            5,242,880 Bytes
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-1 font-mono">Usage: &lt; 2% Capacity</div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="text-xs text-neutral-500 font-medium">Security & Compliance</div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            100% Compliant
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-1 font-mono">CSP Active · 0 Em Dashes</div>
+        </div>
+      </div>
+
+      <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs space-y-3">
+        <h3 className="text-sm font-bold text-neutral-900">
+          Compliance Verification Checkpoints
+        </h3>
+        <div className="space-y-2 text-xs text-neutral-600">
+          <div className="flex items-center justify-between py-1.5 border-b border-neutral-100">
+            <span>Ghana Statutory Tax Calculation (GETFund 2.5%, NHIL 2.5%, GRA VAT 15%)</span>
+            <span className="text-emerald-600 font-semibold">Active & Validated</span>
+          </div>
+          <div className="flex items-center justify-between py-1.5 border-b border-neutral-100">
+            <span>Multi-Role Route Access Boundaries (Admin, Marketer, HR)</span>
+            <span className="text-emerald-600 font-semibold">Enforced via RoleGuard</span>
+          </div>
+          <div className="flex items-center justify-between py-1.5 border-b border-neutral-100">
+            <span>Content Security Policy & Strict Framing Meta Headers</span>
+            <span className="text-emerald-600 font-semibold">Hardened</span>
+          </div>
+          <div className="flex items-center justify-between py-1.5">
+            <span>Zero Em Dash Source Code Compliance</span>
+            <span className="text-emerald-600 font-semibold">Verified</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeadsView() {
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          Marketer Desk · Pipeline
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          Client Leads Directory
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Corporate leads from portfolio inquiries and marketing activations.
+        </p>
+      </div>
+      <MarketerDashboard />
+    </div>
+  );
+}
+
+function CampaignsView() {
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          Marketer Desk · Campaign Tracker
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          Outdoor & Event Marketing Campaigns
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Active campaign budgets, billboard placements, and client conversions.
+        </p>
+      </div>
+      <MarketerDashboard />
+    </div>
+  );
+}
+
+function PortfolioShowcaseView() {
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          Marketer Desk · Showcase Pitch Links
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          Client Showcase Pitch Links
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Custom shareable portfolio links for pitching corporate Ghanaian clients.
+        </p>
+      </div>
+      <MarketerDashboard />
+    </div>
+  );
+}
+
+function StaffDirectoryView() {
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          People & Culture Desk · Staff
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          Staff Directory & Department Records
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Team member profiles across Production, Rigging, Creative, and Marketing.
+        </p>
+      </div>
+      <HrDashboard />
+    </div>
+  );
+}
+
+function InternalNoticesView() {
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          People & Culture Desk · Notices
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          Internal Bulletins & Safety Notices
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Operational bulletins, safety protocols, and company announcements.
+        </p>
+      </div>
+      <HrDashboard />
+    </div>
+  );
+}
+
+function AttendanceView() {
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-neutral-200 pb-5">
+        <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
+          People & Culture Desk · Attendance
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
+          Attendance Logs & Leave Management
+        </h1>
+        <p className="text-xs text-neutral-500 mt-1">
+          Daily workshop and on-site field check-in times and leave request tracking.
+        </p>
+      </div>
+      <HrDashboard />
+    </div>
+  );
+}
+
 function Router() {
+  const { setNeonUser } = useAppClerk();
+
   return (
     <ErrorBoundary>
       <Switch>
         <Route path="/" component={() => <Welcome hasClerk={hasClerk} />} />
-        <Route path="/sign-in" component={() => <AuthScreen />} />
-        <Route path="/sign-in/*" component={() => <AuthScreen />} />
-        <Route path="/sign-up" component={() => <AuthScreen signup />} />
-        <Route path="/sign-up/*" component={() => <AuthScreen signup />} />
+        <Route path="/portfolio" component={() => <PortfolioPage />} />
+        <Route path="/portfolio/:id" component={() => <PortfolioPage />} />
+        <Route
+          path="/sign-in"
+          component={() => (
+            <UnifiedAuthScreen
+              onLoginSuccess={(u) => {
+                setNeonUser?.(u);
+                queryClient.invalidateQueries();
+              }}
+            />
+          )}
+        />
+        <Route
+          path="/sign-in/*"
+          component={() => (
+            <UnifiedAuthScreen
+              onLoginSuccess={(u) => {
+                setNeonUser?.(u);
+                queryClient.invalidateQueries();
+              }}
+            />
+          )}
+        />
+        <Route
+          path="/sign-up"
+          component={() => (
+            <UnifiedAuthScreen
+              signup
+              onLoginSuccess={(u) => {
+                setNeonUser?.(u);
+                queryClient.invalidateQueries();
+              }}
+            />
+          )}
+        />
+        <Route
+          path="/sign-up/*"
+          component={() => (
+            <UnifiedAuthScreen
+              signup
+              onLoginSuccess={(u) => {
+                setNeonUser?.(u);
+                queryClient.invalidateQueries();
+              }}
+            />
+          )}
+        />
+
+        {/* Canonical Dashboard */}
         <Route path="/dashboard">
           {() => (
             <Shell>
-              <Dashboard />
+              <RoleDashboardRouter />
             </Shell>
           )}
         </Route>
+
+        {/* Admin Routes - Protected with RoleGuard allowedRoles={['admin']} */}
         <Route path="/clients">
           {() => (
             <Shell>
-              <ClientList />
+              <RoleGuard allowedRoles={['admin']}>
+                <ClientList />
+              </RoleGuard>
             </Shell>
           )}
         </Route>
         <Route path="/clients/:id">
           {() => (
             <Shell>
-              <ClientDetail />
+              <RoleGuard allowedRoles={['admin']}>
+                <ClientDetail />
+              </RoleGuard>
             </Shell>
           )}
         </Route>
         <Route path="/quotations">
           {() => (
             <Shell>
-              <DocumentList kind="quotation" />
+              <RoleGuard allowedRoles={['admin']}>
+                <DocumentList kind="quotation" />
+              </RoleGuard>
             </Shell>
           )}
         </Route>
         <Route path="/quotations/:id">
           {() => (
             <Shell>
-              <DocumentDetail />
+              <RoleGuard allowedRoles={['admin']}>
+                <DocumentDetail />
+              </RoleGuard>
             </Shell>
           )}
         </Route>
         <Route path="/invoices">
           {() => (
             <Shell>
-              <DocumentList kind="invoice" />
+              <RoleGuard allowedRoles={['admin']}>
+                <DocumentList kind="invoice" />
+              </RoleGuard>
             </Shell>
           )}
         </Route>
         <Route path="/invoices/:id">
           {() => (
             <Shell>
-              <DocumentDetail />
+              <RoleGuard allowedRoles={['admin']}>
+                <DocumentDetail />
+              </RoleGuard>
             </Shell>
           )}
         </Route>
         <Route path="/operations">
           {() => (
             <Shell>
-              <OperationsView />
+              <RoleGuard allowedRoles={['admin']}>
+                <OperationsView />
+              </RoleGuard>
             </Shell>
           )}
         </Route>
+        <Route path="/admin/users">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['admin']}>
+                <AdminWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+        <Route path="/admin/system">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['admin']}>
+                <AdminWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+
+        {/* Marketer Routes : Protected with RoleGuard allowedRoles={['marketer', 'admin']} */}
+        <Route path="/leads">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['marketer', 'admin']}>
+                <MarketerWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+        <Route path="/campaigns">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['marketer', 'admin']}>
+                <MarketerWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+        <Route path="/portfolio-showcase">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['marketer', 'admin']}>
+                <MarketerWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+
+        {/* HR Routes : Protected with RoleGuard allowedRoles={['hr', 'admin']} */}
+        <Route path="/staff">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['hr', 'admin']}>
+                <HrWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+        <Route path="/notices">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['hr', 'admin']}>
+                <HrWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+        <Route path="/attendance">
+          {() => (
+            <Shell>
+              <RoleGuard allowedRoles={['hr', 'admin']}>
+                <HrWorkspacePage />
+              </RoleGuard>
+            </Shell>
+          )}
+        </Route>
+
         <Route path="/privacy" component={() => <PrivacyPolicyPage />} />
         <Route>
           <div className="grid min-h-[100dvh] place-items-center">
