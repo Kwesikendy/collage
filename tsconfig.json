@@ -34,7 +34,9 @@
     "src/components/ui/tooltip.tsx",
     "src/hooks/use-toast.ts",
     "src/lib/**/*",
-    "src/pages/**/*"
+    "src/pages/**/*",
+    "src/server/**/*",
+    "api/**/*"
   ],
   "exclude": ["node_modules", "dist", "artifacts", "lib", "scripts"]
 }
