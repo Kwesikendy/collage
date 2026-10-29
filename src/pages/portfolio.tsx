@@ -250,11 +250,6 @@ export function PortfolioPage() {
           </div>
 
           <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-950/40 px-3.5 py-1 font-mono text-xs font-medium text-red-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-              <span>Collage Ghana · Out-of-Home & Event Staging</span>
-            </div>
-
             <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight">
               Creating Results for <span className="text-red-500">Ghana's Leading Brands.</span>
             </h1>
@@ -287,23 +282,6 @@ export function PortfolioPage() {
                 <span>Request Project Proposal</span>
               </a>
             </div>
-          </div>
-
-          {/* Quick Stats Grid */}
-          <div className="mt-16 grid grid-cols-2 gap-4 border-t border-white/10 pt-8 sm:grid-cols-4">
-            {COMPANY_PROFILE.statistics.map((stat, idx) => (
-              <div key={idx} className="space-y-1">
-                <div className="font-mono text-2xl font-black text-white sm:text-3xl">
-                  {stat.value}
-                </div>
-                <div className="font-mono text-xs font-medium text-red-400">
-                  {stat.label}
-                </div>
-                <div className="text-[11px] text-neutral-400">
-                  {stat.detail}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
