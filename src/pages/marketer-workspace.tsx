@@ -157,7 +157,7 @@ export function MarketerDashboardHub() {
             Marketing Hub & Campaign Analytics
           </h1>
           <p className="text-xs text-neutral-500 mt-1">
-            Corporate lead acquisitions, advertising campaign ROI, and tailored client pitch showcases.
+            Corporate lead acquisitions and advertising campaign performance.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ export function MarketerDashboardHub() {
       </div>
 
       {/* KPI Overview Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs">
             <span>Marketing Budget</span>
@@ -214,19 +214,6 @@ export function MarketerDashboardHub() {
           </div>
           <div className="text-[11px] text-neutral-500 mt-1 font-mono">
             {totalConversions} won / {totalLeadsGenerated} leads generated
-          </div>
-        </div>
-
-        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
-          <div className="flex items-center justify-between text-neutral-500 text-xs">
-            <span>Showcase Pitches</span>
-            <Share2 size={15} className="text-amber-600" />
-          </div>
-          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
-            {showcases.length} Pitch Links
-          </div>
-          <div className="text-[11px] text-neutral-500 mt-1 font-mono">
-            {showcases.reduce((sum, s) => sum + (s.clicks || 0), 0)} client views recorded
           </div>
         </div>
       </div>
@@ -365,56 +352,8 @@ export function MarketerDashboardHub() {
           </div>
         </div>
 
-        {/* Right Column: Portfolio Pitch Links */}
+        {/* Right Column: Key Operational Reference */}
         <div className="space-y-6">
-          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold text-neutral-900">
-                Shareable Pitch Showcases
-              </h3>
-              <Link
-                href="/portfolio-showcase"
-                className="text-xs text-[#C61C2E] hover:underline font-medium no-underline"
-              >
-                All Links →
-              </Link>
-            </div>
-            <p className="text-xs text-neutral-500 mb-4">
-              Click-to-copy client-tailored showcases showcasing Collage Ghana installations.
-            </p>
-
-            <div className="space-y-3">
-              {showcases.map((link) => (
-                <div key={link.id} className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-3">
-                  <div className="text-xs font-semibold text-neutral-900">{link.title}</div>
-                  {link.clientName && (
-                    <div className="text-[10.5px] text-[#C61C2E] font-medium mt-0.5">
-                      Tailored for: {link.clientName}
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-neutral-200/60 text-[11px]">
-                    <span className="text-neutral-400 font-mono">{link.clicks} views</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink(link)}
-                      className="inline-flex items-center gap-1 text-[#C61C2E] hover:underline font-semibold cursor-pointer"
-                    >
-                      {copiedId === link.id ? (
-                        <>
-                          <Check size={12} /> Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={12} /> Copy Link
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Quick Ghanaian Outdoor Placements */}
           <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
             <h3 className="text-sm font-bold text-neutral-900 mb-2">
@@ -677,7 +616,7 @@ export function MarketerWorkspacePage() {
             Client Acquisition & Campaign Center
           </h1>
           <p className="text-xs text-neutral-500 mt-1">
-            Manage corporate prospective leads, outdoor campaigns, and customized portfolio pitch showcases.
+            Manage corporate prospective leads and outdoor advertising campaigns.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -735,17 +674,15 @@ export function MarketerWorkspacePage() {
         >
           <Megaphone size={14} /> Campaign Tracker ({campaigns.length})
         </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('showcase')}
-          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'showcase'
-              ? 'border-[#C61C2E] text-[#C61C2E] font-bold'
-              : 'border-transparent text-neutral-500 hover:text-neutral-900'
-          }`}
-        >
-          <Share2 size={14} /> Portfolio Showcase Links ({showcases.length})
-        </button>
+        {activeTab === 'showcase' && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('showcase')}
+            className="flex items-center gap-2 px-4 py-2.5 border-b-2 transition-colors cursor-pointer border-[#C61C2E] text-[#C61C2E] font-bold"
+          >
+            <Share2 size={14} /> Portfolio Showcase Links ({showcases.length})
+          </button>
+        )}
       </div>
 
       {/* TAB 1: CLIENT LEADS PIPELINE */}
