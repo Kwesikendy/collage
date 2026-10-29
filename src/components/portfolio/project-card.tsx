@@ -101,10 +101,10 @@ export function ProjectCard({ project, onSelect }: ProjectCardProps) {
           {project.summary}
         </p>
 
-        {/* Key Engineering Specs Preview */}
+        {/* Key Scope Preview */}
         <div className="rounded-xl border border-white/5 bg-black/30 p-3">
           <div className="font-mono text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-            Technical Engineering Specs
+            Scope & Details
           </div>
           <ul className="mt-1.5 space-y-1">
             {project.specs.slice(0, 2).map((spec, idx) => (
@@ -114,7 +114,7 @@ export function ProjectCard({ project, onSelect }: ProjectCardProps) {
               >
                 <CheckCircle2
                   size={12}
-                  className="mt-0.5 shrink-0 text-emerald-400"
+                  className="mt-0.5 shrink-0 text-red-400"
                   aria-hidden="true"
                 />
                 <span className="line-clamp-1">{spec}</span>
@@ -124,28 +124,10 @@ export function ProjectCard({ project, onSelect }: ProjectCardProps) {
         </div>
       </div>
 
-      {/* Bottom Metrics Strip & Action */}
+      {/* Bottom Action */}
       <div className="mt-4 border-t border-white/10 pt-3.5">
-        {project.metrics && project.metrics.length > 0 && (
-          <div className="mb-3 grid grid-cols-3 gap-2">
-            {project.metrics.slice(0, 3).map((metric, idx) => (
-              <div
-                key={idx}
-                className="rounded-lg border border-white/5 bg-white/[0.03] p-1.5 text-center"
-              >
-                <div className="font-mono text-[11px] font-bold text-white">
-                  {metric.value}
-                </div>
-                <div className="truncate font-mono text-[9px] uppercase tracking-wider text-neutral-400">
-                  {metric.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
         <div className="flex items-center justify-between font-mono text-xs font-semibold text-red-400 transition-colors duration-200 group-hover:text-red-300">
-          <span>Explore Case Study</span>
+          <span>View Project</span>
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:border-red-500/40 group-hover:bg-red-500/20">
             <ArrowUpRight size={14} aria-hidden="true" />
           </span>

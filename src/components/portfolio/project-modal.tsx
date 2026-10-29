@@ -54,7 +54,7 @@ export function ProjectModal({
   onRequestQuote,
 }: ProjectModalProps) {
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'blueprint' | 'specs' | 'results' | 'testimonial'>('blueprint');
+  const [activeTab, setActiveTab] = useState<'overview' | 'specs' | 'results' | 'testimonial'>('overview');
 
   useEffect(() => {
     const handleKeyDown = (e: globalThis.KeyboardEvent) => {
@@ -65,7 +65,7 @@ export function ProjectModal({
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
-      setActiveTab('blueprint');
+      setActiveTab('overview');
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -125,7 +125,7 @@ export function ProjectModal({
               {project.categoryLabel}
             </span>
             <span className="font-mono text-xs text-neutral-400">
-              {project.year} · Case Study Ref: {project.id}
+              {project.year} · Ref: {project.id}
             </span>
           </div>
 
@@ -144,7 +144,7 @@ export function ProjectModal({
               ) : (
                 <>
                   <Share2 size={14} aria-hidden="true" />
-                  <span>Copy Shareable Link</span>
+                  <span>Copy Link</span>
                 </>
               )}
             </button>
@@ -152,7 +152,7 @@ export function ProjectModal({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close case study dialog"
+              aria-label="Close project dialog"
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-neutral-400 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white"
             >
               <X size={18} aria-hidden="true" />
@@ -192,35 +192,19 @@ export function ProjectModal({
             </p>
           </div>
 
-          {/* Key Metrics Banner */}
-          {project.metrics && project.metrics.length > 0 && (
-            <div className="mt-6 grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:grid-cols-3">
-              {project.metrics.map((metric, idx) => (
-                <div key={idx} className="border-l-2 border-red-500 pl-3">
-                  <div className="font-mono text-xl font-bold text-white">
-                    {metric.value}
-                  </div>
-                  <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
-                    {metric.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Interactive Case Study Section Tabs */}
           <div className="mt-8 border-b border-white/10">
             <div className="flex flex-wrap gap-2 pb-3">
               <button
                 type="button"
-                onClick={() => setActiveTab('blueprint')}
+                onClick={() => setActiveTab('overview')}
                 className={`rounded-lg px-3 py-1.5 font-mono text-xs font-medium transition-all ${
-                  activeTab === 'blueprint'
+                  activeTab === 'overview'
                     ? 'bg-red-600 text-white shadow-sm'
                     : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                Brief & Blueprint
+                Overview
               </button>
               <button
                 type="button"
@@ -231,7 +215,7 @@ export function ProjectModal({
                     : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                Engineering Specs ({project.specs.length})
+                Specifications ({project.specs.length})
               </button>
               <button
                 type="button"
@@ -242,7 +226,7 @@ export function ProjectModal({
                     : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                Verified Results ({project.results.length})
+                Highlights
               </button>
               {project.testimonial && (
                 <button
@@ -254,7 +238,7 @@ export function ProjectModal({
                       : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  Client Endorsement
+                  Feedback
                 </button>
               )}
             </div>
@@ -262,12 +246,12 @@ export function ProjectModal({
 
           {/* Tab Content */}
           <div className="mt-6">
-            {activeTab === 'blueprint' && (
+            {activeTab === 'overview' && (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-neutral-900/50 p-5">
-                  <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-amber-400">
-                    <span className="h-2 w-2 rounded-full bg-amber-400" />
-                    The Client Brief & Challenge
+                  <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-neutral-300">
+                    <span className="h-2 w-2 rounded-full bg-red-400" />
+                    Project Scope
                   </div>
                   <p className="mt-3 text-xs leading-relaxed text-neutral-300 sm:text-sm">
                     {project.challenge}
@@ -277,7 +261,7 @@ export function ProjectModal({
                 <div className="rounded-xl border border-white/10 bg-neutral-900/50 p-5">
                   <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-emerald-400">
                     <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Engineering Solution Delivered
+                    Delivered Solution
                   </div>
                   <p className="mt-3 text-xs leading-relaxed text-neutral-300 sm:text-sm">
                     {project.solution}
@@ -289,7 +273,7 @@ export function ProjectModal({
             {activeTab === 'specs' && (
               <div className="space-y-4">
                 <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
-                  Architectural Rigging & Material Specifications
+                  Specifications & Deliverables
                 </div>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   {project.specs.map((spec, idx) => (
@@ -312,7 +296,7 @@ export function ProjectModal({
             {activeTab === 'results' && (
               <div className="space-y-4">
                 <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
-                  Documented Operational Outcomes
+                  Project Highlights
                 </div>
                 <div className="space-y-2.5">
                   {project.results.map((result, idx) => (
@@ -363,14 +347,14 @@ export function ProjectModal({
               onClick={onClose}
               className="rounded-lg border border-white/10 px-4 py-2 font-mono text-xs text-neutral-300 transition-colors hover:bg-white/5 hover:text-white"
             >
-              Close Preview
+              Close
             </button>
             <button
               type="button"
               onClick={handleRequestSimilar}
               className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 font-mono text-xs font-semibold text-white shadow-lg shadow-red-900/30 transition-all hover:bg-red-500 hover:shadow-red-800/50"
             >
-              <span>Request Similar Scope</span>
+              <span>Request Quote</span>
               <ArrowRight size={14} aria-hidden="true" />
             </button>
           </div>
