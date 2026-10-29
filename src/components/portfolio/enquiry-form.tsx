@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import {
   AlertCircle,
   Building2,
@@ -17,13 +17,14 @@ import {
 
 interface EnquiryFormProps {
   initialService?: ServiceCategory;
+  initialMessage?: string;
   onSuccess?: () => void;
 }
 
 const STORAGE_KEY = 'collat_erp_store_v3';
 const INQUIRIES_KEY = 'collat_inquiries_v1';
 
-export function EnquiryForm({ initialService, onSuccess }: EnquiryFormProps) {
+export function EnquiryForm({ initialService, initialMessage, onSuccess }: EnquiryFormProps) {
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
@@ -31,7 +32,19 @@ export function EnquiryForm({ initialService, onSuccess }: EnquiryFormProps) {
   const [service, setService] = useState<ServiceCategory | string>(
     initialService || 'billboards',
   );
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(initialMessage || '');
+
+  useEffect(() => {
+    if (initialService) {
+      setService(initialService);
+    }
+  }, [initialService]);
+
+  useEffect(() => {
+    if (initialMessage) {
+      setMessage(initialMessage);
+    }
+  }, [initialMessage]);
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

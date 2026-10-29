@@ -15,9 +15,11 @@ import {
   Share2,
   Sparkles,
   Truck,
+  Wrench,
   X,
 } from 'lucide-react';
 import type { PortfolioProject, ServiceCategory } from '@/data/portfolio-data';
+import { ProjectVisual } from './project-visuals';
 
 interface ProjectModalProps {
   project: PortfolioProject | null;
@@ -52,6 +54,7 @@ export function ProjectModal({
   onRequestQuote,
 }: ProjectModalProps) {
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'blueprint' | 'specs' | 'results' | 'testimonial'>('blueprint');
 
   useEffect(() => {
     const handleKeyDown = (e: globalThis.KeyboardEvent) => {
@@ -62,6 +65,7 @@ export function ProjectModal({
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
+      setActiveTab('blueprint');
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -75,12 +79,11 @@ export function ProjectModal({
 
   const handleCopyLink = async () => {
     try {
-      const shareUrl = `${window.location.origin}/portfolio/${project.id}`;
+      const shareUrl = `${window.location.origin}/portfolio?project=${project.id.replace(/^prj-/, '')}`;
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback if clipboard API is restricted
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     }
@@ -113,7 +116,7 @@ export function ProjectModal({
       />
 
       {/* Modal Dialog Body */}
-      <div className="relative z-10 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-neutral-950 text-neutral-100 shadow-2xl shadow-black">
+      <div className="relative z-10 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0D0D0C] text-neutral-100 shadow-2xl shadow-black">
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-white/10 bg-neutral-900/80 px-6 py-4 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
@@ -158,7 +161,16 @@ export function ProjectModal({
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto px-6 py-7 sm:px-8">
+        <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+          {/* Visual Simulation Render */}
+          <div className="mb-6 overflow-hidden rounded-xl border border-white/10 shadow-lg">
+            <ProjectVisual
+              projectId={project.id}
+              category={project.category}
+              className="h-56 sm:h-64 w-full"
+            />
+          </div>
+
           {/* Hero Meta */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-red-400">
@@ -196,90 +208,147 @@ export function ProjectModal({
             </div>
           )}
 
-          {/* Challenge & Solution Grid */}
-          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-neutral-900/50 p-5">
-              <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-amber-400">
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
-                The Client Brief & Challenge
-              </div>
-              <p className="mt-3 text-xs leading-relaxed text-neutral-300 sm:text-sm">
-                {project.challenge}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-neutral-900/50 p-5">
-              <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                Engineering Solution Delivered
-              </div>
-              <p className="mt-3 text-xs leading-relaxed text-neutral-300 sm:text-sm">
-                {project.solution}
-              </p>
-            </div>
-          </div>
-
-          {/* Technical Specifications */}
-          <div className="mt-8">
-            <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              Technical Engineering & Material Specifications
-            </h4>
-            <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {project.specs.map((spec, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-2.5 rounded-lg border border-white/5 bg-white/[0.02] p-3 text-xs text-neutral-200"
+          {/* Interactive Case Study Section Tabs */}
+          <div className="mt-8 border-b border-white/10">
+            <div className="flex flex-wrap gap-2 pb-3">
+              <button
+                type="button"
+                onClick={() => setActiveTab('blueprint')}
+                className={`rounded-lg px-3 py-1.5 font-mono text-xs font-medium transition-all ${
+                  activeTab === 'blueprint'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                Brief & Blueprint
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('specs')}
+                className={`rounded-lg px-3 py-1.5 font-mono text-xs font-medium transition-all ${
+                  activeTab === 'specs'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                Engineering Specs ({project.specs.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('results')}
+                className={`rounded-lg px-3 py-1.5 font-mono text-xs font-medium transition-all ${
+                  activeTab === 'results'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                Verified Results ({project.results.length})
+              </button>
+              {project.testimonial && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('testimonial')}
+                  className={`rounded-lg px-3 py-1.5 font-mono text-xs font-medium transition-all ${
+                    activeTab === 'testimonial'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white'
+                  }`}
                 >
-                  <CheckCircle2
-                    size={14}
-                    className="mt-0.5 shrink-0 text-red-400"
-                    aria-hidden="true"
-                  />
-                  <span>{spec}</span>
-                </div>
-              ))}
+                  Client Endorsement
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Verified Results */}
-          <div className="mt-8">
-            <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              Verified Operational Results & Impact
-            </h4>
-            <div className="mt-3 space-y-2">
-              {project.results.map((result, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-2.5 rounded-lg border border-emerald-950/40 bg-emerald-950/15 p-3 text-xs text-emerald-200"
-                >
-                  <Check
-                    size={14}
-                    className="mt-0.5 shrink-0 text-emerald-400"
-                    aria-hidden="true"
-                  />
-                  <span>{result}</span>
+          {/* Tab Content */}
+          <div className="mt-6">
+            {activeTab === 'blueprint' && (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="rounded-xl border border-white/10 bg-neutral-900/50 p-5">
+                  <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-amber-400">
+                    <span className="h-2 w-2 rounded-full bg-amber-400" />
+                    The Client Brief & Challenge
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-neutral-300 sm:text-sm">
+                    {project.challenge}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Testimonial Quote */}
-          {project.testimonial && (
-            <div className="mt-8 rounded-xl border border-red-900/30 bg-red-950/20 p-5 sm:p-6">
-              <Quote size={24} className="text-red-400/60" aria-hidden="true" />
-              <blockquote className="mt-2 text-sm italic leading-relaxed text-neutral-200 sm:text-base">
-                "{project.testimonial.quote}"
-              </blockquote>
-              <div className="mt-4 border-t border-red-900/30 pt-3">
-                <p className="font-semibold text-white">
-                  {project.testimonial.author}
-                </p>
-                <p className="font-mono text-xs text-neutral-400">
-                  {project.testimonial.position}
-                </p>
+                <div className="rounded-xl border border-white/10 bg-neutral-900/50 p-5">
+                  <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    Engineering Solution Delivered
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-neutral-300 sm:text-sm">
+                    {project.solution}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {activeTab === 'specs' && (
+              <div className="space-y-4">
+                <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+                  Architectural Rigging & Material Specifications
+                </div>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {project.specs.map((spec, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-2.5 rounded-lg border border-white/5 bg-white/[0.02] p-3 text-xs text-neutral-200"
+                    >
+                      <CheckCircle2
+                        size={14}
+                        className="mt-0.5 shrink-0 text-red-400"
+                        aria-hidden="true"
+                      />
+                      <span>{spec}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'results' && (
+              <div className="space-y-4">
+                <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+                  Documented Operational Outcomes
+                </div>
+                <div className="space-y-2.5">
+                  {project.results.map((result, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-2.5 rounded-lg border border-emerald-950/40 bg-emerald-950/15 p-3.5 text-xs text-emerald-200"
+                    >
+                      <Check
+                        size={14}
+                        className="mt-0.5 shrink-0 text-emerald-400"
+                        aria-hidden="true"
+                      />
+                      <span>{result}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'testimonial' && project.testimonial && (
+              <div className="rounded-xl border border-red-900/30 bg-red-950/20 p-6">
+                <Quote size={28} className="text-red-400/60" aria-hidden="true" />
+                <blockquote className="mt-3 text-sm italic leading-relaxed text-neutral-200 sm:text-base">
+                  "{project.testimonial.quote}"
+                </blockquote>
+                <div className="mt-5 border-t border-red-900/30 pt-4">
+                  <p className="font-semibold text-white">
+                    {project.testimonial.author}
+                  </p>
+                  <p className="font-mono text-xs text-neutral-400">
+                    {project.testimonial.position}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer Actions */}

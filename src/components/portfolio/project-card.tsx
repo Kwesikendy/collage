@@ -12,6 +12,7 @@ import {
   Truck,
 } from 'lucide-react';
 import type { PortfolioProject, ServiceCategory } from '@/data/portfolio-data';
+import { ProjectVisual } from './project-visuals';
 
 interface ProjectCardProps {
   project: PortfolioProject;
@@ -37,28 +38,8 @@ function getCategoryIcon(category: ServiceCategory) {
   }
 }
 
-function getCategoryGradient(category: ServiceCategory) {
-  switch (category) {
-    case 'billboards':
-      return 'from-amber-500/20 via-orange-500/10 to-transparent';
-    case 'field_production':
-      return 'from-blue-500/20 via-indigo-500/10 to-transparent';
-    case 'telescopic_flags':
-      return 'from-emerald-500/20 via-teal-500/10 to-transparent';
-    case 'event_branding':
-      return 'from-purple-500/20 via-pink-500/10 to-transparent';
-    case 'wayfinding':
-      return 'from-sky-500/20 via-cyan-500/10 to-transparent';
-    case 'large_format_print':
-      return 'from-rose-500/20 via-red-500/10 to-transparent';
-    default:
-      return 'from-neutral-500/20 via-neutral-600/10 to-transparent';
-  }
-}
-
 export function ProjectCard({ project, onSelect }: ProjectCardProps) {
   const Icon = getCategoryIcon(project.category);
-  const gradientClass = getCategoryGradient(project.category);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -74,54 +55,58 @@ export function ProjectCard({ project, onSelect }: ProjectCardProps) {
       onClick={() => onSelect(project)}
       onKeyDown={handleKeyDown}
       aria-label={`View case study: ${project.title} for ${project.client}`}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/60 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-neutral-700/80 hover:bg-neutral-900/80 hover:shadow-2xl hover:shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/40 p-4 sm:p-5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-red-500/40 hover:bg-neutral-900/75 hover:shadow-2xl hover:shadow-red-950/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 cursor-pointer"
     >
-      {/* Dynamic ambient header gradient */}
-      <div
-        className={`pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b ${gradientClass} opacity-70 transition-opacity duration-300 group-hover:opacity-100`}
-        aria-hidden="true"
-      />
+      {/* Top Architectural Visual Banner */}
+      <div className="relative mb-4 overflow-hidden rounded-xl border border-white/5 bg-neutral-950">
+        <ProjectVisual projectId={project.id} category={project.category} />
 
-      <div className="relative z-10">
-        {/* Top meta bar */}
-        <div className="flex items-center justify-between gap-2 pb-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-950/40 px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-red-300">
+        {/* Ambient Overlay Tag */}
+        {project.tag && (
+          <div className="absolute top-3 left-3 rounded-full border border-white/20 bg-black/60 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+            {project.tag}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3.5">
+        {/* Top meta row */}
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-950/30 px-2.5 py-0.5 font-mono text-[11px] font-medium uppercase tracking-wider text-red-300">
             <Icon size={12} aria-hidden="true" />
             {project.categoryLabel}
           </span>
-          <div className="flex items-center gap-2 font-mono text-[11px] text-neutral-400">
-            <span className="inline-flex items-center gap-1">
-              <Calendar size={11} aria-hidden="true" />
-              {project.year}
-            </span>
+          <div className="flex items-center gap-1.5 font-mono text-[11px] text-neutral-400">
+            <Calendar size={12} aria-hidden="true" />
+            <span>{project.year}</span>
           </div>
         </div>
 
         {/* Client & Title */}
-        <div className="space-y-1.5">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+        <div>
+          <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-red-400">
             {project.client}
-          </p>
-          <h3 className="text-lg font-bold tracking-tight text-neutral-100 transition-colors duration-200 group-hover:text-white">
+          </div>
+          <h3 className="mt-1 text-base font-bold tracking-tight text-white transition-colors duration-200 group-hover:text-red-200">
             {project.title}
           </h3>
-          <p className="flex items-center gap-1 text-xs text-neutral-400">
+          <p className="mt-1 flex items-center gap-1 text-xs text-neutral-400">
             <MapPin size={12} className="shrink-0 text-red-400" aria-hidden="true" />
             <span>{project.location}</span>
           </p>
         </div>
 
         {/* Summary */}
-        <p className="mt-3.5 line-clamp-3 text-xs leading-relaxed text-neutral-300">
+        <p className="line-clamp-2 text-xs leading-relaxed text-neutral-300">
           {project.summary}
         </p>
 
-        {/* Technical specs preview */}
-        <div className="mt-4 border-t border-white/5 pt-3.5">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+        {/* Key Engineering Specs Preview */}
+        <div className="rounded-xl border border-white/5 bg-black/30 p-3">
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
             Technical Engineering Specs
-          </p>
-          <ul className="mt-2 space-y-1.5">
+          </div>
+          <ul className="mt-1.5 space-y-1">
             {project.specs.slice(0, 2).map((spec, idx) => (
               <li
                 key={idx}
@@ -139,19 +124,19 @@ export function ProjectCard({ project, onSelect }: ProjectCardProps) {
         </div>
       </div>
 
-      {/* Bottom metrics and action */}
-      <div className="relative z-10 mt-5 border-t border-white/10 pt-4">
+      {/* Bottom Metrics Strip & Action */}
+      <div className="mt-4 border-t border-white/10 pt-3.5">
         {project.metrics && project.metrics.length > 0 && (
-          <div className="mb-3.5 grid grid-cols-3 gap-2">
+          <div className="mb-3 grid grid-cols-3 gap-2">
             {project.metrics.slice(0, 3).map((metric, idx) => (
               <div
                 key={idx}
-                className="rounded-lg border border-white/5 bg-white/[0.03] p-2 text-center"
+                className="rounded-lg border border-white/5 bg-white/[0.03] p-1.5 text-center"
               >
-                <div className="font-mono text-[12px] font-bold text-white">
+                <div className="font-mono text-[11px] font-bold text-white">
                   {metric.value}
                 </div>
-                <div className="mt-0.5 truncate font-mono text-[9px] uppercase tracking-wider text-neutral-400">
+                <div className="truncate font-mono text-[9px] uppercase tracking-wider text-neutral-400">
                   {metric.label}
                 </div>
               </div>
@@ -159,9 +144,9 @@ export function ProjectCard({ project, onSelect }: ProjectCardProps) {
           </div>
         )}
 
-        <div className="flex items-center justify-between font-mono text-xs font-medium text-red-400 transition-colors duration-200 group-hover:text-red-300">
+        <div className="flex items-center justify-between font-mono text-xs font-semibold text-red-400 transition-colors duration-200 group-hover:text-red-300">
           <span>Explore Case Study</span>
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:bg-red-500/20">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:border-red-500/40 group-hover:bg-red-500/20">
             <ArrowUpRight size={14} aria-hidden="true" />
           </span>
         </div>
