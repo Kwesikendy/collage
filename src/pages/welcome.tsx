@@ -1258,34 +1258,10 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
       </header>
 
       <main>
-        <section className="landing-hero landing-wrap relative">
-          {/* Subtle architectural registration corner marks */}
-          <div
-            className="pointer-events-none absolute left-4 top-4 font-mono text-[10px] text-[#b9aea1]/50 select-none hidden lg:block"
-            aria-hidden="true"
-          >
-            + C-01 // ACCRA DESK
-          </div>
-          <div
-            className="pointer-events-none absolute right-4 top-4 font-mono text-[10px] text-[#b9aea1]/50 select-none hidden lg:block"
-            aria-hidden="true"
-          >
-            + 05°36'N 00°10'W
-          </div>
-
+        <section className="landing-hero landing-wrap">
           <div className="landing-hero__copy">
             <FadeIn delay={0.06}>
-              <div className="inline-flex items-center gap-2.5 rounded-full border border-[#c61c2e]/25 bg-white/80 px-3.5 py-1.5 text-[11px] font-mono font-medium tracking-wide text-[#231F20] shadow-sm backdrop-blur-md transition-all duration-300 hover:border-[#c61c2e]/50 hover:bg-white mb-6">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c61c2e] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c61c2e]"></span>
-                </span>
-                <span className="font-bold text-[#c61c2e] uppercase tracking-wider text-[10.5px]">
-                  Collage Operations
-                </span>
-                <span className="text-neutral-400">|</span>
-                <span className="text-neutral-600">Ghanaian Print & Event Logistics</span>
-              </div>
+              <p className="landing-kicker">Collage</p>
             </FadeIn>
 
             <h1 className="landing-headline">
