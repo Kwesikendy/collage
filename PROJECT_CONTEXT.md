@@ -152,15 +152,15 @@ All quotation and invoice calculations strictly follow the statutory Ghanaian bi
   - **Hero copy**: Updated supporting copy to "Manage clients, branding projects, equipment rentals and payments from one connected workspace. Built for the way Collat operates in Ghana." Preserved headline "From first brief to paid in full."
   - **Headline**: Responsive sizing (`40px` mobile, `50px` tablet, `58px` desktop). Controlled line break with `<br className="hidden sm:block"/>` to prevent orphaned words.
   - **Staggered entrance**: Hero left column animates with `fadeIn` on eyebrow, `slideInUp delay-75` on h1, `slideInUp delay-150` on copy, `slideInUp delay-200` on CTAs, `fadeIn delay-300` on trust line.
-  - **Operations preview card**: Upgraded from 3 generic rows to 4 realistic, semantically distinct activities with individual Lucide icons:
-    1. Branding project (BriefcaseBusiness) -- "PENDING" amber chip
-    2. Equipment rental booking (CalendarDays) -- "RENTAL" warm chip
-    3. Production work order dispatched to sister company (Wrench) -- "IN PROD" blue chip
-    4. Outstanding invoice (CircleDollarSign) -- "PART PAID" gold chip
-  - **Pipeline widget**: Added `TrendingUp` indicator, split progress bar labels ("GHS 10,610 collected / GHS 4,126 outstanding"), gradient progress bar.
-  - **Scroll-reveal features section**: `useScrollReveal()` hook uses `IntersectionObserver` to trigger opacity/translateY transition on each feature card when it enters viewport. Staggered per-card `transitionDelay`.
-  - **CSS**: Added `delay-400`, `delay-500` utilities; slowed `floatSubtle` to 5s; added `.reveal` / `.reveal.is-visible` CSS pair.
-  - **`PREVIEW_ITEMS` constant**: Extracted to module-level `as const` array for type safety and maintainability.
-  - **Footer**: Tightened padding and colour.
-  - **TypeScript**: All checks pass (`tsc --noEmit` exit code 0). No regressions in routing, shell, invoice, client, or quotation views.
-  - **Git**: Committed and pushed to `https://github.com/Kwesikendy/collage.git` (`main` branch, commit `b74e148`).
+  - **Operations preview card**: Upgraded to 4 realistic activities with Lucide icons (Branding, Equipment Rental, Production Work Order to PrintD, Invoice).
+  - **Pipeline widget**: Added `TrendingUp` indicator, split progress bar labels, gradient progress bar.
+  - **Scroll-reveal features section**: `useScrollReveal()` hook uses `IntersectionObserver` to trigger opacity/translateY transition on each feature card.
+  - **TypeScript**: All checks pass (`tsc --noEmit` exit code 0).
+
+- **2026-11-09 (Invoice layout alignment, authentic mark & kinetic hero)**:
+  - **Invoice Alignment**: Strictly left-aligned `INVOICE` title, date, invoice number, and client details to match Ghana standard document reference guide.
+  - **Authentic Mark Integration**: Copied authentic `Collage_icon.png` to `src/assets/collage-icon.png` and `public/collage-icon.png`, replacing placeholder shapes in invoice footer.
+  - **Contact Hierarchy**: Placed `marketing@collagenmosaic.com` at the top of invoice footer correspondence.
+  - **Kinetic Hero**: Upgraded hero section with interactive 3D mouse tilt, ambient crimson mesh glow, rotating registration ring, floating operational cards (`INV #00081126.01` and `SETTLED IN FULL`), live pulse status badge, and operational pillar chips, while preserving the internal piece-by-piece arrival animation of `LandingMark`.
+
+

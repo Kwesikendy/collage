@@ -569,7 +569,6 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .landing-hero { min-height: min(740px, calc(100dvh - 74px)); padding-top: 66px; padding-bottom: 86px; }
 .landing-hero__copy { position: relative; z-index: 1; }
 .landing-hero__visual { position: relative; }
-.landing-hero__visual::before { content: ''; position: absolute; inset: 14% 6%; border: 1px solid rgba(198, 28, 46, .13); border-radius: 50%; pointer-events: none; }
 .landing-mark { width: min(100%, 470px); }
 .landing-mark__frame { padding: 22px; }
 .landing-reveal-line { display: block; overflow: hidden; padding-bottom: .08em; }

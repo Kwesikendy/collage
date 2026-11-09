@@ -6,8 +6,20 @@ import {
   useMotionValue,
   useReducedMotion,
   useSpring,
+  useTransform,
 } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Check, Compass, Flag, Layers } from 'lucide-react';
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  CheckCircle2,
+  Compass,
+  Flag,
+  Layers,
+  Printer,
+  ReceiptText,
+  ShieldCheck,
+} from 'lucide-react';
 import { Brand } from '@/components/brand';
 import { LandingMark } from '@/components/landing/mark';
 
@@ -1057,6 +1069,144 @@ function ClosingWorkspaceFrame({
 }
 
 /* ============================================================================
+   HERO INTERACTIVE VISUAL & KINETIC SURROUNDS
+   Preserves the original piece-arriving LandingMark while surrounding it with
+   interactive floating operational cards, ambient depth, and precision grid.
+   ============================================================================ */
+
+function HeroInteractiveVisual() {
+  const reduce = useReducedMotion();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), {
+    stiffness: 120,
+    damping: 18,
+  });
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-6, 6]), {
+    stiffness: 120,
+    damping: 18,
+  });
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (reduce || !cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const xPct = (e.clientX - rect.left) / width - 0.5;
+    const yPct = (e.clientY - rect.top) / height - 0.5;
+    mouseX.set(xPct);
+    mouseY.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={reduce ? undefined : { rotateX, rotateY, transformStyle: 'preserve-3d' }}
+      className="landing-hero__visual relative flex justify-center items-center"
+      initial={reduce ? false : { opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.7, delay: 0.15, ease }}
+    >
+      {/* Ambient Pulsing Atmospheric Glow Behind Logo */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-6 sm:-inset-10 rounded-full blur-3xl"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(198, 28, 46, 0.16) 0%, rgba(224, 43, 32, 0.06) 45%, transparent 70%)',
+        }}
+        animate={
+          reduce
+            ? {}
+            : {
+                scale: [1, 1.08, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }
+        }
+        transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Architectural Rotating Registration Ring */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute h-[320px] w-[320px] sm:h-[420px] sm:w-[420px] rounded-full border border-dashed border-[#c61c2e]/20"
+        animate={reduce ? {} : { rotate: 360 }}
+        transition={{ duration: 75, repeat: Infinity, ease: 'linear' }}
+      />
+
+      {/* Floating Card: Live Invoice Dispatch */}
+      <motion.div
+        className="absolute -top-3 -right-2 sm:-right-6 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-white/80 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(28,27,25,0.08)] backdrop-blur-md cursor-default select-none"
+        animate={reduce ? {} : { y: [0, -7, 0] }}
+        transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+        whileHover={{ scale: 1.04, y: -9 }}
+      >
+        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-[#c61c2e]/10 text-[#c61c2e]">
+          <ReceiptText size={17} />
+        </div>
+        <div className="text-left font-mono text-[11px] leading-tight">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-[#1f2024]">INV #00081126.01</span>
+            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[8.5px] font-bold text-amber-700 tracking-wider">
+              DISPATCHED
+            </span>
+          </div>
+          <div className="mt-1 text-[10px] text-[#6b665f] font-sans">
+            GHS 105,285.96 · Kasapreko
+          </div>
+        </div>
+      </motion.div>
+
+      {/* The Authentic Piece-Arriving Logo Mark (Completely Unaltered!) */}
+      <div className="relative z-10">
+        <LandingMark />
+      </div>
+
+      {/* Floating Card: Cleared Wire Settlement */}
+      <motion.div
+        className="absolute -bottom-4 -left-2 sm:-left-8 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-white/80 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(28,27,25,0.08)] backdrop-blur-md cursor-default select-none"
+        animate={reduce ? {} : { y: [0, 7, 0] }}
+        transition={{ duration: 5.4, delay: 0.5, repeat: Infinity, ease: 'easeInOut' }}
+        whileHover={{ scale: 1.04, y: 9 }}
+      >
+        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+          <CheckCircle2 size={17} />
+        </div>
+        <div className="text-left font-mono text-[11px] leading-tight">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-emerald-700">SETTLED IN FULL</span>
+            <span className="text-[#a59f96]">·</span>
+            <span className="text-[9.5px] text-[#6b665f]">Bank Wire</span>
+          </div>
+          <div className="mt-1 text-[10px] text-[#1f2024] font-semibold">
+            GHS 65,000.00 · Ecobank
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Floating Pill: Statutory Tax Engine */}
+      <motion.div
+        className="absolute -bottom-4 right-2 sm:right-6 z-20 hidden md:flex items-center gap-2 rounded-full border border-[#c61c2e]/20 bg-white/95 px-3 py-1 text-[10px] font-mono font-medium text-[#2f2e34] shadow-md backdrop-blur-sm cursor-default select-none"
+        animate={reduce ? {} : { y: [0, -5, 0] }}
+        transition={{ duration: 4.2, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-[#c61c2e] animate-ping" />
+        <span>GRA Compliant: 2.5% + 2.5% + 15%</span>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ============================================================================
    MAIN WELCOME COMPONENT
    ============================================================================ */
 
@@ -1108,28 +1258,83 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
       </header>
 
       <main>
-        <section className="landing-hero landing-wrap">
+        <section className="landing-hero landing-wrap relative">
+          {/* Subtle architectural registration corner marks */}
+          <div
+            className="pointer-events-none absolute left-4 top-4 font-mono text-[10px] text-[#b9aea1]/50 select-none hidden lg:block"
+            aria-hidden="true"
+          >
+            + C-01 // ACCRA DESK
+          </div>
+          <div
+            className="pointer-events-none absolute right-4 top-4 font-mono text-[10px] text-[#b9aea1]/50 select-none hidden lg:block"
+            aria-hidden="true"
+          >
+            + 05°36'N 00°10'W
+          </div>
+
           <div className="landing-hero__copy">
             <FadeIn delay={0.06}>
-              <p className="landing-kicker">Collage</p>
+              <div className="inline-flex items-center gap-2.5 rounded-full border border-[#c61c2e]/25 bg-white/80 px-3.5 py-1.5 text-[11px] font-mono font-medium tracking-wide text-[#231F20] shadow-sm backdrop-blur-md transition-all duration-300 hover:border-[#c61c2e]/50 hover:bg-white mb-6">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c61c2e] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c61c2e]"></span>
+                </span>
+                <span className="font-bold text-[#c61c2e] uppercase tracking-wider text-[10.5px]">
+                  Collage Operations
+                </span>
+                <span className="text-neutral-400">|</span>
+                <span className="text-neutral-600">Ghanaian Print & Event Logistics</span>
+              </div>
             </FadeIn>
+
             <h1 className="landing-headline">
               <LineReveal delay={0.16}>From first brief</LineReveal>
               <LineReveal delay={0.3}>
-                to <span className="landing-headline__accent">paid in full.</span>
+                to{' '}
+                <span className="landing-headline__accent relative inline-block">
+                  paid in full.
+                  <motion.span
+                    className="absolute left-0 -bottom-1 h-[3px] w-full bg-gradient-to-r from-[#c61c2e] via-[#e52329] to-[#c61c2e] rounded-full"
+                    initial={reduce ? false : { scaleX: 0, originX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.8, delay: 0.8, ease: fluidEase }}
+                  />
+                </span>
               </LineReveal>
             </h1>
-            <FadeIn delay={0.68} y={8}>
+
+            <FadeIn delay={0.48} y={8}>
               <p className="landing-lede">
-                Keep every part of the job connected. Clients, quotations, invoices and payments, on one desk.
+                The unified Ghanaian operations engine. Connect client briefs, statutory Ghana tax
+                scopes, equipment rentals, and reconciled invoices on one living desk.
               </p>
             </FadeIn>
-            <FadeIn delay={0.84} className="landing-actions" y={8}>
-              <Link href={workspaceHref} className="landing-cta landing-cta--solid">
-                Enter your workspace <ArrowRight size={16} aria-hidden="true" />
+
+            <FadeIn delay={0.65} className="landing-actions" y={8}>
+              <Link
+                href={workspaceHref}
+                className="landing-cta landing-cta--solid group relative overflow-hidden shadow-lg shadow-[#c61c2e]/20"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Enter your workspace
+                  <ArrowRight
+                    size={16}
+                    aria-hidden="true"
+                    className="transition-transform duration-300 group-hover:translate-x-1"
+                  />
+                </span>
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
               </Link>
-              <Link href="/portfolio" className="landing-cta landing-cta--ghost">
-                View Client Portfolio
+              <Link href="/portfolio" className="landing-cta landing-cta--ghost group">
+                <span className="flex items-center gap-1.5">
+                  View Client Portfolio
+                  <ArrowUpRight
+                    size={14}
+                    aria-hidden="true"
+                    className="text-neutral-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#c61c2e]"
+                  />
+                </span>
               </Link>
               {hasClerk && (
                 <Link href="/sign-up" className="landing-cta landing-cta--ghost">
@@ -1137,15 +1342,33 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
                 </Link>
               )}
             </FadeIn>
+
+            {/* Quick Operational Pillars */}
+            <FadeIn delay={0.8} y={8}>
+              <div className="mt-8 pt-6 border-t border-[#1c1b19]/10 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-medium group cursor-default">
+                  <div className="h-6 w-6 rounded-md bg-[#c61c2e]/10 text-[#c61c2e] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#c61c2e] group-hover:text-white">
+                    <ShieldCheck size={13} />
+                  </div>
+                  <span>100% Ghana Tax (GRA)</span>
+                </div>
+                <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-medium group cursor-default">
+                  <div className="h-6 w-6 rounded-md bg-[#c61c2e]/10 text-[#c61c2e] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#c61c2e] group-hover:text-white">
+                    <Layers size={13} />
+                  </div>
+                  <span>Rigging & Rental Days</span>
+                </div>
+                <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-medium group cursor-default col-span-2 sm:col-span-1">
+                  <div className="h-6 w-6 rounded-md bg-[#c61c2e]/10 text-[#c61c2e] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#c61c2e] group-hover:text-white">
+                    <Printer size={13} />
+                  </div>
+                  <span>Sister Dispatch (PrintD)</span>
+                </div>
+              </div>
+            </FadeIn>
           </div>
-          <motion.div
-            className="landing-hero__visual"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.08, ease }}
-          >
-            <LandingMark />
-          </motion.div>
+
+          <HeroInteractiveVisual />
         </section>
 
         <section className="landing-marquee" aria-label="Collage capabilities">

@@ -110,11 +110,12 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import collageLogo from './assets/collage-logo.png';
+import collageIcon from './assets/collage-icon.png';
 import { Brand } from '@/components/brand';
 import { Welcome } from '@/pages/welcome';
 import { PortfolioPage } from '@/pages/portfolio';
 import { PrivacyPolicyPage } from '@/pages/privacy';
-import { CookieConsentBanner } from '@/components/cookie-consent-banner';
+import { CookieConsentBanner } from '@/components/compliance-dialog';
 import {
   type UserRole,
   type WorkspaceUser,
@@ -3020,38 +3021,36 @@ function DocumentDetail() {
           />
         </div>
 
-        {/* Red Document Title */}
-        <div className="mt-4 text-center">
-          <h1 className="text-2xl md:text-3xl font-extrabold uppercase tracking-wide text-[#c61c2e] m-0">
+        {/* Left-Aligned Document Title, Date & Invoice Reference */}
+        <div className="mt-4 text-left border-b border-[#ece6de] pb-3">
+          <h1 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-[#c61c2e] m-0">
             {doc.kind === 'quotation' ? 'QUOTATION' : 'INVOICE'}
           </h1>
-        </div>
-
-        {/* Date & Reference */}
-        <div className="mt-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-[#ece6de] pb-3 text-[12px]">
-          <div className="font-medium text-[#2d2c31]">
-            {doc.issueDate && !isNaN(Date.parse(doc.issueDate))
-              ? new Date(doc.issueDate).toLocaleDateString('en-GB', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })
-              : dateFmt(doc.issueDate)}
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="mono font-semibold text-[#555]">
-              {doc.kind === 'quotation' ? 'Quotation' : 'Invoice'} No.{' '}
-              <span className="text-[#c61c2e]">{doc.number}</span>
-            </span>
-            <span className="no-print">
-              <Status value={doc.status} />
-            </span>
+          <div className="mt-2 text-[12px] leading-relaxed text-[#2d2c31]">
+            <div className="font-medium text-[#2d2c31]">
+              {doc.issueDate && !isNaN(Date.parse(doc.issueDate))
+                ? new Date(doc.issueDate).toLocaleDateString('en-GB', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : dateFmt(doc.issueDate)}
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="mono font-semibold text-[#555]">
+                {doc.kind === 'quotation' ? 'Quotation' : 'Invoice'} No.{' '}
+                <span className="text-[#c61c2e] font-bold">{doc.number}</span>
+              </span>
+              <span className="no-print">
+                <Status value={doc.status} />
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Red Banner: Client Details */}
-        <div className="mt-5">
+        {/* Client Details - strictly left-aligned */}
+        <div className="mt-4 text-left">
           <div className="inline-block bg-[#b71c1c] px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white rounded-sm">
             Client Details
           </div>
@@ -3070,7 +3069,7 @@ function DocumentDetail() {
         </div>
 
         {/* Black Banner: Subject / Project Title */}
-        <div className="mt-5 bg-[#1f2024] px-4 py-2.5 text-[13px] font-extrabold uppercase tracking-wide text-white rounded-sm">
+        <div className="mt-4 bg-[#1f2024] px-4 py-2.5 text-[13px] font-extrabold uppercase tracking-wide text-white rounded-sm text-left">
           {doc.subject}
         </div>
 
@@ -3156,25 +3155,27 @@ function DocumentDetail() {
           </div>
         </div>
 
-        {/* Authentic Collage Footer with Red Circle + Black Diamond Mark */}
+        {/* Authentic Collage Footer with Red Circle + Black Arc Icon */}
         <div className="mt-12 flex flex-wrap items-end justify-between border-t border-[#e2dcce] pt-6 text-[11px]">
-          <div className="text-[10px] text-[#7a756f] space-y-0.5">
+          <div className="text-[10px] text-[#7a756f] space-y-0.5 text-left">
             <div className="font-bold uppercase tracking-wider text-[#1f2024]">
-              Collage · Creating Results
+              COLLAGE · CREATING RESULTS
             </div>
             <div className="text-[#999]">Accra, Ghana</div>
           </div>
-          <div className="flex items-end gap-4">
+          <div className="flex items-end gap-3.5">
             <div className="text-right text-[10px] leading-tight text-[#444] space-y-0.5">
               <div className="font-semibold text-[#1f2024]">+233 24 736 1133</div>
+              <div>marketing@collagenmosaic.com</div>
               <div>collagenmosaic@gmail.com</div>
               <div>sendit@collagenmosaic.com</div>
               <div className="font-medium text-[#c61c2e]">www.collagenmosaic.com</div>
             </div>
-            <div className="relative h-12 w-12 shrink-0" aria-hidden="true">
-              <span className="absolute left-0 top-0 h-6 w-6 rounded-full bg-[#e52329]" />
-              <span className="absolute bottom-0.5 right-0.5 h-6 w-6 rotate-45 rounded-[3px] bg-[#1f2024]" />
-            </div>
+            <img
+              src={collageIcon}
+              alt="Collage mark"
+              className="h-10 w-auto object-contain shrink-0"
+            />
           </div>
         </div>
       </article>

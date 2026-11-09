@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Brand } from '@/components/brand';
 import { useState } from 'react';
-import { STORAGE_CONSENT_KEY } from '@/components/cookie-consent-banner';
+import { STORAGE_CONSENT_KEY } from '@/components/compliance-dialog';
 
 export function PrivacyPolicyPage() {
   const [consentResetNotice, setConsentResetNotice] = useState(false);
