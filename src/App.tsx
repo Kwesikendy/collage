@@ -3160,12 +3160,9 @@ function DocumentDetail() {
           </div>
         </div>
 
-        {/* Client Details - strictly left-aligned */}
+        {/* Client Info - strictly left-aligned without badge */}
         <div className="mt-4 text-left">
-          <div className="inline-block bg-[#b71c1c] px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white rounded-sm">
-            Client Details
-          </div>
-          <div className="mt-2.5 text-[12px] leading-snug text-[#2f2e34]">
+          <div className="text-[12px] leading-snug text-[#2f2e34]">
             <div className="font-semibold text-[#1e1f23]">
               Attn: {clientRecord?.contactName || doc.clientName}
             </div>
@@ -3179,13 +3176,13 @@ function DocumentDetail() {
           </div>
         </div>
 
-        {/* Black Banner: Subject / Project Title */}
-        <div className="mt-4 bg-[#1f2024] px-4 py-2.5 text-[13px] font-extrabold uppercase tracking-wide text-white rounded-sm text-left">
+        {/* Black Banner: Subject / Project Title flush with Line Items Table */}
+        <div className="mt-4 bg-[#1f2024] px-4 py-2.5 text-[13px] font-extrabold uppercase tracking-wide text-white rounded-t-sm text-left">
           {doc.subject}
         </div>
 
         {/* Line Items Table */}
-        <div className="overflow-x-auto my-4">
+        <div className="overflow-x-auto mb-4 mt-0">
           <table className="w-full min-w-[560px] text-left border-collapse">
             <thead>
               <tr className="bg-[#a81a29] text-white text-[9px] font-bold uppercase tracking-[.08em]">
