@@ -367,7 +367,6 @@ const marketerNav = [
   { href: '/dashboard', label: 'Marketing Hub', icon: Target },
   { href: '/leads', label: 'Client Leads', icon: UserPlus },
   { href: '/campaigns', label: 'Campaigns', icon: Megaphone },
-  { href: '/portfolio-showcase', label: 'Portfolio Showcase', icon: Share2 },
 ];
 
 const hrNav = [
@@ -450,7 +449,7 @@ function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="app-shell flex bg-[#F9F8F6] text-neutral-900">
+    <div className="app-shell flex bg-[#F7F7F8] text-[#1D1D1B]">
       {mobileOpen && (
         <button
           aria-label="Close navigation"
@@ -459,7 +458,7 @@ function Shell({ children }: { children: ReactNode }) {
         />
       )}
       <aside
-        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-[236px] shrink-0 flex-col border-r border-white/[0.08] bg-[#111110] text-[#F5F2EA] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
+        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-[236px] shrink-0 flex-col border-r border-white/[0.08] bg-[#141413] text-[#FFFFFF] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -549,43 +548,53 @@ function Shell({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="min-w-0 flex-1">
-        <header className="no-print sticky top-0 z-20 flex h-[60px] items-center justify-between border-b border-neutral-200/80 bg-[#F9F8F6]/90 px-4 backdrop-blur md:px-8">
-          <div className="flex items-center gap-3">
-            <button
-              aria-label="Open navigation"
-              onClick={() => setMobileOpen(true)}
-              className="btn btn-quiet !px-2 md:hidden"
-            >
-              <Menu size={18} />
-            </button>
-            <div className="flex items-center gap-2 text-[12px] text-neutral-500">
-              <span>Collage</span>
-              <span className="text-neutral-300">·</span>
-              <span className="font-medium text-neutral-700">{roleName}</span>
-              <span className="text-neutral-300">/</span>
-              <span className="font-medium text-neutral-900">{page}</span>
+        <header className="no-print sticky top-0 z-20 pt-3 px-4 md:px-8">
+          <div className="mx-auto flex max-w-[1360px] items-center justify-between gap-3 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 text-[#1D1D1B] shadow-[0_8px_28px_rgba(29,29,27,0.06)]">
+            <div className="flex items-center gap-3">
+              <button
+                aria-label="Open navigation"
+                onClick={() => setMobileOpen(true)}
+                className="btn btn-quiet !px-2 md:hidden"
+              >
+                <Menu size={18} />
+              </button>
+              <div className="flex items-center gap-2 text-[12px] text-neutral-500">
+                <span className="font-bold text-[#1D1D1B]">Collage</span>
+                <span className="h-3.5 w-px bg-neutral-200" aria-hidden="true" />
+                <span className="font-medium text-neutral-600">{roleName}</span>
+                <span className="text-neutral-300">/</span>
+                <span className="rounded-full bg-neutral-100 px-3 py-1 font-semibold text-[#1D1D1B]">
+                  {page}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2.5">
-            <RoleSwitcher
-              currentRole={currentRole}
-              onRoleChange={(newUser) => {
-                setNeonUser?.(newUser);
-                queryClient.invalidateQueries();
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleResetDemo}
-              title="Restore initial sample records (including Invoice 00211026.01)"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-[11.5px] font-medium text-neutral-600 transition-colors hover:border-neutral-300 hover:text-neutral-900 cursor-pointer"
-            >
-              <RotateCcw size={12} />
-              <span className="hidden sm:inline">
-                {resetDone ? 'Demo data restored' : 'Reset demo'}
-              </span>
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/portfolio"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+              >
+                <span>Public Portfolio</span>
+              </Link>
+              <RoleSwitcher
+                currentRole={currentRole}
+                onRoleChange={(newUser) => {
+                  setNeonUser?.(newUser);
+                  queryClient.invalidateQueries();
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleResetDemo}
+                title="Restore initial sample records (including Invoice 00211026.01)"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 text-[11.5px] font-semibold text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100 cursor-pointer"
+              >
+                <RotateCcw size={12} />
+                <span className="hidden sm:inline">
+                  {resetDone ? 'Demo data restored' : 'Reset demo'}
+                </span>
+              </button>
+            </div>
           </div>
         </header>
 

@@ -26,7 +26,7 @@ export function LandingMark() {
             cy="50"
             r="41"
             fill="none"
-            stroke="#d8ccbf"
+            stroke="#D4D4D2"
             strokeWidth="0.35"
             initial={reduce ? false : { pathLength: 0, opacity: 0 }}
             animate={{ pathLength: 1, opacity: 1 }}
@@ -37,17 +37,17 @@ export function LandingMark() {
             cy="50"
             r="31"
             fill="none"
-            stroke="#cbbba8"
+            stroke="#C4C4C2"
             strokeWidth="0.3"
             strokeDasharray="0.8 1.6"
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.28, ease }}
           />
-          <line x1="50" y1="8" x2="50" y2="18" stroke="#c9bfb3" strokeWidth="0.35" />
-          <line x1="50" y1="82" x2="50" y2="92" stroke="#c9bfb3" strokeWidth="0.35" />
-          <line x1="8" y1="50" x2="18" y2="50" stroke="#c9bfb3" strokeWidth="0.35" />
-          <line x1="82" y1="50" x2="92" y2="50" stroke="#c9bfb3" strokeWidth="0.35" />
+          <line x1="50" y1="8" x2="50" y2="18" stroke="#C4C4C2" strokeWidth="0.35" />
+          <line x1="50" y1="82" x2="50" y2="92" stroke="#C4C4C2" strokeWidth="0.35" />
+          <line x1="8" y1="50" x2="18" y2="50" stroke="#C4C4C2" strokeWidth="0.35" />
+          <line x1="82" y1="50" x2="92" y2="50" stroke="#C4C4C2" strokeWidth="0.35" />
           <motion.path
             d="M 46 18 A 32 32 0 0 0 18 46 L 30 46 A 20 20 0 0 1 46 30 Z"
             fill="#231F20"

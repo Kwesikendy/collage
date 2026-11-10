@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Sparkles,
   Truck,
+  User,
 } from 'lucide-react';
 import { Brand } from '@/components/brand';
 import {
@@ -56,46 +57,79 @@ export function PortfolioPage() {
   return (
     <div className="min-h-screen bg-[#0D0D0C] text-[#F5F3ED] antialiased selection:bg-red-900 selection:text-white">
       {/* ─────────────────────────────────────────────────────────────
-          1. STICKY PUBLIC NAVIGATION HEADER
+          1. STICKY PUBLIC NAVIGATION HEADER (WHITE PILL DESIGN)
           ───────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0D0D0C]/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-6">
-            <Link href="/" aria-label="Collage Home">
+      <header className="sticky top-0 z-40 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_12px_36px_rgba(0,0,0,0.45)]">
+          {/* Left: Brand + Vertical Divider + Subtitle */}
+          <div className="flex items-center gap-3.5">
+            <Link href="/" aria-label="Collage Home" className="shrink-0">
               <Brand />
             </Link>
-            <span className="hidden font-mono text-[11px] uppercase tracking-widest text-neutral-500 md:inline-block">
-              Services & Capabilities
-            </span>
+            <span className="hidden h-7 w-px bg-neutral-200 md:block" aria-hidden="true" />
+            <div className="hidden md:flex flex-col leading-tight">
+              <span className="text-[11px] font-bold tracking-tight text-[#1D1D1B]">
+                Creating Results
+              </span>
+              <span className="text-[10px] font-medium text-neutral-500">
+                Services & Capabilities
+              </span>
+            </div>
           </div>
 
-          <nav className="hidden items-center gap-6 text-xs font-medium text-neutral-300 md:flex">
-            <a href="#services" className="transition-colors hover:text-white">
+          {/* Center: Clean Pill Navigation Links */}
+          <nav className="hidden items-center gap-1 text-[12.5px] font-semibold text-[#1D1D1B] md:flex" aria-label="Portfolio navigation">
+            <a
+              href="#overview"
+              className="rounded-full bg-neutral-100/90 px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-200/70"
+            >
+              Overview
+            </a>
+            <a
+              href="#services"
+              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
               Services
             </a>
-            <a href="#about" className="transition-colors hover:text-white">
+            <a
+              href="#about"
+              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
               About Collage
             </a>
-            <a href="#contact" className="transition-colors hover:text-white">
+            <a
+              href="#contact"
+              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
               Contact & Quote
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          {/* Right: Circular Icon Actions + Solid Pill CTA */}
+          <div className="flex items-center gap-2">
+            <a
+              href="tel:+233247361133"
+              title="Call Collage Desk"
+              aria-label="Call Collage Desk"
+              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
+            >
+              <Phone size={14} />
+            </a>
+            <Link
+              href="/dashboard"
+              title="Staff Workspace"
+              aria-label="Staff Workspace"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
+            >
+              <User size={15} />
+            </Link>
             <a
               href="#contact"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 font-mono text-xs font-semibold text-white shadow-md shadow-red-950 transition-all hover:bg-red-500"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#E31E24] px-4 sm:px-5 py-2 text-[12.5px] font-semibold text-white no-underline shadow-sm transition-colors hover:bg-[#1D1D1B]"
             >
               <span>Request a Quote</span>
               <ArrowRight size={13} aria-hidden="true" />
             </a>
-
-            <Link
-              href="/dashboard"
-              className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white sm:inline-flex"
-            >
-              Staff Workspace
-            </Link>
           </div>
         </div>
       </header>
@@ -259,8 +293,8 @@ export function PortfolioPage() {
 
             {/* Right Column: Corporate compliance and details */}
             <div className="space-y-4 lg:col-span-6">
-              <div className="rounded-xl border border-emerald-950/50 bg-emerald-950/20 p-5">
-                <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-emerald-400">
+              <div className="rounded-xl border border-white/15 bg-neutral-900/70 p-5">
+                <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-[#E31E24]">
                   <ShieldCheck size={16} aria-hidden="true" />
                   <span>Statutory Registration & Taxes</span>
                 </div>
@@ -402,7 +436,7 @@ export function PortfolioPage() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-3">
               <Link href="/" aria-label="Collage Home">
-                <Brand />
+                <Brand inverse />
               </Link>
               <span>·</span>
               <span>Accra, Ghana</span>

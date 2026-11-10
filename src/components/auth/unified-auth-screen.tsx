@@ -107,7 +107,7 @@ export function UnifiedAuthScreen({
             </div>
             <div className="flex items-center gap-2.5">
               <Check size={16} className="text-[#E02B20]" />
-              <span>Marketer Hub: Client leads conversion, campaign ROI, and showcase links</span>
+              <span>Marketer Hub: Client leads conversion, campaign ROI, and pipeline briefs</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Check size={16} className="text-[#E02B20]" />
@@ -121,7 +121,7 @@ export function UnifiedAuthScreen({
       </section>
 
       {/* Right Sign-In Panel */}
-      <section className="flex items-center justify-center bg-[#F9F8F6] p-6 md:p-12">
+      <section className="flex items-center justify-center bg-[#F7F7F8] p-6 md:p-12">
         <div className="w-full max-w-[440px]">
           <Link
             href="/"

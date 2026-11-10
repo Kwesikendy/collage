@@ -11,7 +11,7 @@ import {
 import {
   ArrowRight,
   ArrowUpRight,
-  Check,
+  Building2,
   CheckCircle2,
   Compass,
   Flag,
@@ -19,6 +19,7 @@ import {
   Printer,
   ReceiptText,
   ShieldCheck,
+  User,
 } from 'lucide-react';
 import { Brand } from '@/components/brand';
 import { LandingMark } from '@/components/landing/mark';
@@ -172,12 +173,12 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
         ? {
             ref: 'REF: QT00241026.01',
             statusText: '● PENDING RECONCILIATION',
-            statusClass: 'text-amber-400/90',
+            statusClass: 'text-[#E31E24]',
           }
         : {
             ref: 'REF: INV00221026.01',
             statusText: '● CLEARED IN FULL',
-            statusClass: 'text-emerald-400',
+            statusClass: 'text-white',
           };
 
   return (
@@ -513,15 +514,15 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
                       </h3>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.07] px-3.5 py-2">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                        <Check size={12} />
+                    <div className="flex items-center gap-3 rounded-lg border border-white/15 bg-white/[0.04] px-3.5 py-2">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E31E24] text-white">
+                        <CheckCircle2 size={12} />
                       </span>
                       <div>
-                        <span className="block font-mono text-[10.5px] font-semibold tracking-widest text-emerald-300 uppercase">
+                        <span className="block font-mono text-[10.5px] font-semibold tracking-widest text-white uppercase">
                           100% Settled
                         </span>
-                        <span className="block font-mono text-[10px] text-emerald-400/80">
+                        <span className="block font-mono text-[10px] text-neutral-400">
                           Balance Due: GHS 0.00
                         </span>
                       </div>
@@ -564,7 +565,7 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
                             <span className="text-[14px] font-medium text-white">
                               MTN Mobile Money · Corporate Settlement
                             </span>
-                            <span className="rounded bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] text-emerald-300 uppercase">
+                            <span className="rounded bg-[#E31E24]/15 px-2 py-0.5 font-mono text-[10px] text-[#E31E24] uppercase">
                               35% Final Tranche
                             </span>
                           </div>
@@ -573,7 +574,7 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
                           </span>
                         </div>
                       </div>
-                      <div className="font-mono text-[13.5px] font-medium tracking-tight text-emerald-400 tabular-nums">
+                      <div className="font-mono text-[13.5px] font-medium tracking-tight text-white tabular-nums">
                         {formatGhs(momoTranche)}
                       </div>
                     </div>
@@ -606,30 +607,30 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
    ============================================================================ */
 
 function PortfolioTeaserStage() {
-  const featuredCases = [
+  const featuredServices = [
     {
-      id: 'ecobank-wayfinding',
-      client: 'Ecobank Ghana PLC',
-      title: 'Head Office & Nationwide Branch Wayfinding Totems',
-      category: 'Wayfinding & Signage',
-      highlight: '14 Branches Retrofitted · Anti-Corrosion Marine Spec',
-      icon: Compass,
-    },
-    {
-      id: 'mtn-billboard-skins',
-      client: 'Scancom PLC (MTN Ghana)',
-      title: 'Yellow Summer 550gsm Highway Billboard Skins',
+      id: 'billboards',
+      badge: 'Outdoor Media',
+      title: 'Outdoor Billboard Skins & Rigging',
       category: 'Billboard Skins',
-      highlight: '12 Highway Unipoles · 72h Emergency Mobilization',
+      highlight: 'Large-format billboard skins · Tension rigging & mounting',
       icon: Layers,
     },
     {
-      id: 'african-protocol-flags',
-      client: 'African Protocol Summit',
-      title: 'Telescopic Anodized Flagpole Deployment',
+      id: 'telescopic_flags',
+      badge: 'Rental Fleet',
+      title: 'Telescopic Flag Poles & Rentals',
       category: 'Telescopic Flag Fleet',
-      highlight: '48 Poles Deployed · 32 Sovereign Nations Represented',
+      highlight: 'Telescopic flagpole rentals · Weighted bases & custom flags',
       icon: Flag,
+    },
+    {
+      id: 'wayfinding',
+      badge: 'Signage',
+      title: 'Wayfinding & Directional Signage',
+      category: 'Wayfinding & Signage',
+      highlight: 'Directional pylons · Entrance totems · Corporate signage',
+      icon: Compass,
     },
   ];
 
@@ -638,43 +639,43 @@ function PortfolioTeaserStage() {
       <div className="landing-wrap">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
-            <span className="font-mono text-xs uppercase tracking-widest text-red-500">
-              02.5 // Client Portfolio Showcase
+            <span className="font-mono text-xs uppercase tracking-widest text-[#E02B20]">
+              02.5 // Services & Capabilities
             </span>
             <h2
               id="portfolio-teaser-heading"
               className="mt-3 font-sans text-3xl font-bold tracking-tight text-white sm:text-4xl"
             >
-              Proven Deployments Across Ghana.
+              What We Do Across Ghana.
             </h2>
             <p className="mt-4 font-sans text-sm leading-relaxed text-neutral-400 sm:text-base">
-              Beyond internal ledger reconciliation, Collage engineers physical brand assets across the country: 550gsm highway billboard skins, high-wind telescopic flags, and architectural corporate wayfinding.
+              Alongside internal ledger management, Collage provides outdoor billboard skins, telescopic flagpole rentals, event branding, directional signage, and large-format printing.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/portfolio"
-              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-white shadow-lg shadow-red-950 transition-all hover:bg-red-500"
+              className="inline-flex items-center gap-2 rounded-full bg-[#E02B20] px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-white shadow-lg shadow-[#E02B20]/25 transition-all hover:bg-[#c61c2e]"
             >
-              <span>Explore Full Portfolio</span>
+              <span>View All Services</span>
               <ArrowRight size={14} aria-hidden="true" />
             </Link>
           </div>
         </div>
 
         <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {featuredCases.map((item) => {
+          {featuredServices.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.id}
-                href={`/portfolio/${item.id}`}
-                className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-neutral-900/40 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-neutral-700/80 hover:bg-neutral-900/70"
+                href="/portfolio#services"
+                className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-[#141413] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#E02B20]/40 hover:bg-[#191918]"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-wider text-red-400">
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-wider text-[#E02B20]">
                       <Icon size={12} aria-hidden="true" />
                       {item.category}
                     </span>
@@ -686,9 +687,9 @@ function PortfolioTeaserStage() {
                   </div>
 
                   <p className="mt-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-                    {item.client}
+                    {item.badge}
                   </p>
-                  <h3 className="mt-1 text-base font-bold text-white transition-colors group-hover:text-red-300">
+                  <h3 className="mt-1 text-base font-bold text-white transition-colors group-hover:text-[#E02B20]">
                     {item.title}
                   </h3>
                 </div>
@@ -1145,22 +1146,22 @@ function HeroInteractiveVisual() {
 
       {/* Floating Card: Live Invoice Dispatch */}
       <motion.div
-        className="absolute -top-3 -right-2 sm:-right-6 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-white/80 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(28,27,25,0.08)] backdrop-blur-md cursor-default select-none"
+        className="absolute -top-3 -right-2 sm:-right-6 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-neutral-200/90 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(29,29,27,0.09)] backdrop-blur-md cursor-default select-none"
         animate={reduce ? {} : { y: [0, -7, 0] }}
         transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
         whileHover={{ scale: 1.04, y: -9 }}
       >
-        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-[#c61c2e]/10 text-[#c61c2e]">
+        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-[#E31E24]/10 text-[#E31E24]">
           <ReceiptText size={17} />
         </div>
         <div className="text-left font-mono text-[11px] leading-tight">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[#1f2024]">INV #00081126.01</span>
-            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[8.5px] font-bold text-amber-700 tracking-wider">
+            <span className="font-bold text-[#1D1D1B]">INV #00081126.01</span>
+            <span className="rounded bg-[#E31E24]/10 px-1.5 py-0.5 text-[8.5px] font-bold text-[#E31E24] tracking-wider">
               DISPATCHED
             </span>
           </div>
-          <div className="mt-1 text-[10px] text-[#6b665f] font-sans">
+          <div className="mt-1 text-[10px] text-neutral-500 font-sans">
             GHS 105,285.96 · Kasapreko
           </div>
         </div>
@@ -1173,21 +1174,21 @@ function HeroInteractiveVisual() {
 
       {/* Floating Card: Cleared Wire Settlement */}
       <motion.div
-        className="absolute -bottom-4 -left-2 sm:-left-8 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-white/80 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(28,27,25,0.08)] backdrop-blur-md cursor-default select-none"
+        className="absolute -bottom-4 -left-2 sm:-left-8 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-neutral-200/90 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(29,29,27,0.09)] backdrop-blur-md cursor-default select-none"
         animate={reduce ? {} : { y: [0, 7, 0] }}
         transition={{ duration: 5.4, delay: 0.5, repeat: Infinity, ease: 'easeInOut' }}
         whileHover={{ scale: 1.04, y: 9 }}
       >
-        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-[#1D1D1B] text-white">
           <CheckCircle2 size={17} />
         </div>
         <div className="text-left font-mono text-[11px] leading-tight">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-emerald-700">SETTLED IN FULL</span>
-            <span className="text-[#a59f96]">·</span>
-            <span className="text-[9.5px] text-[#6b665f]">Bank Wire</span>
+            <span className="font-bold text-[#1D1D1B]">SETTLED IN FULL</span>
+            <span className="text-neutral-300">·</span>
+            <span className="text-[9.5px] text-neutral-500">Bank Wire</span>
           </div>
-          <div className="mt-1 text-[10px] text-[#1f2024] font-semibold">
+          <div className="mt-1 text-[10px] text-[#1D1D1B] font-semibold">
             GHS 65,000.00 · Ecobank
           </div>
         </div>
@@ -1195,11 +1196,11 @@ function HeroInteractiveVisual() {
 
       {/* Floating Pill: Statutory Tax Engine */}
       <motion.div
-        className="absolute -bottom-4 right-2 sm:right-6 z-20 hidden md:flex items-center gap-2 rounded-full border border-[#c61c2e]/20 bg-white/95 px-3 py-1 text-[10px] font-mono font-medium text-[#2f2e34] shadow-md backdrop-blur-sm cursor-default select-none"
+        className="absolute -bottom-4 right-2 sm:right-6 z-20 hidden md:flex items-center gap-2 rounded-full border border-[#E31E24]/25 bg-white/95 px-3 py-1 text-[10px] font-mono font-medium text-[#1D1D1B] shadow-md backdrop-blur-sm cursor-default select-none"
         animate={reduce ? {} : { y: [0, -5, 0] }}
         transition={{ duration: 4.2, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-[#c61c2e] animate-ping" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[#E31E24] animate-ping" />
         <span>GRA Compliant: 2.5% + 2.5% + 15%</span>
       </motion.div>
     </motion.div>
@@ -1216,44 +1217,93 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
 
   return (
     <div className="landing min-h-[100dvh] overflow-x-hidden">
-      <header className="landing-nav sticky top-0 z-30">
-        <div className="landing-wrap flex items-center justify-between gap-4 py-4">
-          <Link href="/" aria-label="Collage home">
-            <Brand />
-          </Link>
-          <nav className="flex items-center gap-1 sm:gap-2" aria-label="Landing">
-            <Link href="/portfolio" className="landing-link">
+      <header className="sticky top-0 z-40 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_8px_30px_rgba(29,29,27,0.08)]">
+          {/* Left: Brand + Divider + Tagline */}
+          <div className="flex items-center gap-3.5">
+            <Link href="/" aria-label="Collage home" className="shrink-0">
+              <Brand />
+            </Link>
+            <span className="hidden h-7 w-px bg-neutral-200 md:block" aria-hidden="true" />
+            <div className="hidden md:flex flex-col leading-tight">
+              <span className="text-[11px] font-bold tracking-tight text-[#1D1D1B]">
+                Creating Results
+              </span>
+              <span className="text-[10px] font-medium text-neutral-500">
+                Operations & Media
+              </span>
+            </div>
+          </div>
+
+          {/* Center: Clean Pill Navigation Links */}
+          <nav className="flex items-center gap-1 sm:gap-1.5" aria-label="Landing">
+            <Link
+              href="/portfolio"
+              className="rounded-full bg-neutral-100/90 px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-200/70"
+            >
               Portfolio
             </Link>
-            <Link href="/portfolio#services" className="landing-link hidden md:inline-flex">
+            <Link
+              href="/portfolio#services"
+              className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
               Services
             </Link>
-            <Link href="/portfolio#about" className="landing-link hidden md:inline-flex">
+            <Link
+              href="/portfolio#about"
+              className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
               About
             </Link>
-            <a href="#workspace" className="landing-link hidden sm:inline-flex">
+            <a
+              href="#workspace"
+              className="hidden sm:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
               Workspace
             </a>
-            {hasClerk ? (
-              <>
-                <Link href="/sign-in" className="landing-link">
-                  Sign in
-                </Link>
-                <Link href="/sign-up" className="landing-cta landing-cta--ghost">
-                  Create account
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/sign-in" className="landing-link">
-                  Sign in
-                </Link>
-                <Link href="/sign-in" className="landing-cta landing-cta--solid">
-                  Enter workspace
-                </Link>
-              </>
-            )}
+            <Link
+              href="/portfolio#contact"
+              className="hidden lg:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
+              Contact
+            </Link>
           </nav>
+
+          {/* Right: Circular Icon Actions + Solid Pill CTA */}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/portfolio"
+              title="Services & Portfolio"
+              aria-label="Services & Portfolio"
+              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
+            >
+              <Building2 size={15} />
+            </Link>
+            <Link
+              href="/sign-in"
+              title="Operator Sign In"
+              aria-label="Operator Sign In"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
+            >
+              <User size={15} />
+            </Link>
+            {hasClerk ? (
+              <Link
+                href="/sign-up"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1D1D1B] px-4 py-2 text-[12.5px] font-semibold text-white no-underline transition-colors hover:bg-[#E31E24]"
+              >
+                <span>Create account</span>
+              </Link>
+            ) : (
+              <Link
+                href="/sign-in"
+                className="inline-flex items-center gap-2 rounded-full bg-[#E31E24] px-4 sm:px-5 py-2 text-[12.5px] font-semibold text-white no-underline shadow-sm transition-colors hover:bg-[#1D1D1B]"
+              >
+                <span>Workspace</span>
+                <ArrowRight size={13} aria-hidden="true" />
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

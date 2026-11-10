@@ -31,24 +31,55 @@ export function PrivacyPolicyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F8F6] text-neutral-900 font-sans selection:bg-[#E02B20]/15 selection:text-[#E02B20]">
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200/80 bg-[#F9F8F6]/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="no-underline flex items-center gap-3">
-            <Brand />
-          </Link>
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#F7F7F8] text-[#1D1D1B] font-sans selection:bg-[#E31E24]/15 selection:text-[#E31E24]">
+      {/* Top Floating White Pill Header */}
+      <header className="sticky top-0 z-30 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_8px_30px_rgba(29,29,27,0.08)]">
+          <div className="flex items-center gap-3.5">
+            <Link href="/" className="no-underline flex items-center shrink-0">
+              <Brand />
+            </Link>
+            <span className="hidden h-7 w-px bg-neutral-200 sm:block" aria-hidden="true" />
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="text-[11px] font-bold tracking-tight text-[#1D1D1B]">
+                Creating Results
+              </span>
+              <span className="text-[10px] font-medium text-neutral-500">
+                Privacy & Governance
+              </span>
+            </div>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-1 text-[12.5px] font-semibold text-[#1D1D1B]">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-[12.5px] font-medium text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-900"
+              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
+              Home
+            </Link>
+            <Link
+              href="/portfolio"
+              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+            >
+              Portfolio
+            </Link>
+            <span className="rounded-full bg-neutral-100 px-3.5 py-1.5 text-[#1D1D1B]">
+              Privacy Policy
+            </span>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              title="Back to Home"
+              aria-label="Back to Home"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
             >
               <ArrowLeft size={14} />
-              <span>Home</span>
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#111110] px-3.5 py-1.5 text-[12.5px] font-medium text-white shadow-sm transition-colors hover:bg-neutral-800"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#1D1D1B] px-4 py-2 text-[12.5px] font-semibold text-white no-underline shadow-sm transition-colors hover:bg-[#E31E24]"
             >
               <span>Dashboard</span>
             </Link>

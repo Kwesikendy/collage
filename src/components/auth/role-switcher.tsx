@@ -108,7 +108,7 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         title="Interactive Demo Role Switcher"
-        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-neutral-200/90 bg-white/80 px-2.5 text-[11.5px] font-medium text-neutral-800 shadow-sm backdrop-blur transition-all hover:border-neutral-300 hover:bg-white cursor-pointer"
+        className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 text-[11.5px] font-medium text-[#1D1D1B] shadow-xs transition-all hover:border-[#1D1D1B] hover:bg-neutral-50 cursor-pointer"
         aria-haspopup="true"
         aria-expanded={open}
       >

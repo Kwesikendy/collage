@@ -190,8 +190,8 @@ export function EnquiryForm({ initialService, initialMessage, onSuccess }: Enqui
 
   if (isSubmitted) {
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-8 text-center backdrop-blur-md">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+      <div className="rounded-2xl border border-white/15 bg-neutral-900/70 p-8 text-center backdrop-blur-md">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#E31E24]/20 text-[#E31E24]">
           <CheckCircle2 size={32} aria-hidden="true" />
         </div>
         <h3 className="mt-4 text-xl font-bold text-white">
@@ -209,7 +209,7 @@ export function EnquiryForm({ initialService, initialMessage, onSuccess }: Enqui
           <button
             type="button"
             onClick={handleReset}
-            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 font-mono text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+            className="rounded-full border border-white/15 bg-white/5 px-5 py-2 font-mono text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
           >
             Submit Another Project Inquiry
           </button>

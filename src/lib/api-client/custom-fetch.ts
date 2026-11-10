@@ -153,8 +153,8 @@ function createInitialStore(): ErpStore {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
-      createdAt: `${currentMonthPrefix}-20T09:00:00.000Z`,
-      updatedAt: `${currentMonthPrefix}-21T10:00:00.000Z`,
+      createdAt: `${currentMonthPrefix}-09T09:00:00.000Z`,
+      updatedAt: `${currentMonthPrefix}-09T10:00:00.000Z`,
     },
     {
       id: 'cli-ecobank-gh',
@@ -1840,7 +1840,9 @@ function handleApiRequest(
       if (input.city !== undefined) client.city = input.city?.trim() || null;
       if (input.country !== undefined) client.country = input.country.trim();
       if (input.status !== undefined) client.status = input.status;
-      client.updatedAt = new Date().toISOString();
+      const nowMs = Date.now();
+      const prevMs = client.updatedAt ? new Date(client.updatedAt).getTime() : 0;
+      client.updatedAt = new Date(Math.max(nowMs, Number.isFinite(prevMs) ? prevMs + 1 : nowMs)).toISOString();
       saveStore(store);
       return client;
     }
