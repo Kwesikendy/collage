@@ -55,63 +55,63 @@ export function PortfolioPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0C] text-[#F5F3ED] antialiased selection:bg-red-900 selection:text-white">
+    <div className="min-h-screen bg-[#100F0E] text-[#F4F0E9] antialiased selection:bg-[#E5232B]/30 selection:text-[#F4F0E9]">
       {/* ─────────────────────────────────────────────────────────────
-          1. STICKY PUBLIC NAVIGATION HEADER (WHITE PILL DESIGN)
+          1. STICKY PUBLIC NAVIGATION HEADER (DARK-GLASS PILL DESIGN)
           ───────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-[#F5F5F6]/80 backdrop-blur-md pt-3 sm:pt-4 pb-2 px-3 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_8px_30px_rgba(29,29,27,0.08)]">
+      <header className="sticky top-0 z-40 pt-3 sm:pt-4 pb-2 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#33302E] bg-[#1B1918]/88 px-4 py-2 sm:px-6 sm:py-2.5 text-[#F4F0E9] shadow-[0_14px_38px_rgba(0,0,0,0.42)] backdrop-blur-xl">
           {/* Left: Brand + Vertical Divider + Subtitle */}
           <div className="flex items-center gap-3.5">
             <Link href="/" aria-label="Collage Home" className="shrink-0">
-              <Brand />
+              <Brand dark />
             </Link>
-            <span className="hidden h-7 w-px bg-neutral-200 md:block" aria-hidden="true" />
+            <span className="hidden h-7 w-px bg-[#33302E] md:block" aria-hidden="true" />
             <div className="hidden md:flex flex-col leading-tight">
-              <span className="text-[11px] font-bold tracking-tight text-[#1D1D1B]">
+              <span className="text-[11px] font-bold tracking-tight text-[#F4F0E9]">
                 Creating Results
               </span>
-              <span className="text-[10px] font-medium text-neutral-500">
+              <span className="text-[10px] font-medium text-[#C9C2B9]">
                 Services & Capabilities
               </span>
             </div>
           </div>
 
-          {/* Center: Clean Pill Navigation Links */}
-          <nav className="hidden items-center gap-1 text-[12.5px] font-semibold text-[#1D1D1B] md:flex" aria-label="Portfolio navigation">
+          {/* Center: Dark-Glass Pill Navigation Links */}
+          <nav className="hidden items-center gap-1 text-[12.5px] font-medium text-[#F4F0E9] md:flex" aria-label="Portfolio navigation">
             <a
               href="#overview"
-              className="rounded-full bg-neutral-100/90 px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-200/70"
+              className="rounded-full border border-[#33302E] bg-[#100F0E]/65 px-3.5 py-1.5 text-[#F4F0E9] no-underline transition-colors hover:border-[#C9C2B9]/35 hover:bg-[#F4F0E9]/[0.06]"
             >
               Overview
             </a>
             <a
               href="#services"
-              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+              className="rounded-full px-3.5 py-1.5 text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
             >
               Services
             </a>
             <a
               href="#about"
-              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+              className="rounded-full px-3.5 py-1.5 text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
             >
               About Collage
             </a>
             <a
               href="#contact"
-              className="rounded-full px-3.5 py-1.5 text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+              className="rounded-full px-3.5 py-1.5 text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
             >
               Contact & Quote
             </a>
           </nav>
 
-          {/* Right: Circular Icon Actions + Solid Pill CTA */}
+          {/* Right: Circular Icon Actions + Brand Red Pill CTA */}
           <div className="flex items-center gap-2">
             <a
               href="tel:+233247361133"
               title="Call Collage Desk"
               aria-label="Call Collage Desk"
-              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
+              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#33302E] bg-[#100F0E]/55 text-[#C9C2B9] transition-colors hover:border-[#C9C2B9]/40 hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
             >
               <Phone size={14} />
             </a>
@@ -119,13 +119,13 @@ export function PortfolioPage() {
               href="/dashboard"
               title="Staff Workspace"
               aria-label="Staff Workspace"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#33302E] bg-[#100F0E]/55 text-[#C9C2B9] transition-colors hover:border-[#C9C2B9]/40 hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
             >
               <User size={15} />
             </Link>
             <a
               href="#contact"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#E31E24] px-4 sm:px-5 py-2 text-[12.5px] font-semibold text-white no-underline shadow-sm transition-colors hover:bg-[#1D1D1B]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#E5232B] px-4 sm:px-5 py-2 text-[12.5px] font-semibold text-[#F4F0E9] no-underline shadow-[0_6px_18px_rgba(229,35,43,0.25)] transition-colors hover:bg-[#cf1d25]"
             >
               <span>Request a Quote</span>
               <ArrowRight size={13} aria-hidden="true" />
@@ -135,33 +135,38 @@ export function PortfolioPage() {
       </header>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. HERO SECTION (MINIMALIST WHITE-AND-OBSIDIAN GRADIENT BLEND)
+          2. HERO SECTION (COHESIVE WARM DARK EDITORIAL STAGE)
           ───────────────────────────────────────────────────────────── */}
       <section
         id="overview"
         className="relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24"
         style={{
           background: [
-            'radial-gradient(ellipse 68% 58% at 22% 38%, rgba(255, 255, 255, 0.96) 0%, rgba(248, 248, 249, 0.85) 45%, rgba(220, 220, 222, 0.35) 72%, transparent 100%)',
-            'radial-gradient(ellipse 55% 60% at 85% 25%, rgba(227, 30, 36, 0.08) 0%, rgba(13, 13, 12, 0.55) 68%, transparent 100%)',
-            'linear-gradient(180deg, #F5F5F6 0%, #EAEAEB 48%, #222120 86%, #0D0D0C 100%)',
+            'radial-gradient(ellipse 60% 50% at 18% 30%, rgba(27, 25, 24, 0.95) 0%, transparent 70%)',
+            'radial-gradient(ellipse 50% 55% at 82% 28%, rgba(229, 35, 43, 0.055) 0%, rgba(27, 25, 24, 0.5) 62%, transparent 80%)',
+            'linear-gradient(180deg, #100F0E 0%, #100F0E 80%, #1B1918 100%)',
           ].join(', '),
         }}
       >
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl space-y-6">
-            <h1 className="text-3xl font-extrabold tracking-tight text-[#141413] sm:text-5xl lg:text-6xl leading-tight">
-              Advertising, Event Staging & <span className="text-[#E31E24]">Large-Format Print.</span>
+            <div className="inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#E5232B]">
+              <span>Collage Ghana · Capabilities</span>
+            </div>
+
+            <h1 className="text-3xl font-bold tracking-tight text-[#F4F0E9] sm:text-5xl lg:text-6xl leading-[1.06]">
+              Advertising, Event Staging &{' '}
+              <span className="text-[#E5232B]">Large-Format Print.</span>
             </h1>
 
-            <p className="text-base leading-relaxed text-[#2D2D2A] sm:text-lg font-medium">
+            <p className="text-base leading-relaxed text-[#C9C2B9] sm:text-lg">
               Collage provides outdoor billboard skins, telescopic flagpole rentals, event branding, field setups, and large-format printing across Accra and beyond.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
                 href="#services"
-                className="inline-flex items-center gap-2 rounded-full bg-[#141413] px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-colors hover:bg-[#E31E24]"
+                className="inline-flex items-center gap-2 rounded-full bg-[#E5232B] px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-[#F4F0E9] shadow-[0_8px_22px_rgba(229,35,43,0.22)] transition-colors hover:bg-[#cf1d25]"
               >
                 <span>Explore Services</span>
                 <ArrowRight size={14} aria-hidden="true" />
@@ -169,7 +174,7 @@ export function PortfolioPage() {
 
               <a
                 href="#contact"
-                className="inline-flex items-center gap-2 rounded-full border border-[#141413]/20 bg-white/90 px-6 py-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#141413] shadow-sm transition-colors hover:bg-white"
+                className="inline-flex items-center gap-2 rounded-full border border-[#33302E] bg-[#1B1918]/80 px-6 py-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#F4F0E9] transition-colors hover:border-[#C9C2B9]/40 hover:bg-[#1B1918]"
               >
                 <span>Request a Quote</span>
               </a>
@@ -440,7 +445,7 @@ export function PortfolioPage() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-3">
               <Link href="/" aria-label="Collage Home">
-                <Brand inverse />
+                <Brand dark />
               </Link>
               <span>·</span>
               <span>Accra, Ghana</span>
