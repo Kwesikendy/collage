@@ -3176,8 +3176,8 @@ function DocumentDetail() {
           </div>
         </div>
 
-        {/* Black Banner: Subject / Project Title flush with Line Items Table */}
-        <div className="mt-4 bg-[#1f2024] px-4 py-2.5 text-[13px] font-extrabold uppercase tracking-wide text-white rounded-t-sm text-left">
+        {/* Black Banner: Subject / Project Title (70% width, 2x font size) */}
+        <div className="mt-4 mb-1.5 w-full sm:w-[70%] bg-[#0d0d0e] px-4 py-3 text-[22px] sm:text-[26px] leading-tight font-extrabold uppercase tracking-tight text-white text-left">
           {doc.subject}
         </div>
 
