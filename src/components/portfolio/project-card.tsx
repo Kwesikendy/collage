@@ -8,7 +8,6 @@ import {
   Flag,
   Layers,
   MapPin,
-  Sparkles,
   Truck,
 } from 'lucide-react';
 import type { PortfolioProject, ServiceCategory } from '@/data/portfolio-data';
@@ -28,7 +27,7 @@ function getCategoryIcon(category: ServiceCategory) {
     case 'telescopic_flags':
       return Flag;
     case 'event_branding':
-      return Sparkles;
+      return Layers;
     case 'wayfinding':
       return Compass;
     case 'large_format_print':

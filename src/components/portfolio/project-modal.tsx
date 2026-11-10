@@ -13,7 +13,6 @@ import {
   MapPin,
   Quote,
   Share2,
-  Sparkles,
   Truck,
   Wrench,
   X,
@@ -37,7 +36,7 @@ function getCategoryIcon(category: ServiceCategory) {
     case 'telescopic_flags':
       return Flag;
     case 'event_branding':
-      return Sparkles;
+      return Layers;
     case 'wayfinding':
       return Compass;
     case 'large_format_print':

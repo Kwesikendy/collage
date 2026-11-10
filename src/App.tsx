@@ -91,7 +91,6 @@ import {
   RotateCcw,
   Search,
   ShieldCheck,
-  Sparkles,
   Trash2,
   UserRound,
   Users,
@@ -4195,7 +4194,6 @@ function MarketerDashboard() {
         <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs">
             <span>Conversion Rate</span>
-            <Sparkles size={15} className="text-emerald-600" />
           </div>
           <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
             28.9%

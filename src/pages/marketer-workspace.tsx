@@ -13,7 +13,6 @@ import {
   Filter,
   Search,
   Eye,
-  Sparkles,
   Building2,
   Phone,
   Mail,
@@ -207,7 +206,6 @@ export function MarketerDashboardHub() {
         <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs">
             <span>Campaign Conversions</span>
-            <Sparkles size={15} className="text-emerald-600" />
           </div>
           <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
             {overallConversionRate}% Rate

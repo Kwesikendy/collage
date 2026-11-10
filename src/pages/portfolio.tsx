@@ -12,7 +12,6 @@ import {
   MapPin,
   Phone,
   ShieldCheck,
-  Sparkles,
   Truck,
   User,
 } from 'lucide-react';
@@ -33,7 +32,7 @@ function getServiceIcon(category: ServiceCategory) {
     case 'telescopic_flags':
       return Flag;
     case 'event_branding':
-      return Sparkles;
+      return Layers;
     case 'wayfinding':
       return Compass;
     case 'large_format_print':

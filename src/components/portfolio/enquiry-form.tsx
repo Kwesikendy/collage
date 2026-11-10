@@ -7,7 +7,6 @@ import {
   Mail,
   Phone,
   Send,
-  Sparkles,
   User,
 } from 'lucide-react';
 import {
@@ -226,7 +225,6 @@ export function EnquiryForm({ initialService, initialMessage, onSuccess }: Enqui
     >
       <div className="mb-6 space-y-1">
         <div className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-red-400">
-          <Sparkles size={13} aria-hidden="true" />
           <span>Request a Quote</span>
         </div>
         <h3 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
