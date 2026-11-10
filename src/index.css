@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -47,8 +47,8 @@
   /* Charts */
   --chart-1: 354 83% 43%; --chart-2: 155 35% 42%; --chart-3: 32 68% 52%; --chart-4: 213 38% 46%; --chart-5: 268 25% 54%;
   /* App tokens: Clean, simple unified sans-serif */
-  --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --app-font-mono: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --app-font-sans: 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --app-font-mono: 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --radius: 0.75rem;
 }
 
@@ -71,6 +71,7 @@
 @layer base {
   *, *::before, *::after { @apply border-border; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  h1, h2, h3, h4 { font-family: 'Bricolage Grotesque', 'Syne', 'Plus Jakarta Sans', 'Inter', sans-serif; letter-spacing: -0.032em; }
   body {
     @apply font-sans antialiased text-foreground;
     margin: 0; min-height: 100dvh;
@@ -81,7 +82,7 @@
       radial-gradient(at 80% 88%, rgba(224, 43, 32, 0.04) 0px, transparent 50%),
       radial-gradient(at 15% 85%, rgba(255, 255, 255, 0.7) 0px, transparent 45%);
     background-attachment: fixed;
-    letter-spacing: -0.011em;
+    letter-spacing: -0.016em;
   }
 }
 
@@ -287,8 +288,8 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
 /* ─── LANDING ────────────────────────────────────────────── */
 .landing {
-  --landing-display: 'Newsreader', 'Iowan Old Style', Palatino, Georgia, serif;
-  --landing-sans: 'Source Sans 3', 'Source Sans Pro', system-ui, sans-serif;
+  --landing-display: 'Bricolage Grotesque', 'Syne', 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --landing-sans: 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   background: #F7F7F8;
   color: #1D1D1B;
   font-family: var(--landing-sans);
@@ -550,9 +551,9 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
 /* Second-pass landing identity: clean, simple, unified modern sans. */
 .landing {
-  --landing-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --landing-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --landing-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --landing-display: 'Bricolage Grotesque', 'Syne', 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --landing-sans: 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --landing-ui: 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Inter', sans-serif;
 }
 .landing-nav, .landing-link, .landing-cta, .landing-kicker, .landing-index, .landing-row > span, .landing-thread__item > span, .landing-footer, .landing-mark-caption { font-family: var(--landing-ui); }
 .landing-kicker { font-weight: 600; letter-spacing: 0.18em; }
