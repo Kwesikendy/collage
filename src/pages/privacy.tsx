@@ -35,19 +35,10 @@ export function PrivacyPolicyPage() {
       {/* Top Floating White Pill Header */}
       <header className="sticky top-0 z-30 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_8px_30px_rgba(29,29,27,0.08)]">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center">
             <Link href="/" className="no-underline flex items-center shrink-0">
               <Brand />
             </Link>
-            <span className="hidden h-7 w-px bg-neutral-200 sm:block" aria-hidden="true" />
-            <div className="hidden sm:flex flex-col leading-tight">
-              <span className="text-[11px] font-bold tracking-tight text-[#1D1D1B]">
-                Creating Results
-              </span>
-              <span className="text-[10px] font-medium text-neutral-500">
-                Privacy & Governance
-              </span>
-            </div>
           </div>
 
           <nav className="hidden md:flex items-center gap-1 text-[12.5px] font-semibold text-[#1D1D1B]">

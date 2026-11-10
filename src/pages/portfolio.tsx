@@ -61,20 +61,11 @@ export function PortfolioPage() {
           ───────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 pt-3 sm:pt-4 pb-2 px-3 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#33302E] bg-[#1B1918]/88 px-4 py-2 sm:px-6 sm:py-2.5 text-[#F4F0E9] shadow-[0_14px_38px_rgba(0,0,0,0.42)] backdrop-blur-xl">
-          {/* Left: Brand + Vertical Divider + Subtitle */}
-          <div className="flex items-center gap-3.5">
+          {/* Left: Brand */}
+          <div className="flex items-center">
             <Link href="/" aria-label="Collage Home" className="shrink-0">
               <Brand dark />
             </Link>
-            <span className="hidden h-7 w-px bg-[#33302E] md:block" aria-hidden="true" />
-            <div className="hidden md:flex flex-col leading-tight">
-              <span className="text-[11px] font-bold tracking-tight text-[#F4F0E9]">
-                Creating Results
-              </span>
-              <span className="text-[10px] font-medium text-[#C9C2B9]">
-                Services & Capabilities
-              </span>
-            </div>
           </div>
 
           {/* Center: Dark-Glass Pill Navigation Links */}

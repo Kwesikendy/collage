@@ -95,7 +95,6 @@ export const ALL_WORKSPACE_NAV_ITEMS: NavItemConfig[] = [
   // Admin Navigation
   { href: '/dashboard', label: 'Overview', iconName: 'LayoutDashboard', requiredRoles: ['admin'] },
   { href: '/clients', label: 'Clients Directory', iconName: 'Users', requiredRoles: ['admin'] },
-  { href: '/quotations', label: 'Quotations', iconName: 'FileText', requiredRoles: ['admin'] },
   { href: '/invoices', label: 'Tax Invoices', iconName: 'ReceiptText', requiredRoles: ['admin'] },
   { href: '/operations', label: 'Rentals & Production', iconName: 'Layers', requiredRoles: ['admin'] },
   { href: '/admin/users', label: 'User & Role Access', iconName: 'UserCheck', requiredRoles: ['admin'] },

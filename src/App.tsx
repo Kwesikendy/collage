@@ -326,11 +326,11 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const CATALOG_PRESETS = [
   { description: 'Polo rental', quantity: 4, days: 1, unitPrice: 70 },
-  { description: 'Flag printing (1x3m)', quantity: 4, days: 1, unitPrice: 200 },
+  { description: 'Flag printing (1x3m)', quantity: 4, days: 0, unitPrice: 200 },
   {
     description: 'Logistics (Transpotation, Deployment)',
     quantity: 1,
-    days: 1,
+    days: 0,
     unitPrice: 500,
   },
   {
@@ -342,7 +342,7 @@ const CATALOG_PRESETS = [
   {
     description: 'Corporate Stage Backdrop & Wayfinding Branding',
     quantity: 1,
-    days: 1,
+    days: 0,
     unitPrice: 1450,
   },
   {
@@ -356,7 +356,6 @@ const CATALOG_PRESETS = [
 const adminNav = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/clients', label: 'Clients', icon: Users },
-  { href: '/quotations', label: 'Quotations', icon: FileText },
   { href: '/invoices', label: 'Invoices', icon: ReceiptText },
   { href: '/operations', label: 'Rentals & Production', icon: Layers },
   { href: '/admin/users', label: 'Admin Users', icon: UserCheck },
@@ -1444,13 +1443,6 @@ function ClientDetail() {
                   Edit client
                 </button>
                 <button
-                  className="btn btn-secondary"
-                  onClick={() => setNewDocKind('quotation')}
-                >
-                  <FilePlus2 size={15} />
-                  New quotation
-                </button>
-                <button
                   className="btn btn-primary"
                   onClick={() => setNewDocKind('invoice')}
                 >
@@ -1528,13 +1520,13 @@ function ClientDetail() {
                 <Empty
                   icon={FileText}
                   title="No documents yet"
-                  detail="Create a quotation or invoice for this client."
+                  detail="Create an invoice for this client."
                   action={
                     <button
                       className="btn btn-primary"
-                      onClick={() => setNewDocKind('quotation')}
+                      onClick={() => setNewDocKind('invoice')}
                     >
-                      <Plus size={15} /> Create quotation
+                      <Plus size={15} /> Create invoice
                     </button>
                   }
                 />
@@ -1689,13 +1681,6 @@ function Dashboard() {
           </button>
           <button
             type="button"
-            onClick={() => setModalAction('quotation')}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-neutral-300/80 bg-white/75 px-4 text-[13px] font-medium text-neutral-800 backdrop-blur-md transition-all duration-200 hover:border-neutral-400 hover:bg-white cursor-pointer"
-          >
-            <span>New Quotation</span>
-          </button>
-          <button
-            type="button"
             onClick={() => setModalAction('invoice')}
             className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#E02B20] px-4 text-[13px] font-medium text-white transition-all duration-200 hover:bg-[#c61c2e] cursor-pointer"
           >
@@ -1802,7 +1787,7 @@ function Dashboard() {
               Operations Ledger
             </h2>
             <Link
-              href="/quotations"
+              href="/invoices"
               className="text-[12.5px] font-medium text-neutral-500 no-underline transition-colors hover:text-neutral-900"
             >
               View all records →
@@ -2111,17 +2096,28 @@ function DocumentForm({
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
+  const [durationUnit, setDurationUnit] = useState<'days' | 'months'>(
+    doc?.items?.some((x) => x.durationUnit === 'months') ? 'months' : 'days',
+  );
+
   const [items, setItems] = useState<
-    Array<{ description: string; quantity: number; days: number; unitPrice: number }>
+    Array<{
+      description: string;
+      quantity: number;
+      days: number;
+      durationUnit?: 'days' | 'months';
+      unitPrice: number;
+    }>
   >(
     doc?.items?.length
       ? doc.items.map((x) => ({
           description: x.description,
           quantity: x.quantity,
           days: x.days,
+          durationUnit: x.durationUnit ?? 'days',
           unitPrice: x.unitPrice,
         }))
-      : [{ description: '', quantity: 1, days: 1, unitPrice: 0 }],
+      : [{ description: '', quantity: 1, days: 1, durationUnit: 'days', unitPrice: 0 }],
   );
   const [clientId, setClientId] = useState(doc?.clientId || defaultClientId || '');
   const [status, setStatus] = useState<'draft' | 'issued'>(
@@ -2139,6 +2135,7 @@ function DocumentForm({
       description: String(it.description || '').slice(0, 300) || 'Item',
       quantity: Number.isFinite(Number(it.quantity)) ? Math.max(0, Number(it.quantity)) : 0,
       days: Number.isFinite(Number(it.days)) ? Math.max(0, Number(it.days)) : 0,
+      durationUnit: it.durationUnit ?? durationUnit,
       unitPrice: Number.isFinite(Number(it.unitPrice)) ? Math.max(0, Number(it.unitPrice)) : 0,
     })),
     discountPercent: Number.isFinite(Number(rates.discount))
@@ -2151,7 +2148,13 @@ function DocumentForm({
 
   function updateItem(
     index: number,
-    patch: Partial<{ description: string; quantity: number; days: number; unitPrice: number }>,
+    patch: Partial<{
+      description: string;
+      quantity: number;
+      days: number;
+      durationUnit?: 'days' | 'months';
+      unitPrice: number;
+    }>,
   ) {
     setItems((prev) => prev.map((it, idx) => (idx === index ? { ...it, ...patch } : it)));
   }
@@ -2159,9 +2162,9 @@ function DocumentForm({
   function addPreset(preset: (typeof CATALOG_PRESETS)[number]) {
     setItems((prev) => {
       if (prev.length === 1 && !prev[0].description.trim() && prev[0].unitPrice === 0) {
-        return [{ ...preset }];
+        return [{ ...preset, durationUnit }];
       }
-      return [...prev, { ...preset }];
+      return [...prev, { ...preset, durationUnit }];
     });
   }
 
@@ -2176,6 +2179,7 @@ function DocumentForm({
       description: String(it.description || '').trim().slice(0, 300),
       quantity: Number(it.quantity),
       days: Number(it.days),
+      durationUnit: it.durationUnit ?? durationUnit,
       unitPrice: Number(it.unitPrice),
     }));
     if (
@@ -2185,12 +2189,14 @@ function DocumentForm({
           !Number.isFinite(it.quantity) ||
           it.quantity <= 0 ||
           !Number.isFinite(it.days) ||
-          it.days <= 0 ||
+          it.days < 0 ||
           !Number.isFinite(it.unitPrice) ||
           it.unitPrice < 0,
       )
     ) {
-      setError('Add a description and valid quantity and days for each line item.');
+      setError(
+        `Add a description, valid quantity, and ${durationUnit} (0 or more) for each line item.`,
+      );
       return;
     }
 
@@ -2333,21 +2339,38 @@ function DocumentForm({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-[#e9e3db]">
-        <div className="grid grid-cols-[1fr_68px_68px_105px_95px_32px] gap-2 bg-[#f5f1eb] px-3 py-2 text-[9px] font-bold uppercase tracking-[.09em] text-[#8c867e]">
+        <div className="grid grid-cols-[1fr_68px_88px_105px_95px_32px] items-center gap-2 bg-[#f5f1eb] px-3 py-2 text-[9px] font-bold uppercase tracking-[.09em] text-[#8c867e]">
           <span>Item Description</span>
           <span>Qty</span>
-          <span>Days</span>
+          <select
+            aria-label="Duration unit"
+            value={durationUnit}
+            onChange={(e) => {
+              const nextUnit = e.target.value as 'days' | 'months';
+              setDurationUnit(nextUnit);
+              setItems((prev) => prev.map((it) => ({ ...it, durationUnit: nextUnit })));
+            }}
+            className="cursor-pointer rounded border border-[#d6cec2] bg-white px-1.5 py-1 text-[9px] font-bold uppercase tracking-[.06em] text-[#292a2f] focus:border-[#c61c2e] focus:outline-none"
+          >
+            <option value="days">Days</option>
+            <option value="months">Months</option>
+          </select>
           <span>Unit Price</span>
           <span className="text-right">Line Total</span>
           <span />
         </div>
         <div className="divide-y divide-[#f0ece6]">
           {items.map((item, idx) => {
-            const rowTotal = (Number(item.quantity) || 0) * (Number(item.days) || 0) * (Number(item.unitPrice) || 0);
+            const rawDays = Number(item.days) || 0;
+            const effectiveDuration = rawDays > 0 ? rawDays : 1;
+            const rowTotal =
+              (Number(item.quantity) || 0) *
+              effectiveDuration *
+              (Number(item.unitPrice) || 0);
             return (
               <div
                 key={idx}
-                className="grid grid-cols-[1fr_68px_68px_105px_95px_32px] items-center gap-2 p-2.5"
+                className="grid grid-cols-[1fr_68px_88px_105px_95px_32px] items-center gap-2 p-2.5"
               >
                 <input
                   aria-label="Item description"
@@ -2367,10 +2390,10 @@ function DocumentForm({
                   onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
                 />
                 <input
-                  aria-label="Days"
+                  aria-label={durationUnit === 'months' ? 'Months' : 'Days'}
                   className="field"
                   type="number"
-                  min="1"
+                  min="0"
                   step="1"
                   value={item.days}
                   onChange={(e) => updateItem(idx, { days: Number(e.target.value) })}
@@ -2407,7 +2430,7 @@ function DocumentForm({
             onClick={() =>
               setItems((prev) => [
                 ...prev,
-                { description: '', quantity: 1, days: 1, unitPrice: 0 },
+                { description: '', quantity: 1, days: 0, durationUnit, unitPrice: 0 },
               ])
             }
           >
@@ -2460,8 +2483,7 @@ function DocumentForm({
               Statutory Ghana Tax Breakdown
             </div>
             <div className="mt-1">
-              Line total = Qty × Days × Unit Price. GETFund (2.5%), NHIL (2.5%) & VAT
-              (15%) applied on taxable subtotal.
+              Line total = Qty × {durationUnit === 'months' ? 'Months' : 'Days'} × Unit Price (or Qty × Unit Price when {durationUnit} is 0). GETFund (2.5%), NHIL (2.5%) & VAT (15%) applied on taxable subtotal.
             </div>
           </div>
           <div className="space-y-1 text-[11px]">
@@ -2830,6 +2852,33 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
   );
 }
 
+const COLLAGE_BANK_ACCOUNTS = [
+  {
+    bank: 'Fidelity Bank',
+    name: 'Collage N Mosaic',
+    accountNumber: '1050385493154',
+    branch: 'Tesano',
+  },
+  {
+    bank: 'Ghana Commercial Bank',
+    name: 'Collage N Mosaic',
+    accountNumber: '1201180001339',
+    branch: 'Kaneshie Industrial',
+  },
+  {
+    bank: 'Consolidated Bank Ghana (CBG)',
+    name: 'Collage N Mosaic',
+    accountNumber: '0158475100001',
+    branch: 'North Industrial Area',
+  },
+  {
+    bank: 'Omni BSIC',
+    name: 'Collage N Mosaic',
+    accountNumber: '0010221964018',
+    branch: 'Adabrraka',
+  },
+] as const;
+
 function DocumentDetail() {
   const { id = '' } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -3089,7 +3138,11 @@ function DocumentDetail() {
               <tr className="bg-[#a81a29] text-white text-[9px] font-bold uppercase tracking-[.08em]">
                 <th className="px-4 py-2.5">Item Description</th>
                 <th className="px-3 py-2.5 text-center">Qty</th>
-                <th className="px-3 py-2.5 text-center">Days</th>
+                <th className="px-3 py-2.5 text-center">
+                  {(doc.items || []).some((it) => it.durationUnit === 'months')
+                    ? 'Months'
+                    : 'Days'}
+                </th>
                 <th className="px-3 py-2.5 text-right">Unit Price GHS</th>
                 <th className="px-4 py-2.5 text-right">Total Amount GHS</th>
               </tr>
@@ -3164,15 +3217,67 @@ function DocumentDetail() {
           </div>
         </div>
 
-        {/* Authentic Collage Footer with Red Circle + Black Arc Icon */}
-        <div className="mt-12 flex flex-wrap items-end justify-between border-t border-[#e2dcce] pt-6 text-[11px]">
-          <div className="text-[10px] text-[#7a756f] space-y-0.5 text-left">
-            <div className="font-bold uppercase tracking-wider text-[#1f2024]">
-              COLLAGE · CREATING RESULTS
+        {/* Authentic Collage Footer with Official MoMo + 4 Bank Accounts on Left & Contact + Mark on Right */}
+        <div className="mt-10 flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-t border-[#e2dcce] pt-6 text-[11px]">
+          {/* Left: Official Payment Details (MoMo + 4 Bank Accounts) */}
+          <div className="flex-1 text-left space-y-4">
+            {/* MOMO DETAILS */}
+            <div>
+              <div className="inline-block rounded-[4px] bg-[#d81e27] px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                MoMo Details
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <div className="inline-flex items-center gap-1">
+                  <span className="inline-flex h-5 items-center rounded-[2px] bg-[#e60000] px-1.5 text-[8px] font-extrabold uppercase tracking-tight text-white">
+                    Telecel
+                  </span>
+                  <span className="inline-flex h-5 items-center rounded-[2px] bg-[#1d3c85] px-1.5 text-[8px] font-extrabold uppercase tracking-tight text-white">
+                    AT Money
+                  </span>
+                  <span className="inline-flex h-5 items-center rounded-[2px] bg-[#ffcc00] px-1.5 text-[8px] font-extrabold uppercase tracking-tight text-[#00334e]">
+                    MTN MoMo
+                  </span>
+                </div>
+                <span className="mono text-[16px] font-extrabold tracking-tight text-[#1f2024]">
+                  *713*1308#
+                </span>
+              </div>
             </div>
-            <div className="text-[#999]">Accra, Ghana</div>
+
+            {/* BANK DETAILS */}
+            <div>
+              <div className="inline-block rounded-[4px] bg-[#d81e27] px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                Bank Details
+              </div>
+              <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-[10px] leading-[1.35]">
+                {COLLAGE_BANK_ACCOUNTS.map((acct) => (
+                  <div key={acct.accountNumber} className="space-y-0.5">
+                    <div>
+                      <span className="font-bold text-[#d81e27]">Bank:</span>{' '}
+                      <span className="font-bold text-[#1f2024]">{acct.bank}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-[#d81e27]">Name:</span>{' '}
+                      <span className="font-bold text-[#1f2024]">{acct.name}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-[#d81e27]">Acc. No.:</span>{' '}
+                      <span className="mono font-bold text-[#1f2024]">
+                        {acct.accountNumber}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-[#d81e27]">Branch:</span>{' '}
+                      <span className="font-bold text-[#1f2024]">{acct.branch}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="flex items-end gap-3.5">
+
+          {/* Right: Collage Contact Info & Target Mark */}
+          <div className="flex items-end justify-end gap-3.5 shrink-0">
             <div className="text-right text-[10px] leading-tight text-[#444] space-y-0.5">
               <div className="font-semibold text-[#1f2024]">+233 24 736 1133</div>
               <div>marketing@collagenmosaic.com</div>

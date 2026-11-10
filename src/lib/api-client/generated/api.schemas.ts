@@ -130,6 +130,8 @@ export interface ClientUpdate {
   status?: ClientUpdateStatus;
 }
 
+export type DurationUnit = 'days' | 'months';
+
 export interface DocumentLineItem {
   /**
      * @minLength 1
@@ -138,8 +140,9 @@ export interface DocumentLineItem {
   description: string;
   /** @exclusiveMinimum 0 */
   quantity: number;
-  /** @exclusiveMinimum 0 */
+  /** @minimum 0 */
   days: number;
+  durationUnit?: DurationUnit;
   /** @minimum 0 */
   unitPrice: number;
   /** @minimum 0 */
@@ -154,8 +157,9 @@ export interface DocumentLineInput {
   description: string;
   /** @exclusiveMinimum 0 */
   quantity: number;
-  /** @exclusiveMinimum 0 */
+  /** @minimum 0 */
   days: number;
+  durationUnit?: DurationUnit;
   /** @minimum 0 */
   unitPrice: number;
 }

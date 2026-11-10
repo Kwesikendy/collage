@@ -4,6 +4,7 @@ export type LineInput = {
   description: string;
   quantity: number;
   days: number;
+  durationUnit?: 'days' | 'months';
   unitPrice: number;
 };
 
@@ -39,11 +40,13 @@ export function calculateDocumentPricing(input: {
 }): DocumentPricing {
   const items = input.items.map((item) => {
     const unitPriceCents = toCents(item.unitPrice);
-    const totalCents = Math.round(item.quantity * item.days * unitPriceCents);
+    const effectiveDuration = item.days > 0 ? item.days : 1;
+    const totalCents = Math.round(item.quantity * effectiveDuration * unitPriceCents);
     return {
       description: item.description.trim(),
       quantity: item.quantity,
       days: item.days,
+      durationUnit: item.durationUnit ?? 'days',
       unitPrice: Number(fromCents(unitPriceCents)),
       total: Number(fromCents(totalCents)),
     };
