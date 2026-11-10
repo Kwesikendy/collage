@@ -2119,6 +2119,7 @@ function DocumentForm({
       : [{ description: '', quantity: 1, days: 1, durationUnit: 'days', unitPrice: 0 }],
   );
   const [clientId, setClientId] = useState(doc?.clientId || defaultClientId || '');
+  const [subject, setSubject] = useState(doc?.subject || '');
   const [status, setStatus] = useState<'draft' | 'issued'>(
     doc?.status === 'draft' ? 'draft' : 'issued',
   );
@@ -2160,11 +2161,17 @@ function DocumentForm({
 
   function addPreset(preset: (typeof CATALOG_PRESETS)[number]) {
     setItems((prev) => {
-      if (prev.length === 1 && !prev[0].description.trim() && prev[0].unitPrice === 0) {
-        return [{ ...preset, durationUnit }];
+      const emptyIdx = prev.findIndex((row) => !row.description.trim() && Number(row.unitPrice) === 0);
+      if (emptyIdx !== -1) {
+        return prev.map((row, idx) =>
+          idx === emptyIdx ? { ...preset, durationUnit } : row,
+        );
       }
       return [...prev, { ...preset, durationUnit }];
     });
+    setSubject((prevSubject) =>
+      prevSubject.trim() ? prevSubject : preset.description.toUpperCase(),
+    );
   }
 
   function submit(e: FormEvent<HTMLFormElement>) {
@@ -2174,13 +2181,16 @@ function DocumentForm({
       setError('Choose a client before saving.');
       return;
     }
-    const cleanedItems = items.map((it) => ({
+    const normalizedItems = items.map((it) => ({
       description: String(it.description || '').trim().slice(0, 300),
-      quantity: Number(it.quantity),
-      days: Number(it.days),
+      quantity: Number.isFinite(Number(it.quantity)) && Number(it.quantity) > 0 ? Number(it.quantity) : 1,
+      days: Number.isFinite(Number(it.days)) && Number(it.days) >= 0 ? Number(it.days) : 0,
       durationUnit: it.durationUnit ?? durationUnit,
-      unitPrice: Number(it.unitPrice),
+      unitPrice: Number.isFinite(Number(it.unitPrice)) && Number(it.unitPrice) >= 0 ? Number(it.unitPrice) : 0,
     }));
+    const nonEmptyItems = normalizedItems.filter((it) => it.description.length > 0);
+    const cleanedItems = nonEmptyItems.length > 0 ? nonEmptyItems : normalizedItems;
+
     if (
       cleanedItems.some(
         (it) =>
@@ -2200,7 +2210,14 @@ function DocumentForm({
     }
 
     const f = new FormData(e.currentTarget);
-    const rawSubject = String(f.get('subject') || '').trim().slice(0, 180);
+    const formSubject = String(f.get('subject') || subject || '').trim();
+    const autoSubject = cleanedItems
+      .map((it) => it.description)
+      .filter(Boolean)
+      .slice(0, 2)
+      .join(' & ')
+      .toUpperCase();
+    const rawSubject = (formSubject || autoSubject || 'GENERAL OPERATIONS INVOICE').slice(0, 180);
     const rawDiscount = Number(rates.discount);
     const clampedDiscount = Number.isFinite(rawDiscount)
       ? Math.min(100, Math.max(0, rawDiscount))
@@ -2286,7 +2303,8 @@ function DocumentForm({
           name="subject"
           required
           maxLength={180}
-          defaultValue={doc?.subject}
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
           placeholder="e.g. TELESCOPIC FLAG PRINT AND POLE RENTALS"
         />
         <Input
@@ -2316,8 +2334,13 @@ function DocumentForm({
 
       {/* Quick Catalog Picker */}
       <div className="rounded-xl border border-neutral-200/80 bg-white/60 p-3.5 backdrop-blur-md">
-        <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-neutral-500">
-          Quick add Collage catalog item
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+            Quick add Collage catalog item (tap to insert)
+          </span>
+          <span className="text-[10.5px] text-neutral-500">
+            Tip: Set <strong>{durationUnit === 'months' ? 'Months' : 'Days'} = 0</strong> for printed or flat-rate items (calculates Qty × Unit Price)
+          </span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {CATALOG_PRESETS.map((preset) => (
@@ -2332,24 +2355,28 @@ function DocumentForm({
               <span className="mono text-[10px] text-[#c61c2e]">
                 GHS {preset.unitPrice}
               </span>
+              <span className="rounded bg-neutral-200/70 px-1 py-0.2 text-[9px] font-semibold text-neutral-600">
+                {preset.days === 0 ? '0d · Print/Flat' : `${preset.days}d · Rental`}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-[#e9e3db]">
-        <div className="grid grid-cols-[1fr_68px_88px_105px_95px_32px] items-center gap-2 bg-[#f5f1eb] px-3 py-2 text-[9px] font-bold uppercase tracking-[.09em] text-[#8c867e]">
+        <div className="grid grid-cols-[1fr_68px_96px_105px_100px_32px] items-center gap-2 bg-[#f5f1eb] px-3 py-2 text-[9px] font-bold uppercase tracking-[.09em] text-[#8c867e]">
           <span>Item Description</span>
           <span>Qty</span>
           <select
-            aria-label="Duration unit"
+            aria-label="Duration unit (Days or Months)"
+            data-testid="select-duration-unit"
             value={durationUnit}
             onChange={(e) => {
               const nextUnit = e.target.value as 'days' | 'months';
               setDurationUnit(nextUnit);
               setItems((prev) => prev.map((it) => ({ ...it, durationUnit: nextUnit })));
             }}
-            className="cursor-pointer rounded border border-[#d6cec2] bg-white px-1.5 py-1 text-[9px] font-bold uppercase tracking-[.06em] text-[#292a2f] focus:border-[#c61c2e] focus:outline-none"
+            className="w-full cursor-pointer rounded-md border border-[#cfc6b8] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[.05em] text-[#1D1D1B] shadow-2xs transition-colors hover:border-[#a81a29] focus:border-[#c61c2e] focus:outline-none"
           >
             <option value="days">Days</option>
             <option value="months">Months</option>
@@ -2360,16 +2387,22 @@ function DocumentForm({
         </div>
         <div className="divide-y divide-[#f0ece6]">
           {items.map((item, idx) => {
-            const rawDays = Number(item.days) || 0;
+            const qty = Number.isFinite(Number(item.quantity))
+              ? Math.max(0, Number(item.quantity))
+              : 0;
+            const rawDays = Number.isFinite(Number(item.days))
+              ? Math.max(0, Number(item.days))
+              : 0;
+            const unitPrice = Number.isFinite(Number(item.unitPrice))
+              ? Math.max(0, Number(item.unitPrice))
+              : 0;
             const effectiveDuration = rawDays > 0 ? rawDays : 1;
-            const rowTotal =
-              (Number(item.quantity) || 0) *
-              effectiveDuration *
-              (Number(item.unitPrice) || 0);
+            const computedRowTotal =
+              livePricing.items[idx]?.total ?? qty * effectiveDuration * unitPrice;
             return (
               <div
                 key={idx}
-                className="grid grid-cols-[1fr_68px_88px_105px_95px_32px] items-center gap-2 p-2.5"
+                className="grid grid-cols-[1fr_68px_96px_105px_100px_32px] items-start gap-2 p-2.5"
               >
                 <input
                   aria-label="Item description"
@@ -2388,15 +2421,34 @@ function DocumentForm({
                   value={item.quantity}
                   onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
                 />
-                <input
-                  aria-label={durationUnit === 'months' ? 'Months' : 'Days'}
-                  className="field"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={item.days}
-                  onChange={(e) => updateItem(idx, { days: Number(e.target.value) })}
-                />
+                <div className="flex flex-col gap-1">
+                  <input
+                    aria-label={durationUnit === 'months' ? 'Months' : 'Days'}
+                    className="field"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={item.days}
+                    onChange={(e) =>
+                      updateItem(idx, {
+                        days: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
+                      })
+                    }
+                  />
+                  {rawDays === 0 ? (
+                    <span className="text-[9.5px] font-medium text-emerald-700 leading-tight">
+                      Qty × Unit Price
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => updateItem(idx, { days: 0 })}
+                      className="text-left text-[9.5px] font-medium text-neutral-500 underline hover:text-[#c61c2e] cursor-pointer leading-tight"
+                    >
+                      Set 0 (No {durationUnit})
+                    </button>
+                  )}
+                </div>
                 <input
                   aria-label="Unit price in GHS"
                   className="field"
@@ -2406,15 +2458,15 @@ function DocumentForm({
                   value={item.unitPrice}
                   onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value) })}
                 />
-                <div className="mono text-right text-[12px] font-semibold text-[#292a2f]">
-                  {fmt(rowTotal).replace('GHS ', '')}
+                <div className="mono pt-2 text-right text-[12px] font-semibold text-[#292a2f]">
+                  {fmt(computedRowTotal)}
                 </div>
                 <button
                   type="button"
                   aria-label="Remove line item"
                   disabled={items.length <= 1}
                   onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}
-                  className="btn btn-quiet !h-8 !min-h-8 !w-8 !px-0 text-[#a53b47]"
+                  className="btn btn-quiet mt-0.5 !h-8 !min-h-8 !w-8 !px-0 text-[#a53b47]"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -2422,19 +2474,33 @@ function DocumentForm({
             );
           })}
         </div>
-        <div className="border-t border-[#eee8e0] bg-[#faf8f4] px-3 py-2">
-          <button
-            type="button"
-            className="btn btn-quiet !h-7 !min-h-7 !px-2 text-[11px]"
-            onClick={() =>
-              setItems((prev) => [
-                ...prev,
-                { description: '', quantity: 1, days: 0, durationUnit, unitPrice: 0 },
-              ])
-            }
-          >
-            <Plus size={13} /> Add blank line item
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee8e0] bg-[#faf8f4] px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-quiet !h-7 !min-h-7 !px-2 text-[11px]"
+              onClick={() =>
+                setItems((prev) => [
+                  ...prev,
+                  { description: '', quantity: 1, days: 0, durationUnit, unitPrice: 0 },
+                ])
+              }
+            >
+              <Plus size={13} /> Add blank line item (0 {durationUnit})
+            </button>
+            <button
+              type="button"
+              className="btn btn-quiet !h-7 !min-h-7 !px-2 text-[11px]"
+              onClick={() =>
+                setItems((prev) => [
+                  ...prev,
+                  { description: '', quantity: 1, days: 1, durationUnit, unitPrice: 0 },
+                ])
+              }
+            >
+              <Plus size={13} /> Add rental item (1 {durationUnit === 'months' ? 'month' : 'day'})
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3147,28 +3213,35 @@ function DocumentDetail() {
               </tr>
             </thead>
             <tbody>
-              {(doc.items || []).map((item, i) => (
-                <tr
-                  key={`${item.description}-${i}`}
-                  className="border-b border-[#ece6de] text-[11px] even:bg-[#faf7f2]"
-                >
-                  <td className="px-4 py-2.5 font-medium text-[#2e2d33]">
-                    {item.description}
-                  </td>
-                  <td className="mono px-3 py-2.5 text-center text-[#555]">
-                    {item.quantity}
-                  </td>
-                  <td className="mono px-3 py-2.5 text-center text-[#555]">
-                    {item.days}
-                  </td>
-                  <td className="mono px-3 py-2.5 text-right text-[#555]">
-                    {fmt(item.unitPrice).replace('GHS ', '')}
-                  </td>
-                  <td className="mono px-4 py-2.5 text-right font-semibold text-[#1e1f23]">
-                    {fmt(item.total).replace('GHS ', '')}
-                  </td>
-                </tr>
-              ))}
+              {(doc.items || []).map((item, i) => {
+                const effDur = Number(item.days) > 0 ? Number(item.days) : 1;
+                const lineTotal =
+                  Number(item.total) > 0
+                    ? Number(item.total)
+                    : Number(item.quantity || 0) * effDur * Number(item.unitPrice || 0);
+                return (
+                  <tr
+                    key={`${item.description}-${i}`}
+                    className="border-b border-[#ece6de] text-[11px] even:bg-[#faf7f2]"
+                  >
+                    <td className="px-4 py-2.5 font-medium text-[#2e2d33]">
+                      {item.description}
+                    </td>
+                    <td className="mono px-3 py-2.5 text-center text-[#555]">
+                      {item.quantity}
+                    </td>
+                    <td className="mono px-3 py-2.5 text-center text-[#555]">
+                      {item.days}
+                    </td>
+                    <td className="mono px-3 py-2.5 text-right text-[#555]">
+                      {fmt(item.unitPrice)}
+                    </td>
+                    <td className="mono px-4 py-2.5 text-right font-semibold text-[#1e1f23]">
+                      {fmt(lineTotal)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -3395,6 +3468,12 @@ function OperationsView() {
   const [tab, setTab] = useState<'rentals' | 'print'>('rentals');
   const [rentalModal, setRentalModal] = useState(false);
   const [printModal, setPrintModal] = useState(false);
+  const [rentalForm, setRentalForm] = useState({
+    itemName: 'Telescopic Flag Pole & Heavy Water Base (5m)',
+    quantity: 4,
+    days: 1,
+    unitRate: 70,
+  });
   const clients = useGetClients();
   const documentsQuery = useGetDocuments();
 
@@ -3411,15 +3490,15 @@ function OperationsView() {
   function submitRental(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    const rawQty = Number(f.get('quantity') || 1);
-    const rawDays = Number(f.get('days') || 1);
-    const rawRate = Number(f.get('unitRate') || 70);
+    const rawQty = Number(f.get('quantity') ?? rentalForm.quantity ?? 1);
+    const rawDays = Number(f.get('days') ?? rentalForm.days ?? 0);
+    const rawRate = Number(f.get('unitRate') ?? rentalForm.unitRate ?? 70);
     const updated = createRentalBooking({
-      itemName: String(f.get('itemName') || '').trim().slice(0, 180),
+      itemName: String(f.get('itemName') || rentalForm.itemName || '').trim().slice(0, 180),
       clientName: String(f.get('clientName') || '').trim().slice(0, 180),
       documentNumber: String(f.get('documentNumber') || 'Direct').trim().slice(0, 60),
       quantity: Number.isFinite(rawQty) && rawQty > 0 ? Math.min(100000, rawQty) : 1,
-      days: Number.isFinite(rawDays) && rawDays > 0 ? Math.min(365, rawDays) : 1,
+      days: Number.isFinite(rawDays) && rawDays >= 0 ? Math.min(365, rawDays) : 0,
       unitRate: Number.isFinite(rawRate) && rawRate >= 0 ? rawRate : 70,
       startDate: String(f.get('startDate') || '').trim().slice(0, 30),
       returnDate: String(f.get('returnDate') || '').trim().slice(0, 30),
@@ -3499,60 +3578,66 @@ function OperationsView() {
                 </tr>
               </thead>
               <tbody>
-                {ops.rentals.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="table-row border-b border-[#f0ece6] last:border-0"
-                  >
-                    <td className="px-5 py-4">
-                      <div className="text-[13px] font-bold text-[#333338]">
-                        {r.itemName}
-                      </div>
-                      <div className="mono mt-0.5 text-[11px] text-[#89847e]">
-                        {fmt(r.unitRate)} / day · Total {fmt(r.quantity * r.days * r.unitRate)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-[12px] font-semibold text-[#45434a]">
-                        {r.clientName}
-                      </div>
-                      <div className="mono mt-0.5 text-[11px] text-[#a82b3e]">
-                        {r.documentNumber}
-                      </div>
-                    </td>
-                    <td className="mono px-4 py-4 text-[12px]">
-                      {r.quantity} units × {r.days}d
-                    </td>
-                    <td className="px-4 py-4 text-[12px] text-[#68666a]">
-                      {dateFmt(r.startDate)} → {dateFmt(r.returnDate)}
-                    </td>
-                    <td className="px-4 py-4">
-                      <Status value={r.status} />
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="inline-flex gap-1">
-                        {r.status !== 'deployed' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRentalStatus(r.id, 'deployed')}
-                            className="btn btn-secondary !h-7 !min-h-7 !px-2.5 text-[11px]"
-                          >
-                            Mark Deployed
-                          </button>
-                        )}
-                        {r.status !== 'returned' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRentalStatus(r.id, 'returned')}
-                            className="btn btn-primary !h-7 !min-h-7 !px-2.5 text-[11px]"
-                          >
-                            Mark Returned
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {ops.rentals.map((r) => {
+                  const effDays = Number(r.days) > 0 ? Number(r.days) : 1;
+                  const rentalTotal = r.quantity * effDays * r.unitRate;
+                  return (
+                    <tr
+                      key={r.id}
+                      className="table-row border-b border-[#f0ece6] last:border-0"
+                    >
+                      <td className="px-5 py-4">
+                        <div className="text-[13px] font-bold text-[#333338]">
+                          {r.itemName}
+                        </div>
+                        <div className="mono mt-0.5 text-[11px] text-[#89847e]">
+                          {fmt(r.unitRate)} {Number(r.days) > 0 ? '/ day' : '/ unit'} · Total {fmt(rentalTotal)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="text-[12px] font-semibold text-[#45434a]">
+                          {r.clientName}
+                        </div>
+                        <div className="mono mt-0.5 text-[11px] text-[#a82b3e]">
+                          {r.documentNumber}
+                        </div>
+                      </td>
+                      <td className="mono px-4 py-4 text-[12px]">
+                        {Number(r.days) > 0
+                          ? `${r.quantity} units × ${r.days}d`
+                          : `${r.quantity} units (0d · Qty × Rate)`}
+                      </td>
+                      <td className="px-4 py-4 text-[12px] text-[#68666a]">
+                        {dateFmt(r.startDate)} → {dateFmt(r.returnDate)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <Status value={r.status} />
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="inline-flex gap-1">
+                          {r.status !== 'deployed' && (
+                            <button
+                              type="button"
+                              onClick={() => handleRentalStatus(r.id, 'deployed')}
+                              className="btn btn-secondary !h-7 !min-h-7 !px-2.5 text-[11px]"
+                            >
+                              Mark Deployed
+                            </button>
+                          )}
+                          {r.status !== 'returned' && (
+                            <button
+                              type="button"
+                              onClick={() => handleRentalStatus(r.id, 'returned')}
+                              className="btn btn-primary !h-7 !min-h-7 !px-2.5 text-[11px]"
+                            >
+                              Mark Returned
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -3644,16 +3729,45 @@ function OperationsView() {
       {rentalModal && (
         <Modal
           title="Log equipment rental"
-          subtitle="Reserve or deploy telescopic poles, bases, or lighting kits."
+          subtitle="Reserve or deploy telescopic poles, bases, lighting kits, or printed items."
           onClose={() => setRentalModal(false)}
         >
           <form onSubmit={submitRental} className="space-y-4">
+            <div className="rounded-xl border border-neutral-200/80 bg-white/60 p-3 backdrop-blur-md">
+              <div className="mb-1.5 text-[10.5px] font-medium uppercase tracking-wider text-neutral-500">
+                Quick select catalog item (tap to fill)
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {CATALOG_PRESETS.map((preset) => (
+                  <button
+                    key={preset.description}
+                    type="button"
+                    onClick={() =>
+                      setRentalForm({
+                        itemName: preset.description,
+                        quantity: preset.quantity,
+                        days: preset.days,
+                        unitRate: preset.unitPrice,
+                      })
+                    }
+                    className="toggle-token !py-1 !px-2 !text-[11px]"
+                  >
+                    <Plus size={11} />
+                    <span>{preset.description}</span>
+                    <span className="mono text-[10px] text-[#c61c2e]">
+                      GHS {preset.unitPrice}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Input
-                label="Equipment item"
+                label="Equipment / Printed item"
                 name="itemName"
                 required
-                defaultValue="Telescopic Flag Pole & Heavy Water Base (5m)"
+                value={rentalForm.itemName}
+                onChange={(e) => setRentalForm({ ...rentalForm, itemName: e.target.value })}
               />
               <Select label="Client" name="clientName" required>
                 {(clients.data || []).map((c) => (
@@ -3667,24 +3781,36 @@ function OperationsView() {
                 name="quantity"
                 type="number"
                 min="1"
-                defaultValue="4"
+                value={rentalForm.quantity}
+                onChange={(e) =>
+                  setRentalForm({ ...rentalForm, quantity: Math.max(1, Number(e.target.value) || 1) })
+                }
                 required
               />
               <Input
-                label="Rental days"
+                label="Rental days (0 for print / non-rental)"
                 name="days"
                 type="number"
-                min="1"
-                defaultValue="1"
+                min="0"
+                value={rentalForm.days}
+                onChange={(e) =>
+                  setRentalForm({
+                    ...rentalForm,
+                    days: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
+                  })
+                }
                 required
               />
               <Input
-                label="Unit rate (GHS / day)"
+                label="Unit rate (GHS)"
                 name="unitRate"
                 type="number"
                 min="0"
                 step=".01"
-                defaultValue="70"
+                value={rentalForm.unitRate}
+                onChange={(e) =>
+                  setRentalForm({ ...rentalForm, unitRate: Math.max(0, Number(e.target.value) || 0) })
+                }
                 required
               />
               <Select label="Invoice / Reference" name="documentNumber">
@@ -3709,6 +3835,20 @@ function OperationsView() {
                 defaultValue={today()}
                 required
               />
+            </div>
+            <div className="rounded-lg border border-[#e6dfd6] bg-[#f7f3ed] px-3.5 py-2.5 flex items-center justify-between text-xs">
+              <span className="text-[#68666a]">
+                {rentalForm.days === 0
+                  ? `0 days selected — Total calculated as Quantity (${rentalForm.quantity}) × Unit Rate (${fmt(rentalForm.unitRate)})`
+                  : `Total calculated as Quantity (${rentalForm.quantity}) × Days (${rentalForm.days}) × Unit Rate (${fmt(rentalForm.unitRate)})`}
+              </span>
+              <span className="mono font-bold text-[#1e1f23]">
+                {fmt(
+                  rentalForm.quantity *
+                    (rentalForm.days > 0 ? rentalForm.days : 1) *
+                    rentalForm.unitRate,
+                )}
+              </span>
             </div>
             <div className="flex justify-end gap-2">
               <button

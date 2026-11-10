@@ -1643,16 +1643,41 @@ function nextDocumentNumber(
 function hydrateDocument(store: ErpStore, doc: StoredDocument): SalesDocument {
   const clients = Array.isArray(store.clients) ? store.clients : [];
   const client = clients.find((c) => c.id === doc.clientId);
+  const rawItems = Array.isArray(doc.items) ? doc.items : [];
+  const needsRecalc = rawItems.some(
+    (it) =>
+      Number(it.days) === 0 &&
+      Number(it.total) === 0 &&
+      Number(it.quantity) > 0 &&
+      Number(it.unitPrice) > 0,
+  );
+  const recalculated = needsRecalc
+    ? calculateDocumentPricing({
+        items: rawItems,
+        discountPercent: doc.discountPercent ?? 0,
+        getfundRate: doc.getfundRate ?? 2.5,
+        nhilRate: doc.nhilRate ?? 2.5,
+        vatRate: doc.vatRate ?? 15,
+      })
+    : null;
+
+  const effectiveTotal = recalculated ? Number(recalculated.total) : (doc.total ?? 0);
   const payments = Array.isArray(store.payments) ? store.payments : [];
   const paidCents = payments
     .filter((p) => p.documentId === doc.id)
     .reduce((sum, p) => sum + amountToCents(p.amount), 0);
-  const totalCents = amountToCents(doc.total ?? 0);
+  const totalCents = amountToCents(effectiveTotal);
   const balanceCents = Math.max(0, totalCents - paidCents);
 
   return {
     ...doc,
-    items: Array.isArray(doc.items) ? doc.items : [],
+    items: recalculated ? recalculated.items : rawItems,
+    subtotal: recalculated ? Number(recalculated.subtotal) : doc.subtotal,
+    discountAmount: recalculated ? Number(recalculated.discountAmount) : doc.discountAmount,
+    getfundAmount: recalculated ? Number(recalculated.getfundAmount) : doc.getfundAmount,
+    nhilAmount: recalculated ? Number(recalculated.nhilAmount) : doc.nhilAmount,
+    vatAmount: recalculated ? Number(recalculated.vatAmount) : doc.vatAmount,
+    total: effectiveTotal,
     clientName: client?.companyName ?? 'Client',
     amountPaid: Number(centsToAmount(paidCents)),
     balance: Number(centsToAmount(balanceCents)),
