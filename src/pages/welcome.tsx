@@ -1217,6 +1217,30 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
 
   return (
     <div className="landing min-h-[100dvh] overflow-x-hidden">
+      {/* Top Hero Stage with Minimalist White-to-Obsidian Blend */}
+      <div
+        className="relative"
+        style={{
+          background: [
+            'radial-gradient(ellipse 68% 58% at 24% 34%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.86) 46%, rgba(244, 244, 245, 0.45) 74%, transparent 100%)',
+            'radial-gradient(ellipse 60% 55% at 78% 44%, rgba(255, 255, 255, 0.92) 0%, rgba(235, 235, 237, 0.65) 52%, rgba(14, 13, 12, 0.14) 84%, transparent 100%)',
+            'linear-gradient(180deg, #FFFFFF 0%, #F4F4F5 46%, #DADAD8 76%, #181716 94%, #0E0D0C 100%)',
+          ].join(', '),
+        }}
+      >
+        {/* Subtle top-right and bottom-edge obsidian & crimson ambient glow */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
+          <div
+            className="absolute -top-28 right-[-8%] h-[420px] w-[420px] rounded-full blur-3xl opacity-35"
+            style={{
+              background: 'radial-gradient(circle, rgba(14, 13, 12, 0.28) 0%, rgba(227, 30, 36, 0.08) 55%, transparent 75%)',
+            }}
+          />
+        </div>
+
       <header className="sticky top-0 z-40 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_8px_30px_rgba(29,29,27,0.08)]">
           {/* Left: Brand + Divider + Tagline */}
@@ -1371,21 +1395,21 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
 
             {/* Quick Operational Pillars */}
             <FadeIn delay={0.8} y={8}>
-              <div className="mt-8 pt-6 border-t border-[#1c1b19]/10 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-medium group cursor-default">
-                  <div className="h-6 w-6 rounded-md bg-[#c61c2e]/10 text-[#c61c2e] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#c61c2e] group-hover:text-white">
+              <div className="mt-8 rounded-2xl border border-neutral-200/80 bg-white/85 px-4 py-3.5 shadow-[0_8px_24px_rgba(14,13,12,0.06)] backdrop-blur-md grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="flex items-center gap-2 text-[12px] text-[#1D1D1B] font-semibold group cursor-default">
+                  <div className="h-6 w-6 rounded-md bg-[#E31E24]/10 text-[#E31E24] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#E31E24] group-hover:text-white">
                     <ShieldCheck size={13} />
                   </div>
                   <span>100% Ghana Tax (GRA)</span>
                 </div>
-                <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-medium group cursor-default">
-                  <div className="h-6 w-6 rounded-md bg-[#c61c2e]/10 text-[#c61c2e] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#c61c2e] group-hover:text-white">
+                <div className="flex items-center gap-2 text-[12px] text-[#1D1D1B] font-semibold group cursor-default">
+                  <div className="h-6 w-6 rounded-md bg-[#1D1D1B]/10 text-[#1D1D1B] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#1D1D1B] group-hover:text-white">
                     <Layers size={13} />
                   </div>
                   <span>Rigging & Rental Days</span>
                 </div>
-                <div className="flex items-center gap-2 text-[12px] text-neutral-600 font-medium group cursor-default col-span-2 sm:col-span-1">
-                  <div className="h-6 w-6 rounded-md bg-[#c61c2e]/10 text-[#c61c2e] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#c61c2e] group-hover:text-white">
+                <div className="flex items-center gap-2 text-[12px] text-[#1D1D1B] font-semibold group cursor-default col-span-2 sm:col-span-1">
+                  <div className="h-6 w-6 rounded-md bg-[#E31E24]/10 text-[#E31E24] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#E31E24] group-hover:text-white">
                     <Printer size={13} />
                   </div>
                   <span>Sister Dispatch (PrintD)</span>
@@ -1396,6 +1420,7 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
 
           <HeroInteractiveVisual />
         </section>
+      </div>
 
         <section className="landing-marquee" aria-label="Collage capabilities">
           <div className="landing-marquee__track">

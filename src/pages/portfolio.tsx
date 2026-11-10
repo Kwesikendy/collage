@@ -59,8 +59,8 @@ export function PortfolioPage() {
       {/* ─────────────────────────────────────────────────────────────
           1. STICKY PUBLIC NAVIGATION HEADER (WHITE PILL DESIGN)
           ───────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_12px_36px_rgba(0,0,0,0.45)]">
+      <header className="sticky top-0 z-40 bg-[#F5F5F6]/80 backdrop-blur-md pt-3 sm:pt-4 pb-2 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_8px_30px_rgba(29,29,27,0.08)]">
           {/* Left: Brand + Vertical Divider + Subtitle */}
           <div className="flex items-center gap-3.5">
             <Link href="/" aria-label="Collage Home" className="shrink-0">
@@ -135,29 +135,33 @@ export function PortfolioPage() {
       </header>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. HERO SECTION
+          2. HERO SECTION (MINIMALIST WHITE-AND-OBSIDIAN GRADIENT BLEND)
           ───────────────────────────────────────────────────────────── */}
-      <section id="overview" className="relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24">
-        {/* Subtle background glow */}
-        <div
-          className="pointer-events-none absolute -top-40 right-1/4 h-96 w-96 rounded-full bg-red-600/10 blur-3xl"
-          aria-hidden="true"
-        />
-
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section
+        id="overview"
+        className="relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24"
+        style={{
+          background: [
+            'radial-gradient(ellipse 68% 58% at 22% 38%, rgba(255, 255, 255, 0.96) 0%, rgba(248, 248, 249, 0.85) 45%, rgba(220, 220, 222, 0.35) 72%, transparent 100%)',
+            'radial-gradient(ellipse 55% 60% at 85% 25%, rgba(227, 30, 36, 0.08) 0%, rgba(13, 13, 12, 0.55) 68%, transparent 100%)',
+            'linear-gradient(180deg, #F5F5F6 0%, #EAEAEB 48%, #222120 86%, #0D0D0C 100%)',
+          ].join(', '),
+        }}
+      >
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl space-y-6">
-            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight">
-              Advertising, Event Staging & <span className="text-red-500">Large-Format Print.</span>
+            <h1 className="text-3xl font-extrabold tracking-tight text-[#141413] sm:text-5xl lg:text-6xl leading-tight">
+              Advertising, Event Staging & <span className="text-[#E31E24]">Large-Format Print.</span>
             </h1>
 
-            <p className="text-base leading-relaxed text-neutral-300 sm:text-lg">
+            <p className="text-base leading-relaxed text-[#2D2D2A] sm:text-lg font-medium">
               Collage provides outdoor billboard skins, telescopic flagpole rentals, event branding, field setups, and large-format printing across Accra and beyond.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
                 href="#services"
-                className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-black transition-colors hover:bg-neutral-200"
+                className="inline-flex items-center gap-2 rounded-full bg-[#141413] px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-colors hover:bg-[#E31E24]"
               >
                 <span>Explore Services</span>
                 <ArrowRight size={14} aria-hidden="true" />
@@ -165,7 +169,7 @@ export function PortfolioPage() {
 
               <a
                 href="#contact"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-full border border-[#141413]/20 bg-white/90 px-6 py-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#141413] shadow-sm transition-colors hover:bg-white"
               >
                 <span>Request a Quote</span>
               </a>

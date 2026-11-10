@@ -290,7 +290,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .landing {
   --landing-display: 'Bricolage Grotesque', 'Syne', 'Plus Jakarta Sans', 'Inter', sans-serif;
   --landing-sans: 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-  background: #F7F7F8;
+  background: #0E0D0C;
   color: #1D1D1B;
   font-family: var(--landing-sans);
 }
@@ -545,7 +545,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   padding: 22px 0 28px;
   font-size: 12px;
   color: #7a746c;
-  background: #F7F7F8;
+  background: #0E0D0C;
   border-top: 1px solid rgba(28, 27, 25, 0.08);
 }
 
@@ -574,9 +574,9 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .landing-mark__frame { padding: 22px; }
 .landing-reveal-line { display: block; overflow: hidden; padding-bottom: .08em; }
 .landing-reveal-line__inner { display: block; will-change: transform; }
-.landing-marquee { overflow: hidden; border-top: 1px solid rgba(29, 29, 27, .09); border-bottom: 1px solid rgba(29, 29, 27, .09); background: #FFFFFF; padding: 15px 0; }
+.landing-marquee { overflow: hidden; border-top: 1px solid rgba(255, 255, 255, .1); border-bottom: 1px solid rgba(255, 255, 255, .08); background: linear-gradient(90deg, #141413 0%, #1D1D1B 50%, #141413 100%); padding: 15px 0; }
 .landing-marquee__track { display: flex; width: max-content; animation: landing-marquee 30s linear infinite; will-change: transform; }
-.landing-marquee__item { display: inline-flex; align-items: center; gap: 24px; padding-right: 24px; color: #1D1D1B; font-family: var(--landing-ui); font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; white-space: nowrap; }
+.landing-marquee__item { display: inline-flex; align-items: center; gap: 24px; padding-right: 24px; color: #F5F3ED; font-family: var(--landing-ui); font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; white-space: nowrap; }
 .landing-marquee__item i { width: 5px; height: 5px; border-radius: 50%; background: #c61c2e; }
 @keyframes landing-marquee { to { transform: translateX(-50%); } }
 @media (max-width: 799px) {
