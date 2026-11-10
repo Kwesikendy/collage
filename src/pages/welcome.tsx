@@ -1075,19 +1075,52 @@ function ClosingWorkspaceFrame({
    interactive floating operational cards, ambient depth, and precision grid.
    ============================================================================ */
 
+const HERO_OPERATIONAL_SCENARIOS = [
+  {
+    id: 'dispatch',
+    label: '01 · Brief & Scope',
+    invoiceRef: 'INV #00081126.01',
+    invoiceClient: 'GHS 105,285.96 · Kasapreko',
+    settlementAmount: 'GHS 65,000.00 · Ecobank',
+    settlementChannel: 'Bank Wire',
+    taxNote: 'GRA Compliant: 2.5% + 2.5% + 15%',
+  },
+  {
+    id: 'rigging',
+    label: '02 · Field Rigging',
+    invoiceRef: 'INV #00141126.02',
+    invoiceClient: 'GHS 48,450.00 · MTN Ghana',
+    settlementAmount: 'GHS 48,450.00 · Stanbic',
+    settlementChannel: 'RTGS Transfer',
+    taxNote: '150+ Flagpoles · Same-Day Dispatch',
+  },
+  {
+    id: 'settlement',
+    label: '03 · Settled in Full',
+    invoiceRef: 'INV #00191126.01',
+    invoiceClient: 'GHS 82,900.00 · Standard Chartered',
+    settlementAmount: 'GHS 82,900.00 · Cleared',
+    settlementChannel: 'Corporate Wire',
+    taxNote: 'Reconciled Ledger · Zero Balance',
+  },
+] as const;
+
 function HeroInteractiveVisual() {
   const reduce = useReducedMotion();
   const cardRef = useRef<HTMLDivElement>(null);
+  const [activeScenarioIndex, setActiveScenarioIndex] = useState(0);
+  const activeScenario = HERO_OPERATIONAL_SCENARIOS[activeScenarioIndex];
+
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), {
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [4.5, -4.5]), {
     stiffness: 120,
-    damping: 18,
+    damping: 20,
   });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-6, 6]), {
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4.5, 4.5]), {
     stiffness: 120,
-    damping: 18,
+    damping: 20,
   });
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -1112,97 +1145,135 @@ function HeroInteractiveVisual() {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={reduce ? undefined : { rotateX, rotateY, transformStyle: 'preserve-3d' }}
-      className="landing-hero__visual relative flex justify-center items-center"
-      initial={reduce ? false : { opacity: 0, scale: 0.96 }}
+      className="landing-hero__visual relative flex flex-col justify-center items-center"
+      initial={reduce ? false : { opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.7, delay: 0.15, ease }}
     >
-      {/* Ambient Pulsing Atmospheric Glow Behind Logo */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-6 sm:-inset-10 rounded-full blur-3xl"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(198, 28, 46, 0.16) 0%, rgba(224, 43, 32, 0.06) 45%, transparent 70%)',
-        }}
-        animate={
-          reduce
-            ? {}
-            : {
-                scale: [1, 1.08, 1],
-                opacity: [0.5, 0.8, 0.5],
-              }
-        }
-        transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      <div className="relative flex w-full justify-center items-center">
+        {/* Restrained Ambient Atmospheric Glow Behind Logo */}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-6 sm:-inset-10 rounded-full blur-3xl"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(229, 35, 43, 0.08) 0%, rgba(27, 25, 24, 0.45) 48%, transparent 72%)',
+          }}
+          animate={
+            reduce
+              ? {}
+              : {
+                  scale: [1, 1.05, 1],
+                  opacity: [0.45, 0.7, 0.45],
+                }
+          }
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        />
 
-      {/* Architectural Rotating Registration Ring */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute h-[320px] w-[320px] sm:h-[420px] sm:w-[420px] rounded-full border border-dashed border-[#c61c2e]/20"
-        animate={reduce ? {} : { rotate: 360 }}
-        transition={{ duration: 75, repeat: Infinity, ease: 'linear' }}
-      />
+        {/* Subtle Architectural Rotating Registration Ring */}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute h-[300px] w-[300px] sm:h-[400px] sm:w-[400px] rounded-full border border-dashed border-[#33302E]/80"
+          animate={reduce ? {} : { rotate: 360 }}
+          transition={{ duration: 90, repeat: Infinity, ease: 'linear' }}
+        />
 
-      {/* Floating Card: Live Invoice Dispatch */}
-      <motion.div
-        className="absolute -top-3 -right-2 sm:-right-6 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-neutral-200/90 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(29,29,27,0.09)] backdrop-blur-md cursor-default select-none"
-        animate={reduce ? {} : { y: [0, -7, 0] }}
-        transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-        whileHover={{ scale: 1.04, y: -9 }}
-      >
-        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-[#E31E24]/10 text-[#E31E24]">
-          <ReceiptText size={17} />
-        </div>
-        <div className="text-left font-mono text-[11px] leading-tight">
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[#1D1D1B]">INV #00081126.01</span>
-            <span className="rounded bg-[#E31E24]/10 px-1.5 py-0.5 text-[8.5px] font-bold text-[#E31E24] tracking-wider">
-              DISPATCHED
-            </span>
+        {/* Floating Notification Card: Live Invoice Dispatch (Warm Ivory #F4F0E9) */}
+        <motion.div
+          className="absolute -top-2 right-0 sm:-right-3 z-20 flex items-center gap-2.5 rounded-xl border border-[#33302E]/20 bg-[#F4F0E9] px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.34)] cursor-pointer select-none"
+          onClick={() =>
+            setActiveScenarioIndex((prev) => (prev + 1) % HERO_OPERATIONAL_SCENARIOS.length)
+          }
+          animate={reduce ? {} : { y: [0, -5, 0] }}
+          transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
+          whileHover={{ scale: 1.025, y: -6 }}
+        >
+          <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-[#E5232B]/12 text-[#E5232B]">
+            <ReceiptText size={15} />
           </div>
-          <div className="mt-1 text-[10px] text-neutral-500 font-sans">
-            GHS 105,285.96 · Kasapreko
+          <div className="text-left font-mono text-[10.5px] leading-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-[#100F0E]">{activeScenario.invoiceRef}</span>
+              <span className="rounded bg-[#E5232B]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#E5232B] tracking-wider">
+                DISPATCHED
+              </span>
+            </div>
+            <div className="mt-0.5 text-[9.5px] text-[#1B1918]/75 font-sans font-medium">
+              {activeScenario.invoiceClient}
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* The Authentic Piece-Arriving Logo Mark (Completely Unaltered!) */}
-      <div className="relative z-10">
-        <LandingMark />
+        {/* Central Circular Operations Visualization */}
+        <div className="relative z-10">
+          <LandingMark />
+        </div>
+
+        {/* Floating Notification Card: Cleared Wire Settlement (Warm Ivory #F4F0E9 + Success Green #008F68) */}
+        <motion.div
+          className="absolute -bottom-2 left-0 sm:-left-4 z-20 flex items-center gap-2.5 rounded-xl border border-[#33302E]/20 bg-[#F4F0E9] px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.34)] cursor-pointer select-none"
+          onClick={() =>
+            setActiveScenarioIndex((prev) => (prev + 1) % HERO_OPERATIONAL_SCENARIOS.length)
+          }
+          animate={reduce ? {} : { y: [0, 5, 0] }}
+          transition={{ duration: 5.8, delay: 0.5, repeat: Infinity, ease: 'easeInOut' }}
+          whileHover={{ scale: 1.025, y: 6 }}
+        >
+          <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-[#008F68]/14 text-[#008F68]">
+            <CheckCircle2 size={15} />
+          </div>
+          <div className="text-left font-mono text-[10.5px] leading-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-[#008F68]">SETTLED IN FULL</span>
+              <span className="text-[#33302E]/50">·</span>
+              <span className="text-[9px] text-[#1B1918]/70">{activeScenario.settlementChannel}</span>
+            </div>
+            <div className="mt-0.5 text-[9.5px] text-[#100F0E] font-sans font-semibold">
+              {activeScenario.settlementAmount}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Floating Pill: Statutory Tax Engine */}
+        <motion.div
+          className="absolute -bottom-2 right-1 sm:right-4 z-20 hidden md:flex items-center gap-2 rounded-full border border-[#33302E] bg-[#1B1918]/95 px-3 py-1 text-[9.5px] font-mono font-medium text-[#C9C2B9] shadow-[0_8px_20px_rgba(0,0,0,0.35)] backdrop-blur-sm cursor-default select-none"
+          animate={reduce ? {} : { y: [0, -4, 0] }}
+          transition={{ duration: 4.6, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-[#008F68]" />
+          <span>{activeScenario.taxNote}</span>
+        </motion.div>
       </div>
 
-      {/* Floating Card: Cleared Wire Settlement */}
-      <motion.div
-        className="absolute -bottom-4 -left-2 sm:-left-8 z-20 flex items-center gap-2.5 sm:gap-3 rounded-xl border border-neutral-200/90 bg-white/95 p-2.5 sm:p-3 shadow-[0_12px_32px_rgba(29,29,27,0.09)] backdrop-blur-md cursor-default select-none"
-        animate={reduce ? {} : { y: [0, 7, 0] }}
-        transition={{ duration: 5.4, delay: 0.5, repeat: Infinity, ease: 'easeInOut' }}
-        whileHover={{ scale: 1.04, y: 9 }}
+      {/* Interactive Operational Scenario Selector Nodes */}
+      <div
+        className="mt-5 flex flex-wrap items-center justify-center gap-1.5 z-20"
+        role="group"
+        aria-label="Operational scenarios"
       >
-        <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-[#1D1D1B] text-white">
-          <CheckCircle2 size={17} />
-        </div>
-        <div className="text-left font-mono text-[11px] leading-tight">
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[#1D1D1B]">SETTLED IN FULL</span>
-            <span className="text-neutral-300">·</span>
-            <span className="text-[9.5px] text-neutral-500">Bank Wire</span>
-          </div>
-          <div className="mt-1 text-[10px] text-[#1D1D1B] font-semibold">
-            GHS 65,000.00 · Ecobank
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Floating Pill: Statutory Tax Engine */}
-      <motion.div
-        className="absolute -bottom-4 right-2 sm:right-6 z-20 hidden md:flex items-center gap-2 rounded-full border border-[#E31E24]/25 bg-white/95 px-3 py-1 text-[10px] font-mono font-medium text-[#1D1D1B] shadow-md backdrop-blur-sm cursor-default select-none"
-        animate={reduce ? {} : { y: [0, -5, 0] }}
-        transition={{ duration: 4.2, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <span className="h-1.5 w-1.5 rounded-full bg-[#E31E24] animate-ping" />
-        <span>GRA Compliant: 2.5% + 2.5% + 15%</span>
-      </motion.div>
+        {HERO_OPERATIONAL_SCENARIOS.map((scenario, idx) => {
+          const isActive = idx === activeScenarioIndex;
+          return (
+            <button
+              key={scenario.id}
+              type="button"
+              onClick={() => setActiveScenarioIndex(idx)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-mono transition-colors ${
+                isActive
+                  ? 'border-[#E5232B]/50 bg-[#1B1918] text-[#F4F0E9]'
+                  : 'border-[#33302E] bg-[#100F0E]/70 text-[#C9C2B9]/80 hover:border-[#C9C2B9]/35 hover:text-[#F4F0E9]'
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  isActive ? 'bg-[#E5232B]' : 'bg-[#33302E]'
+                }`}
+              />
+              <span>{scenario.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </motion.div>
   );
 }
@@ -1216,238 +1287,232 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
   const reduce = useReducedMotion();
 
   return (
-    <div className="landing min-h-[100dvh] overflow-x-hidden">
-      {/* Top Hero Stage with Minimalist White-to-Obsidian Blend */}
+    <div className="landing min-h-[100dvh] overflow-x-hidden bg-[#100F0E] text-[#F4F0E9]">
+      {/* Top Dark Hero Stage (#100F0E primary with subtle #1B1918 warm depth) */}
       <div
         className="relative"
         style={{
           background: [
-            'radial-gradient(ellipse 68% 58% at 24% 34%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.86) 46%, rgba(244, 244, 245, 0.45) 74%, transparent 100%)',
-            'radial-gradient(ellipse 60% 55% at 78% 44%, rgba(255, 255, 255, 0.92) 0%, rgba(235, 235, 237, 0.65) 52%, rgba(14, 13, 12, 0.14) 84%, transparent 100%)',
-            'linear-gradient(180deg, #FFFFFF 0%, #F4F4F5 46%, #DADAD8 76%, #181716 94%, #0E0D0C 100%)',
+            'radial-gradient(ellipse 65% 55% at 22% 30%, rgba(27, 25, 24, 0.9) 0%, transparent 72%)',
+            'radial-gradient(ellipse 52% 48% at 78% 42%, rgba(229, 35, 43, 0.045) 0%, rgba(27, 25, 24, 0.5) 55%, transparent 78%)',
+            'linear-gradient(180deg, #100F0E 0%, #100F0E 78%, #1B1918 100%)',
           ].join(', '),
         }}
       >
-        {/* Subtle top-right and bottom-edge obsidian & crimson ambient glow */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 overflow-hidden"
-        >
-          <div
-            className="absolute -top-28 right-[-8%] h-[420px] w-[420px] rounded-full blur-3xl opacity-35"
-            style={{
-              background: 'radial-gradient(circle, rgba(14, 13, 12, 0.28) 0%, rgba(227, 30, 36, 0.08) 55%, transparent 75%)',
-            }}
-          />
-        </div>
-
-      <header className="sticky top-0 z-40 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 sm:py-2.5 text-[#1D1D1B] shadow-[0_8px_30px_rgba(29,29,27,0.08)]">
-          {/* Left: Brand + Divider + Tagline */}
-          <div className="flex items-center gap-3.5">
-            <Link href="/" aria-label="Collage home" className="shrink-0">
-              <Brand />
-            </Link>
-            <span className="hidden h-7 w-px bg-neutral-200 md:block" aria-hidden="true" />
-            <div className="hidden md:flex flex-col leading-tight">
-              <span className="text-[11px] font-bold tracking-tight text-[#1D1D1B]">
-                Creating Results
-              </span>
-              <span className="text-[10px] font-medium text-neutral-500">
-                Operations & Media
-              </span>
-            </div>
-          </div>
-
-          {/* Center: Clean Pill Navigation Links */}
-          <nav className="flex items-center gap-1 sm:gap-1.5" aria-label="Landing">
-            <Link
-              href="/portfolio"
-              className="rounded-full bg-neutral-100/90 px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-200/70"
-            >
-              Portfolio
-            </Link>
-            <Link
-              href="/portfolio#services"
-              className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
-            >
-              Services
-            </Link>
-            <Link
-              href="/portfolio#about"
-              className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
-            >
-              About
-            </Link>
-            <a
-              href="#workspace"
-              className="hidden sm:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
-            >
-              Workspace
-            </a>
-            <Link
-              href="/portfolio#contact"
-              className="hidden lg:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
-            >
-              Contact
-            </Link>
-          </nav>
-
-          {/* Right: Circular Icon Actions + Solid Pill CTA */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/portfolio"
-              title="Services & Portfolio"
-              aria-label="Services & Portfolio"
-              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
-            >
-              <Building2 size={15} />
-            </Link>
-            <Link
-              href="/sign-in"
-              title="Operator Sign In"
-              aria-label="Operator Sign In"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100"
-            >
-              <User size={15} />
-            </Link>
-            {hasClerk ? (
-              <Link
-                href="/sign-up"
-                className="inline-flex items-center gap-2 rounded-full bg-[#1D1D1B] px-4 py-2 text-[12.5px] font-semibold text-white no-underline transition-colors hover:bg-[#E31E24]"
-              >
-                <span>Create account</span>
+        <header className="sticky top-0 z-40 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#33302E] bg-[#1B1918]/88 px-4 py-2 sm:px-6 sm:py-2.5 text-[#F4F0E9] shadow-[0_14px_38px_rgba(0,0,0,0.42)] backdrop-blur-xl">
+            {/* Left: Brand + Divider + Tagline */}
+            <div className="flex items-center gap-3.5">
+              <Link href="/" aria-label="Collage home" className="shrink-0">
+                <Brand dark />
               </Link>
-            ) : (
+              <span className="hidden h-7 w-px bg-[#33302E] md:block" aria-hidden="true" />
+              <div className="hidden md:flex flex-col leading-tight">
+                <span className="text-[11px] font-bold tracking-tight text-[#F4F0E9]">
+                  Creating Results
+                </span>
+                <span className="text-[10px] font-medium text-[#C9C2B9]">
+                  Operations & Media
+                </span>
+              </div>
+            </div>
+
+            {/* Center: Dark-Glass Pill Navigation Links */}
+            <nav className="flex items-center gap-1 sm:gap-1.5" aria-label="Landing">
+              <Link
+                href="/portfolio"
+                className="rounded-full border border-[#33302E] bg-[#100F0E]/65 px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9] no-underline transition-colors hover:border-[#C9C2B9]/35 hover:bg-[#F4F0E9]/[0.06]"
+              >
+                Portfolio
+              </Link>
+              <Link
+                href="/portfolio#services"
+                className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+              >
+                Services
+              </Link>
+              <Link
+                href="/portfolio#about"
+                className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+              >
+                About
+              </Link>
+              <a
+                href="#workspace"
+                className="hidden sm:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+              >
+                Workspace
+              </a>
+              <Link
+                href="/portfolio#contact"
+                className="hidden lg:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+              >
+                Contact
+              </Link>
+            </nav>
+
+            {/* Right: Subtle Circular Icon Actions + Brand Red Workspace CTA */}
+            <div className="flex items-center gap-2">
+              <Link
+                href="/portfolio"
+                title="Services & Portfolio"
+                aria-label="Services & Portfolio"
+                className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#33302E] bg-[#100F0E]/55 text-[#C9C2B9] transition-colors hover:border-[#C9C2B9]/40 hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+              >
+                <Building2 size={15} />
+              </Link>
               <Link
                 href="/sign-in"
-                className="inline-flex items-center gap-2 rounded-full bg-[#E31E24] px-4 sm:px-5 py-2 text-[12.5px] font-semibold text-white no-underline shadow-sm transition-colors hover:bg-[#1D1D1B]"
+                title="Operator Sign In"
+                aria-label="Operator Sign In"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#33302E] bg-[#100F0E]/55 text-[#C9C2B9] transition-colors hover:border-[#C9C2B9]/40 hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
               >
-                <span>Workspace</span>
-                <ArrowRight size={13} aria-hidden="true" />
+                <User size={15} />
               </Link>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main>
-        <section className="landing-hero landing-wrap">
-          <div className="landing-hero__copy">
-            <FadeIn delay={0.06}>
-              <p className="landing-kicker">Collage</p>
-            </FadeIn>
-
-            <h1 className="landing-headline">
-              <LineReveal delay={0.16}>From first brief</LineReveal>
-              <LineReveal delay={0.3}>
-                to{' '}
-                <span className="landing-headline__accent relative inline-block">
-                  paid in full.
-                  <motion.span
-                    className="absolute left-0 -bottom-1 h-[3px] w-full bg-gradient-to-r from-[#c61c2e] via-[#e52329] to-[#c61c2e] rounded-full"
-                    initial={reduce ? false : { scaleX: 0, originX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ duration: 0.8, delay: 0.8, ease: fluidEase }}
-                  />
-                </span>
-              </LineReveal>
-            </h1>
-
-            <FadeIn delay={0.48} y={8}>
-              <p className="landing-lede">
-                The unified Ghanaian operations engine. Connect client briefs, statutory Ghana tax
-                scopes, equipment rentals, and reconciled invoices on one living desk.
-              </p>
-            </FadeIn>
-
-            <FadeIn delay={0.65} className="landing-actions" y={8}>
-              <Link
-                href={workspaceHref}
-                className="landing-cta landing-cta--solid group relative overflow-hidden shadow-lg shadow-[#c61c2e]/20"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  Enter your workspace
-                  <ArrowRight
-                    size={16}
-                    aria-hidden="true"
-                    className="transition-transform duration-300 group-hover:translate-x-1"
-                  />
-                </span>
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
-              </Link>
-              <Link href="/portfolio" className="landing-cta landing-cta--ghost group">
-                <span className="flex items-center gap-1.5">
-                  View Client Portfolio
-                  <ArrowUpRight
-                    size={14}
-                    aria-hidden="true"
-                    className="text-neutral-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#c61c2e]"
-                  />
-                </span>
-              </Link>
-              {hasClerk && (
-                <Link href="/sign-up" className="landing-cta landing-cta--ghost">
-                  Create account
+              {hasClerk ? (
+                <Link
+                  href="/sign-up"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#E5232B] px-4 py-2 text-[12.5px] font-semibold text-[#F4F0E9] no-underline shadow-[0_6px_18px_rgba(229,35,43,0.25)] transition-colors hover:bg-[#cf1d25]"
+                >
+                  <span>Create account</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/sign-in"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#E5232B] px-4 sm:px-5 py-2 text-[12.5px] font-semibold text-[#F4F0E9] no-underline shadow-[0_6px_18px_rgba(229,35,43,0.25)] transition-colors hover:bg-[#cf1d25]"
+                >
+                  <span>Workspace</span>
+                  <ArrowRight size={13} aria-hidden="true" />
                 </Link>
               )}
-            </FadeIn>
-
-            {/* Quick Operational Pillars */}
-            <FadeIn delay={0.8} y={8}>
-              <div className="mt-8 rounded-2xl border border-neutral-200/80 bg-white/85 px-4 py-3.5 shadow-[0_8px_24px_rgba(14,13,12,0.06)] backdrop-blur-md grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="flex items-center gap-2 text-[12px] text-[#1D1D1B] font-semibold group cursor-default">
-                  <div className="h-6 w-6 rounded-md bg-[#E31E24]/10 text-[#E31E24] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#E31E24] group-hover:text-white">
-                    <ShieldCheck size={13} />
-                  </div>
-                  <span>100% Ghana Tax (GRA)</span>
-                </div>
-                <div className="flex items-center gap-2 text-[12px] text-[#1D1D1B] font-semibold group cursor-default">
-                  <div className="h-6 w-6 rounded-md bg-[#1D1D1B]/10 text-[#1D1D1B] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#1D1D1B] group-hover:text-white">
-                    <Layers size={13} />
-                  </div>
-                  <span>Rigging & Rental Days</span>
-                </div>
-                <div className="flex items-center gap-2 text-[12px] text-[#1D1D1B] font-semibold group cursor-default col-span-2 sm:col-span-1">
-                  <div className="h-6 w-6 rounded-md bg-[#E31E24]/10 text-[#E31E24] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#E31E24] group-hover:text-white">
-                    <Printer size={13} />
-                  </div>
-                  <span>Sister Dispatch (PrintD)</span>
-                </div>
-              </div>
-            </FadeIn>
+            </div>
           </div>
+        </header>
 
-          <HeroInteractiveVisual />
-        </section>
+        <main>
+          <section className="landing-hero landing-wrap">
+            <div className="landing-hero__copy">
+              <FadeIn delay={0.06}>
+                <p className="landing-kicker text-[#E5232B]">Collage</p>
+              </FadeIn>
+
+              <h1 className="landing-headline text-[#F4F0E9]">
+                <LineReveal delay={0.16}>
+                  <span className="text-[#F4F0E9]">From first brief</span>
+                </LineReveal>
+                <LineReveal delay={0.3}>
+                  <span className="landing-headline__accent relative inline-block text-[#E5232B]">
+                    to paid in full.
+                    <motion.span
+                      className="absolute left-0 -bottom-1.5 h-[2px] w-full bg-[#E5232B]/85 rounded-full"
+                      initial={reduce ? false : { scaleX: 0, originX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 0.8, delay: 0.8, ease: fluidEase }}
+                    />
+                  </span>
+                </LineReveal>
+              </h1>
+
+              <FadeIn delay={0.48} y={8}>
+                <p className="landing-lede text-[#C9C2B9]">
+                  The unified Ghanaian operations engine. Connect client briefs, statutory Ghana tax
+                  scopes, equipment rentals, and reconciled invoices on one living desk.
+                </p>
+              </FadeIn>
+
+              <FadeIn delay={0.65} className="landing-actions" y={8}>
+                <Link
+                  href={workspaceHref}
+                  className="landing-cta landing-cta--solid group relative overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    Enter your workspace
+                    <ArrowRight
+                      size={16}
+                      aria-hidden="true"
+                      className="transition-transform duration-300 group-hover:translate-x-1"
+                    />
+                  </span>
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
+                </Link>
+                <Link href="/portfolio" className="landing-cta landing-cta--ghost group">
+                  <span className="flex items-center gap-1.5">
+                    View Client Portfolio
+                    <ArrowUpRight
+                      size={14}
+                      aria-hidden="true"
+                      className="text-[#C9C2B9] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#E5232B]"
+                    />
+                  </span>
+                </Link>
+                {hasClerk && (
+                  <Link href="/sign-up" className="landing-cta landing-cta--ghost">
+                    Create account
+                  </Link>
+                )}
+              </FadeIn>
+
+              {/* Feature Indicators - Muted Ivory on Refined Secondary Dark Surface */}
+              <FadeIn delay={0.8} y={8}>
+                <div className="mt-8 rounded-2xl border border-[#33302E] bg-[#1B1918]/65 px-4 py-3.5 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="flex items-center gap-2 text-[12px] text-[#C9C2B9] font-medium group cursor-default">
+                    <div className="h-6 w-6 rounded-md border border-[#33302E] bg-[#100F0E] text-[#E5232B] flex items-center justify-center shrink-0 transition-colors group-hover:border-[#E5232B]/50">
+                      <ShieldCheck size={13} />
+                    </div>
+                    <span className="group-hover:text-[#F4F0E9] transition-colors">
+                      100% Ghana Tax (GRA)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[12px] text-[#C9C2B9] font-medium group cursor-default">
+                    <div className="h-6 w-6 rounded-md border border-[#33302E] bg-[#100F0E] text-[#C9C2B9] flex items-center justify-center shrink-0 transition-colors group-hover:border-[#C9C2B9]/50 group-hover:text-[#F4F0E9]">
+                      <Layers size={13} />
+                    </div>
+                    <span className="group-hover:text-[#F4F0E9] transition-colors">
+                      Rigging & Rental Days
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[12px] text-[#C9C2B9] font-medium group cursor-default col-span-2 sm:col-span-1">
+                    <div className="h-6 w-6 rounded-md border border-[#33302E] bg-[#100F0E] text-[#E5232B] flex items-center justify-center shrink-0 transition-colors group-hover:border-[#E5232B]/50">
+                      <Printer size={13} />
+                    </div>
+                    <span className="group-hover:text-[#F4F0E9] transition-colors">
+                      Sister Dispatch (PrintD)
+                    </span>
+                  </div>
+                </div>
+              </FadeIn>
+            </div>
+
+            <HeroInteractiveVisual />
+          </section>
+
+          <section className="landing-marquee" aria-label="Collage capabilities">
+            <div className="landing-marquee__track">
+              {[...services, ...services].map((service, i) => (
+                <span key={`${service}-${i}`} className="landing-marquee__item">
+                  {service}
+                  <i aria-hidden="true" />
+                </span>
+              ))}
+            </div>
+          </section>
+
+          {/* Deep Obsidian Canvas Below Hero */}
+          <div className="relative bg-[#100F0E] text-[#F4F0E9]">
+            {/* Section 02: The Living Thread Document & Financial Ledger */}
+            <LivingThreadStage workspaceHref={workspaceHref} />
+
+            {/* Section 02.5: Featured Client Portfolio Teaser */}
+            <PortfolioTeaserStage />
+
+            {/* Section 03: The Four Workspace Rooms */}
+            <WorkspaceRoomsDirectory hasClerk={hasClerk} />
+
+            {/* Section 04: Workspace Entry & Colophon */}
+            <ClosingWorkspaceFrame workspaceHref={workspaceHref} hasClerk={hasClerk} />
+          </div>
+        </main>
       </div>
-
-        <section className="landing-marquee" aria-label="Collage capabilities">
-          <div className="landing-marquee__track">
-            {[...services, ...services].map((service, i) => (
-              <span key={`${service}-${i}`} className="landing-marquee__item">
-                {service}
-                <i aria-hidden="true" />
-              </span>
-            ))}
-          </div>
-        </section>
-
-        {/* Deep Obsidian Canvas Below Hero */}
-        <div className="relative bg-[#0E0D0C] text-[#F5F3ED]">
-          {/* Section 02: The Living Thread Document & Financial Ledger */}
-          <LivingThreadStage workspaceHref={workspaceHref} />
-
-          {/* Section 02.5: Featured Client Portfolio Teaser */}
-          <PortfolioTeaserStage />
-
-          {/* Section 03: The Four Workspace Rooms */}
-          <WorkspaceRoomsDirectory hasClerk={hasClerk} />
-
-          {/* Section 04: Workspace Entry & Colophon */}
-          <ClosingWorkspaceFrame workspaceHref={workspaceHref} hasClerk={hasClerk} />
-        </div>
-      </main>
     </div>
   );
 }
