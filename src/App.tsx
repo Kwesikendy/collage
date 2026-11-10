@@ -2930,18 +2930,6 @@ const COLLAGE_BANK_ACCOUNTS = [
     accountNumber: '1201180001339',
     branch: 'Kaneshie Industrial',
   },
-  {
-    bank: 'Consolidated Bank Ghana (CBG)',
-    name: 'Collage N Mosaic',
-    accountNumber: '0158475100001',
-    branch: 'North Industrial Area',
-  },
-  {
-    bank: 'Omni BSIC',
-    name: 'Collage N Mosaic',
-    accountNumber: '0010221964018',
-    branch: 'Adabrraka',
-  },
 ] as const;
 
 function DocumentDetail() {
@@ -3289,58 +3277,46 @@ function DocumentDetail() {
           </div>
         </div>
 
-        {/* Authentic Collage Footer with Official MoMo + 4 Bank Accounts on Left & Contact + Mark on Right */}
-        <div className="mt-10 flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-t border-[#e2dcce] pt-6 text-[11px]">
-          {/* Left: Official Payment Details (MoMo + 4 Bank Accounts) */}
-          <div className="flex-1 text-left space-y-4">
-            {/* MOMO DETAILS */}
-            <div>
-              <div className="inline-block rounded-[4px] bg-[#d81e27] px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">
-                MoMo Details
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <div className="inline-flex items-center gap-1">
-                  <span className="inline-flex h-5 items-center rounded-[2px] bg-[#e60000] px-1.5 text-[8px] font-extrabold uppercase tracking-tight text-white">
-                    Telecel
-                  </span>
-                  <span className="inline-flex h-5 items-center rounded-[2px] bg-[#1d3c85] px-1.5 text-[8px] font-extrabold uppercase tracking-tight text-white">
-                    AT Money
-                  </span>
-                  <span className="inline-flex h-5 items-center rounded-[2px] bg-[#ffcc00] px-1.5 text-[8px] font-extrabold uppercase tracking-tight text-[#00334e]">
-                    MTN MoMo
-                  </span>
-                </div>
-                <span className="mono text-[16px] font-extrabold tracking-tight text-[#1f2024]">
-                  *713*1308#
-                </span>
-              </div>
+        {/* Authentic Collage Footer: Payment Details aligned at bottom-left, Contact Info at bottom-right */}
+        <div className="mt-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-t border-[#e2dcce] pt-5 text-[10px]">
+          {/* Bottom-Left: MoMo Details (single line) & Bank Details (2 banks) */}
+          <div className="text-left space-y-2.5 max-w-[480px]">
+            {/* Single-line MoMo Details */}
+            <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight">
+              <span className="font-bold text-[#d81e27]">MoMo Details:</span>
+              <span className="font-medium text-[#1f2024]">
+                Telecel / AT Money / MTN MoMo
+              </span>
+              <span className="mono font-extrabold text-[#1f2024]">
+                *713*1308#
+              </span>
             </div>
 
-            {/* BANK DETAILS */}
-            <div>
-              <div className="inline-block rounded-[4px] bg-[#d81e27] px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">
-                Bank Details
+            {/* Bank Details (Red heading, no background, 2 banks side-by-side) */}
+            <div className="space-y-1">
+              <div className="font-bold text-[#d81e27] leading-tight">
+                Bank Details:
               </div>
-              <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-[10px] leading-[1.35]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 leading-[1.35]">
                 {COLLAGE_BANK_ACCOUNTS.map((acct) => (
                   <div key={acct.accountNumber} className="space-y-0.5">
                     <div>
-                      <span className="font-bold text-[#d81e27]">Bank:</span>{' '}
-                      <span className="font-bold text-[#1f2024]">{acct.bank}</span>
+                      <span className="font-semibold text-[#d81e27]">Bank:</span>{' '}
+                      <span className="font-medium text-[#1f2024]">{acct.bank}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-[#d81e27]">Name:</span>{' '}
-                      <span className="font-bold text-[#1f2024]">{acct.name}</span>
+                      <span className="font-semibold text-[#d81e27]">Name:</span>{' '}
+                      <span className="font-medium text-[#1f2024]">{acct.name}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-[#d81e27]">Acc. No.:</span>{' '}
-                      <span className="mono font-bold text-[#1f2024]">
+                      <span className="font-semibold text-[#d81e27]">Acc. No.:</span>{' '}
+                      <span className="mono font-semibold text-[#1f2024]">
                         {acct.accountNumber}
                       </span>
                     </div>
                     <div>
-                      <span className="font-bold text-[#d81e27]">Branch:</span>{' '}
-                      <span className="font-bold text-[#1f2024]">{acct.branch}</span>
+                      <span className="font-semibold text-[#d81e27]">Branch:</span>{' '}
+                      <span className="font-medium text-[#1f2024]">{acct.branch}</span>
                     </div>
                   </div>
                 ))}
@@ -3348,7 +3324,7 @@ function DocumentDetail() {
             </div>
           </div>
 
-          {/* Right: Collage Contact Info & Target Mark */}
+          {/* Bottom-Right: Collage Contact Info & Target Mark */}
           <div className="flex items-end justify-end gap-3.5 shrink-0">
             <div className="text-right text-[10px] leading-tight text-[#444] space-y-0.5">
               <div className="font-semibold text-[#1f2024]">+233 24 736 1133</div>
