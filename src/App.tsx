@@ -456,7 +456,7 @@ function Shell({ children }: { children: ReactNode }) {
         />
       )}
       <aside
-        className={`sidebar fixed inset-y-0 left-0 z-40 flex w-[236px] shrink-0 flex-col border-r border-white/[0.08] bg-[#141413] text-[#FFFFFF] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
+        className={`sidebar no-print fixed inset-y-0 left-0 z-40 flex w-[236px] shrink-0 flex-col border-r border-white/[0.08] bg-[#141413] text-[#FFFFFF] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -596,7 +596,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <div className="mx-auto max-w-[1360px] px-4 py-6 md:px-8 md:py-8">
+        <div className="mx-auto max-w-[1360px] px-4 py-6 md:px-8 md:py-8 print:max-w-none print:p-0 print:m-0">
           {accessPending ? (
             <AccessPending
               onRetry={() => {
@@ -3122,22 +3122,22 @@ function DocumentDetail() {
         </div>
       )}
 
-      <article className="print-paper panel mx-auto max-w-[850px] bg-white p-6 md:p-12 shadow-sm">
+      <article className="print-paper panel mx-auto max-w-[850px] bg-white p-6 md:p-12 shadow-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
         {/* Centered Collage Logo */}
-        <div className="text-center pb-2">
+        <div className="text-center pb-2 print:pb-1">
           <img
             src={collageLogo}
             alt="Collage · Creating Results"
-            className="mx-auto h-14 md:h-16 w-auto object-contain"
+            className="mx-auto h-14 md:h-16 print:h-13 w-auto object-contain"
           />
         </div>
 
         {/* Left-Aligned Document Title, Date & Invoice Reference */}
-        <div className="mt-4 text-left border-b border-[#ece6de] pb-3">
+        <div className="mt-4 print:mt-2.5 text-left border-b border-[#ece6de] pb-3 print:pb-2">
           <h1 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-[#c61c2e] m-0">
             {doc.kind === 'quotation' ? 'QUOTATION' : 'INVOICE'}
           </h1>
-          <div className="mt-2 text-[12px] leading-relaxed text-[#2d2c31]">
+          <div className="mt-2 print:mt-1 text-[12px] leading-relaxed text-[#2d2c31]">
             <div className="font-medium text-[#2d2c31]">
               {doc.issueDate && !isNaN(Date.parse(doc.issueDate))
                 ? new Date(doc.issueDate).toLocaleDateString('en-GB', {
@@ -3161,7 +3161,7 @@ function DocumentDetail() {
         </div>
 
         {/* Client Info - strictly left-aligned without badge */}
-        <div className="mt-4 text-left">
+        <div className="mt-4 print:mt-2.5 text-left">
           <div className="text-[12px] leading-snug text-[#2f2e34]">
             <div className="font-semibold text-[#1e1f23]">
               Attn: {clientRecord?.contactName || doc.clientName}
@@ -3177,24 +3177,24 @@ function DocumentDetail() {
         </div>
 
         {/* Black Banner: Subject / Project Title (70% width, 2x font size) */}
-        <div className="mt-4 mb-1.5 w-full sm:w-[70%] bg-[#0d0d0e] px-4 py-3 text-[22px] sm:text-[26px] leading-tight font-extrabold uppercase tracking-tight text-white text-left">
+        <div className="mt-4 print:mt-3 mb-1.5 w-full sm:w-[70%] print:w-[70%] bg-[#0d0d0e] px-4 py-3 print:py-2.5 text-[22px] sm:text-[26px] print:text-[22px] leading-tight font-extrabold uppercase tracking-tight text-white text-left [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
           {doc.subject}
         </div>
 
         {/* Line Items Table */}
-        <div className="overflow-x-auto mb-4 mt-0">
-          <table className="w-full min-w-[560px] text-left border-collapse">
+        <div className="overflow-x-auto print:overflow-visible mb-4 print:mb-2.5 mt-0">
+          <table className="w-full min-w-[560px] print:min-w-0 text-left border-collapse">
             <thead>
-              <tr className="bg-[#a81a29] text-white text-[9px] font-bold uppercase tracking-[.08em]">
-                <th className="px-4 py-2.5">Item Description</th>
-                <th className="px-3 py-2.5 text-center">Qty</th>
-                <th className="px-3 py-2.5 text-center">
+              <tr className="bg-[#a81a29] text-white text-[9px] font-bold uppercase tracking-[.08em] [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+                <th className="px-4 py-2.5 print:py-2">Item Description</th>
+                <th className="px-3 py-2.5 print:py-2 text-center">Qty</th>
+                <th className="px-3 py-2.5 print:py-2 text-center">
                   {(doc.items || []).some((it) => it.durationUnit === 'months')
                     ? 'Months'
                     : 'Days'}
                 </th>
-                <th className="px-3 py-2.5 text-right">Unit Price GHS</th>
-                <th className="px-4 py-2.5 text-right">Total Amount GHS</th>
+                <th className="px-3 py-2.5 print:py-2 text-right">Unit Price GHS</th>
+                <th className="px-4 py-2.5 print:py-2 text-right">Total Amount GHS</th>
               </tr>
             </thead>
             <tbody>
@@ -3207,21 +3207,21 @@ function DocumentDetail() {
                 return (
                   <tr
                     key={`${item.description}-${i}`}
-                    className="border-b border-[#ece6de] text-[11px] even:bg-[#faf7f2]"
+                    className="border-b border-[#ece6de] text-[11px] even:bg-[#faf7f2] [print-color-adjust:exact] [-webkit-print-color-adjust:exact]"
                   >
-                    <td className="px-4 py-2.5 font-medium text-[#2e2d33]">
+                    <td className="px-4 py-2.5 print:py-1.5 font-medium text-[#2e2d33]">
                       {item.description}
                     </td>
-                    <td className="mono px-3 py-2.5 text-center text-[#555]">
+                    <td className="mono px-3 py-2.5 print:py-1.5 text-center text-[#555]">
                       {item.quantity}
                     </td>
-                    <td className="mono px-3 py-2.5 text-center text-[#555]">
+                    <td className="mono px-3 py-2.5 print:py-1.5 text-center text-[#555]">
                       {item.days}
                     </td>
-                    <td className="mono px-3 py-2.5 text-right text-[#555]">
+                    <td className="mono px-3 py-2.5 print:py-1.5 text-right text-[#555]">
                       {fmt(item.unitPrice)}
                     </td>
-                    <td className="mono px-4 py-2.5 text-right font-semibold text-[#1e1f23]">
+                    <td className="mono px-4 py-2.5 print:py-1.5 text-right font-semibold text-[#1e1f23]">
                       {fmt(lineTotal)}
                     </td>
                   </tr>
@@ -3232,9 +3232,9 @@ function DocumentDetail() {
         </div>
 
         {/* Tax & Total Calculation */}
-        <div className="ml-auto max-w-[340px] space-y-1.5 border-t border-[#ece6de] pt-3 text-[11px]">
+        <div className="ml-auto max-w-[340px] space-y-1.5 print:space-y-1 border-t border-[#ece6de] pt-3 print:pt-2 text-[11px] break-inside-avoid">
           <MoneyRow label="Subtotal" value={doc.subtotal} />
-          <div className="flex justify-between text-[#77726c] bg-[#fbe9e7]/60 px-1.5 py-0.5 rounded-sm">
+          <div className="flex justify-between text-[#77726c] bg-[#fbe9e7]/60 px-1.5 py-0.5 rounded-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
             <span>Less: Discount ({doc.discountPercent}%)</span>
             <span className="mono">
               {doc.discountAmount > 0 ? `-${fmt(doc.discountAmount)}` : '-'}
@@ -3250,7 +3250,7 @@ function DocumentDetail() {
         </div>
 
         {/* Solid Black Banner: Total Payment Due */}
-        <div className="ml-auto max-w-[340px] mt-3 bg-[#1f2024] text-white px-4 py-2.5 flex items-center justify-between text-[12px] font-bold rounded-sm">
+        <div className="ml-auto max-w-[340px] mt-3 print:mt-2 bg-[#1f2024] text-white px-4 py-2.5 print:py-2 flex items-center justify-between text-[12px] font-bold rounded-sm break-inside-avoid [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
           <span className="uppercase tracking-wider">Total Payment Due GHS</span>
           <span className="mono text-[16px]">
             {fmt(doc.total).replace('GHS ', '')}
@@ -3258,14 +3258,14 @@ function DocumentDetail() {
         </div>
 
         {doc.kind === 'invoice' && (
-          <div className="ml-auto max-w-[340px] space-y-1.5 border-t border-dashed border-[#e5ded6] mt-3 pt-2 text-[11px]">
+          <div className="ml-auto max-w-[340px] space-y-1.5 print:space-y-1 border-t border-dashed border-[#e5ded6] mt-3 print:mt-2 pt-2 print:pt-1.5 text-[11px] break-inside-avoid">
             <MoneyRow label="Paid to date" value={doc.amountPaid} />
             <MoneyRow label="Balance due" value={doc.balance} strong />
           </div>
         )}
 
         {/* Payment Terms & Validity */}
-        <div className="mt-8 space-y-1 text-[11px]">
+        <div className="mt-8 print:mt-4 space-y-1 text-[11px] break-inside-avoid">
           <div className="font-semibold text-[#222] italic">
             {doc.paymentTerms || '100% Down Payment'}
           </div>
@@ -3275,9 +3275,9 @@ function DocumentDetail() {
         </div>
 
         {/* Authentic Collage Footer: Payment Details aligned at bottom-left, Contact Info at bottom-right */}
-        <div className="mt-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-t border-[#e2dcce] pt-5 text-[10px]">
+        <div className="mt-10 print:mt-5 flex flex-col sm:flex-row print:flex-row sm:items-end print:items-end justify-between gap-6 border-t border-[#e2dcce] pt-5 print:pt-3 text-[10px] break-inside-avoid">
           {/* Bottom-Left: MoMo Details (single line) & Bank Details (2 banks) */}
-          <div className="text-left space-y-2.5 max-w-[480px]">
+          <div className="text-left space-y-2.5 print:space-y-1.5 max-w-[480px]">
             {/* Single-line MoMo Details */}
             <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight">
               <span className="font-bold text-[#d81e27]">MoMo Details:</span>
@@ -3294,7 +3294,7 @@ function DocumentDetail() {
               <div className="font-bold text-[#d81e27] leading-tight">
                 Bank Details:
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 leading-[1.35]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-x-6 gap-y-2 leading-[1.35]">
                 {COLLAGE_BANK_ACCOUNTS.map((acct) => (
                   <div key={acct.accountNumber} className="space-y-0.5">
                     <div>

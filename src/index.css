@@ -279,12 +279,59 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 .mono { font-family: var(--app-font-sans); font-variant-numeric: tabular-nums; }
 
 /* ─── PRINT ──────────────────────────────────────────────── */
-@media print {
-  body { background: white !important; }
-  body::before { display: none !important; }
-  .no-print { display: none !important; }
-  .print-paper { box-shadow: none !important; border: 0 !important; padding: 0 !important; }
+@page {
+  size: A4 portrait;
+  margin: 10mm 12mm;
 }
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+
+  .no-print,
+  .sidebar {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+    background: #ffffff !important;
+    min-height: 0 !important;
+  }
+
+  .print-paper {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 4mm 2mm !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 
 /* ─── LANDING ────────────────────────────────────────────── */
 .landing {
