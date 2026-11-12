@@ -37,6 +37,12 @@ export interface Client {
   city?: string | null;
   country: string;
   status: ClientStatus;
+  /** @nullable */
+  assignedMarketerId?: string | null;
+  /** @nullable */
+  assignedMarketerName?: string | null;
+  /** @nullable */
+  assignedMarketerEmail?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,6 +89,12 @@ export interface ClientInput {
      */
   country?: string;
   status?: ClientInputStatus;
+  /** @nullable */
+  assignedMarketerId?: string | null;
+  /** @nullable */
+  assignedMarketerName?: string | null;
+  /** @nullable */
+  assignedMarketerEmail?: string | null;
 }
 
 export type ClientUpdateStatus = typeof ClientUpdateStatus[keyof typeof ClientUpdateStatus];
@@ -128,6 +140,12 @@ export interface ClientUpdate {
      */
   country?: string;
   status?: ClientUpdateStatus;
+  /** @nullable */
+  assignedMarketerId?: string | null;
+  /** @nullable */
+  assignedMarketerName?: string | null;
+  /** @nullable */
+  assignedMarketerEmail?: string | null;
 }
 
 export type DurationUnit = 'days' | 'months';

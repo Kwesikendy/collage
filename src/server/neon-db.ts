@@ -140,6 +140,9 @@ function buildSeedData() {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-nana',
+      assignedMarketerName: 'Nana Mensah',
+      assignedMarketerEmail: 'marketer@collage.com.gh',
       createdAt: `${currentMonthPrefix}-20T09:00:00.000Z`,
       updatedAt: `${currentMonthPrefix}-21T10:00:00.000Z`,
     },
@@ -153,6 +156,9 @@ function buildSeedData() {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-nana',
+      assignedMarketerName: 'Nana Mensah',
+      assignedMarketerEmail: 'marketer@collage.com.gh',
       createdAt: `${currentMonthPrefix}-03T09:15:00.000Z`,
       updatedAt: `${currentMonthPrefix}-18T14:20:00.000Z`,
     },
@@ -166,6 +172,9 @@ function buildSeedData() {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-ama',
+      assignedMarketerName: 'Ama Serwaa',
+      assignedMarketerEmail: 'ama@collage.com.gh',
       createdAt: `${currentMonthPrefix}-05T11:00:00.000Z`,
       updatedAt: `${currentMonthPrefix}-19T16:40:00.000Z`,
     },
@@ -179,6 +188,9 @@ function buildSeedData() {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-kwesi',
+      assignedMarketerName: 'Kwesi Boateng',
+      assignedMarketerEmail: 'kwesi@collage.com.gh',
       createdAt: `${currentMonthPrefix}-08T10:30:00.000Z`,
       updatedAt: `${currentMonthPrefix}-20T12:15:00.000Z`,
     },
@@ -192,6 +204,9 @@ function buildSeedData() {
       city: 'Accra',
       country: 'Ghana',
       status: 'lead',
+      assignedMarketerId: 'usr-marketer-nana',
+      assignedMarketerName: 'Nana Mensah',
+      assignedMarketerEmail: 'marketer@collage.com.gh',
       createdAt: `${currentMonthPrefix}-12T08:45:00.000Z`,
       updatedAt: `${currentMonthPrefix}-12T08:45:00.000Z`,
     },
@@ -530,9 +545,16 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           city TEXT,
           country TEXT NOT NULL DEFAULT 'Ghana',
           status TEXT NOT NULL DEFAULT 'lead',
+          assigned_marketer_id TEXT,
+          assigned_marketer_name TEXT,
+          assigned_marketer_email TEXT,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         );
+
+        ALTER TABLE collat_clients ADD COLUMN IF NOT EXISTS assigned_marketer_id TEXT;
+        ALTER TABLE collat_clients ADD COLUMN IF NOT EXISTS assigned_marketer_name TEXT;
+        ALTER TABLE collat_clients ADD COLUMN IF NOT EXISTS assigned_marketer_email TEXT;
 
         CREATE TABLE IF NOT EXISTS collat_documents (
           id TEXT PRIMARY KEY,
@@ -633,6 +655,19 @@ export async function ensureDatabaseInitialized(): Promise<void> {
       const clientCountRes = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM collat_clients');
       if (Number(clientCountRes.rows[0]?.count ?? 0) === 0) {
         await seedErpTables(client);
+      } else {
+        // Backfill default marketer assignments on pre-existing seed clients if null
+        const seed = buildSeedData();
+        for (const c of seed.clients) {
+          if (c.assignedMarketerId) {
+            await client.query(
+              `UPDATE collat_clients
+               SET assigned_marketer_id = $2, assigned_marketer_name = $3, assigned_marketer_email = $4
+               WHERE id = $1 AND assigned_marketer_id IS NULL`,
+              [c.id, c.assignedMarketerId, c.assignedMarketerName, c.assignedMarketerEmail],
+            );
+          }
+        }
       }
     } finally {
       client.release();
@@ -650,10 +685,25 @@ async function seedErpTables(client: pg.PoolClient): Promise<void> {
 
   for (const c of seed.clients) {
     await client.query(
-      `INSERT INTO collat_clients (id, company_name, contact_name, email, phone, address, city, country, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `INSERT INTO collat_clients (id, company_name, contact_name, email, phone, address, city, country, status, assigned_marketer_id, assigned_marketer_name, assigned_marketer_email, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        ON CONFLICT (id) DO NOTHING`,
-      [c.id, c.companyName, c.contactName, c.email, c.phone, c.address, c.city, c.country, c.status, c.createdAt, c.updatedAt],
+      [
+        c.id,
+        c.companyName,
+        c.contactName,
+        c.email,
+        c.phone,
+        c.address,
+        c.city,
+        c.country,
+        c.status,
+        c.assignedMarketerId ?? null,
+        c.assignedMarketerName ?? null,
+        c.assignedMarketerEmail ?? null,
+        c.createdAt,
+        c.updatedAt,
+      ],
     );
   }
 
@@ -758,6 +808,9 @@ function mapClientRow(row: Record<string, any>): Client {
     city: row.city ?? null,
     country: String(row.country || 'Ghana'),
     status: row.status as Client['status'],
+    assignedMarketerId: row.assigned_marketer_id ?? null,
+    assignedMarketerName: row.assigned_marketer_name ?? null,
+    assignedMarketerEmail: row.assigned_marketer_email ?? null,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -1144,14 +1197,17 @@ export async function createClientInDb(input: ClientInput): Promise<Client> {
     city: input.city?.trim().slice(0, 100) || null,
     country: input.country?.trim().slice(0, 100) || 'Ghana',
     status: input.status ?? 'lead',
+    assignedMarketerId: input.assignedMarketerId?.trim() || null,
+    assignedMarketerName: input.assignedMarketerName?.trim() || null,
+    assignedMarketerEmail: input.assignedMarketerEmail?.trim().toLowerCase() || null,
     createdAt: nowIso,
     updatedAt: nowIso,
   };
 
   const pool = getPool();
   await pool.query(
-    `INSERT INTO collat_clients (id, company_name, contact_name, email, phone, address, city, country, status, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+    `INSERT INTO collat_clients (id, company_name, contact_name, email, phone, address, city, country, status, assigned_marketer_id, assigned_marketer_name, assigned_marketer_email, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       created.id,
       created.companyName,
@@ -1162,6 +1218,9 @@ export async function createClientInDb(input: ClientInput): Promise<Client> {
       created.city,
       created.country,
       created.status,
+      created.assignedMarketerId,
+      created.assignedMarketerName,
+      created.assignedMarketerEmail,
       created.createdAt,
       created.updatedAt,
     ],
@@ -1191,6 +1250,18 @@ export async function updateClientInDb(id: string, input: ClientUpdate): Promise
     city: input.city !== undefined ? input.city?.trim().slice(0, 100) || null : existing.city,
     country: input.country !== undefined ? input.country.trim().slice(0, 100) : existing.country,
     status: input.status !== undefined ? input.status : existing.status,
+    assignedMarketerId:
+      input.assignedMarketerId !== undefined
+        ? input.assignedMarketerId?.trim() || null
+        : existing.assignedMarketerId ?? null,
+    assignedMarketerName:
+      input.assignedMarketerName !== undefined
+        ? input.assignedMarketerName?.trim() || null
+        : existing.assignedMarketerName ?? null,
+    assignedMarketerEmail:
+      input.assignedMarketerEmail !== undefined
+        ? input.assignedMarketerEmail?.trim().toLowerCase() || null
+        : existing.assignedMarketerEmail ?? null,
     updatedAt: new Date().toISOString(),
   };
 
@@ -1201,7 +1272,8 @@ export async function updateClientInDb(id: string, input: ClientUpdate): Promise
   const pool = getPool();
   await pool.query(
     `UPDATE collat_clients
-     SET company_name = $2, contact_name = $3, email = $4, phone = $5, address = $6, city = $7, country = $8, status = $9, updated_at = $10
+     SET company_name = $2, contact_name = $3, email = $4, phone = $5, address = $6, city = $7, country = $8, status = $9,
+         assigned_marketer_id = $10, assigned_marketer_name = $11, assigned_marketer_email = $12, updated_at = $13
      WHERE id = $1`,
     [
       id,
@@ -1213,6 +1285,9 @@ export async function updateClientInDb(id: string, input: ClientUpdate): Promise
       updated.city,
       updated.country,
       updated.status,
+      updated.assignedMarketerId,
+      updated.assignedMarketerName,
+      updated.assignedMarketerEmail,
       updated.updatedAt,
     ],
   );

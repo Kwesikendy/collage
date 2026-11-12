@@ -35,12 +35,14 @@ import type {
   AttendanceStatus,
   LeaveType,
   WorkspaceRole,
+  MarketerTarget,
 } from '../../types/workflows';
 import {
   sortInternalNotices,
   computeSystemStorageMetrics,
   getCapabilitiesForRole,
   generateShowcaseLink,
+  DEFAULT_MARKETER_TARGETS,
 } from '../../types/workflows';
 
 export type CustomFetchOptions = RequestInit & {
@@ -134,6 +136,7 @@ interface ErpStore {
   leaveRequests: LeaveRequest[];
   users: WorkspaceUser[];
   auditLogs: AuditLogItem[];
+  marketerTargets: MarketerTarget[];
 }
 
 const STORAGE_KEY = 'collat_erp_store_v3';
@@ -153,6 +156,9 @@ function createInitialStore(): ErpStore {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-nana',
+      assignedMarketerName: 'Nana Mensah',
+      assignedMarketerEmail: 'marketer@collage.com.gh',
       createdAt: `${currentMonthPrefix}-09T09:00:00.000Z`,
       updatedAt: `${currentMonthPrefix}-09T10:00:00.000Z`,
     },
@@ -166,6 +172,9 @@ function createInitialStore(): ErpStore {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-nana',
+      assignedMarketerName: 'Nana Mensah',
+      assignedMarketerEmail: 'marketer@collage.com.gh',
       createdAt: `${currentMonthPrefix}-03T09:15:00.000Z`,
       updatedAt: `${currentMonthPrefix}-18T14:20:00.000Z`,
     },
@@ -179,6 +188,9 @@ function createInitialStore(): ErpStore {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-ama',
+      assignedMarketerName: 'Ama Serwaa',
+      assignedMarketerEmail: 'ama@collage.com.gh',
       createdAt: `${currentMonthPrefix}-05T11:00:00.000Z`,
       updatedAt: `${currentMonthPrefix}-19T16:40:00.000Z`,
     },
@@ -192,6 +204,9 @@ function createInitialStore(): ErpStore {
       city: 'Accra',
       country: 'Ghana',
       status: 'active',
+      assignedMarketerId: 'usr-marketer-kwesi',
+      assignedMarketerName: 'Kwesi Boateng',
+      assignedMarketerEmail: 'kwesi@collage.com.gh',
       createdAt: `${currentMonthPrefix}-08T10:30:00.000Z`,
       updatedAt: `${currentMonthPrefix}-20T12:15:00.000Z`,
     },
@@ -205,6 +220,9 @@ function createInitialStore(): ErpStore {
       city: 'Accra',
       country: 'Ghana',
       status: 'lead',
+      assignedMarketerId: 'usr-marketer-nana',
+      assignedMarketerName: 'Nana Mensah',
+      assignedMarketerEmail: 'marketer@collage.com.gh',
       createdAt: `${currentMonthPrefix}-12T08:45:00.000Z`,
       updatedAt: `${currentMonthPrefix}-12T08:45:00.000Z`,
     },
@@ -926,6 +944,26 @@ function createInitialStore(): ErpStore {
       lastLogin: '2026-10-28T08:00:00.000Z',
     },
     {
+      id: 'usr-marketer-ama',
+      email: 'ama@collage.com.gh',
+      fullName: 'Ama Serwaa',
+      role: 'marketer',
+      status: 'active',
+      office: 'Brand & Marketing Desk',
+      createdAt: '2026-02-15T00:00:00.000Z',
+      lastLogin: '2026-10-28T08:15:00.000Z',
+    },
+    {
+      id: 'usr-marketer-kwesi',
+      email: 'kwesi@collage.com.gh',
+      fullName: 'Kwesi Boateng',
+      role: 'marketer',
+      status: 'active',
+      office: 'Brand & Marketing Desk',
+      createdAt: '2026-03-10T00:00:00.000Z',
+      lastLogin: '2026-10-28T08:30:00.000Z',
+    },
+    {
       id: 'usr-hr-efua',
       email: 'hr@collage.com.gh',
       fullName: 'Efua Baffour',
@@ -964,6 +1002,8 @@ function createInitialStore(): ErpStore {
     },
   ];
 
+  const marketerTargets: MarketerTarget[] = DEFAULT_MARKETER_TARGETS.map((t) => ({ ...t }));
+
   return {
     clients,
     documents,
@@ -978,6 +1018,7 @@ function createInitialStore(): ErpStore {
     leaveRequests,
     users,
     auditLogs,
+    marketerTargets,
   };
 }
 
@@ -1076,6 +1117,10 @@ function loadStore(): ErpStore {
       parsed.auditLogs = seed.auditLogs;
       needsResave = true;
     }
+    if (!Array.isArray(parsed.marketerTargets) || parsed.marketerTargets.length === 0) {
+      parsed.marketerTargets = seed.marketerTargets;
+      needsResave = true;
+    }
 
     // Filter out corrupted elements inside collections if any
     parsed.clients = parsed.clients.filter(
@@ -1085,6 +1130,18 @@ function loadStore(): ErpStore {
         typeof c.id === 'string' &&
         typeof c.companyName === 'string',
     );
+    // Backfill default marketer ownership on pre-existing seed clients if missing
+    for (const c of parsed.clients) {
+      if (!c.assignedMarketerId && !c.assignedMarketerEmail) {
+        const seedClient = seed.clients.find((sc) => sc.id === c.id);
+        if (seedClient?.assignedMarketerId) {
+          c.assignedMarketerId = seedClient.assignedMarketerId;
+          c.assignedMarketerName = seedClient.assignedMarketerName;
+          c.assignedMarketerEmail = seedClient.assignedMarketerEmail;
+          needsResave = true;
+        }
+      }
+    }
     parsed.documents = parsed.documents.filter(
       (d: any) =>
         d &&
@@ -1120,6 +1177,13 @@ function loadStore(): ErpStore {
     parsed.users = parsed.users.filter(
       (u: any) => u && typeof u === 'object' && typeof u.id === 'string',
     );
+    // Ensure Ama and Kwesi exist in store.users
+    for (const su of seed.users) {
+      if (!parsed.users.some((u: any) => u.email === su.email)) {
+        parsed.users.push(su);
+        needsResave = true;
+      }
+    }
     parsed.auditLogs = parsed.auditLogs.filter(
       (a: any) => a && typeof a === 'object' && typeof a.id === 'string',
     );
@@ -1208,6 +1272,32 @@ export const PRESEEDED_AUTH_ACCOUNTS: Record<
       role: 'marketer',
       office: 'Brand & Marketing Desk',
       createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    plainPassword: 'Collage2026!',
+  },
+  'ama@collage.com.gh': {
+    user: {
+      id: 'usr-marketer-ama',
+      email: 'ama@collage.com.gh',
+      firstName: 'Ama',
+      lastName: 'Serwaa',
+      fullName: 'Ama Serwaa',
+      role: 'marketer',
+      office: 'Brand & Marketing Desk',
+      createdAt: '2026-02-15T00:00:00.000Z',
+    },
+    plainPassword: 'Collage2026!',
+  },
+  'kwesi@collage.com.gh': {
+    user: {
+      id: 'usr-marketer-kwesi',
+      email: 'kwesi@collage.com.gh',
+      firstName: 'Kwesi',
+      lastName: 'Boateng',
+      fullName: 'Kwesi Boateng',
+      role: 'marketer',
+      office: 'Brand & Marketing Desk',
+      createdAt: '2026-03-10T00:00:00.000Z',
     },
     plainPassword: 'Collage2026!',
   },
@@ -1424,7 +1514,17 @@ export async function syncStoreFromNeon(): Promise<boolean> {
     if (!res.ok) return false;
     const snapshot = await res.json();
     if (snapshot && Array.isArray(snapshot.clients) && Array.isArray(snapshot.documents)) {
-      saveStore(snapshot as ErpStore);
+      const current = loadStore();
+      saveStore({
+        ...current,
+        clients: snapshot.clients,
+        documents: snapshot.documents,
+        payments: Array.isArray(snapshot.payments) ? snapshot.payments : current.payments,
+        rentals: Array.isArray(snapshot.rentals) ? snapshot.rentals : current.rentals,
+        productionOrders: Array.isArray(snapshot.productionOrders)
+          ? snapshot.productionOrders
+          : current.productionOrders,
+      });
       return true;
     }
     return false;
@@ -1451,7 +1551,16 @@ export function resetErpDemoData(): void {
       .then((res) => (res.ok ? res.json() : null))
       .then((snapshot) => {
         if (snapshot && Array.isArray(snapshot.clients)) {
-          saveStore(snapshot as ErpStore);
+          saveStore({
+            ...seed,
+            clients: snapshot.clients,
+            documents: Array.isArray(snapshot.documents) ? snapshot.documents : seed.documents,
+            payments: Array.isArray(snapshot.payments) ? snapshot.payments : seed.payments,
+            rentals: Array.isArray(snapshot.rentals) ? snapshot.rentals : seed.rentals,
+            productionOrders: Array.isArray(snapshot.productionOrders)
+              ? snapshot.productionOrders
+              : seed.productionOrders,
+          });
         }
       })
       .catch(() => {});
@@ -1822,6 +1931,9 @@ function handleApiRequest(
       city: input.city?.trim() || null,
       country: input.country?.trim() || 'Ghana',
       status: input.status ?? 'lead',
+      assignedMarketerId: input.assignedMarketerId?.trim() || null,
+      assignedMarketerName: input.assignedMarketerName?.trim() || null,
+      assignedMarketerEmail: input.assignedMarketerEmail?.trim().toLowerCase() || null,
       createdAt: nowIso,
       updatedAt: nowIso,
     };
@@ -1865,6 +1977,15 @@ function handleApiRequest(
       if (input.city !== undefined) client.city = input.city?.trim() || null;
       if (input.country !== undefined) client.country = input.country.trim();
       if (input.status !== undefined) client.status = input.status;
+      if (input.assignedMarketerId !== undefined) {
+        client.assignedMarketerId = input.assignedMarketerId?.trim() || null;
+      }
+      if (input.assignedMarketerName !== undefined) {
+        client.assignedMarketerName = input.assignedMarketerName?.trim() || null;
+      }
+      if (input.assignedMarketerEmail !== undefined) {
+        client.assignedMarketerEmail = input.assignedMarketerEmail?.trim().toLowerCase() || null;
+      }
       const nowMs = Date.now();
       const prevMs = client.updatedAt ? new Date(client.updatedAt).getTime() : 0;
       client.updatedAt = new Date(Math.max(nowMs, Number.isFinite(prevMs) ? prevMs + 1 : nowMs)).toISOString();
@@ -2127,6 +2248,7 @@ function handleApiRequest(
       throw new ApiError(400, 'Company name is required.', { error: 'Company name is required.' }, { method, url: rawUrl });
     }
     const nowIso = new Date().toISOString();
+    const currentAuthUser = getStoredAuthUser();
     const createdLead: Client = {
       id: genId('cli'),
       companyName: input.companyName.trim(),
@@ -2137,6 +2259,12 @@ function handleApiRequest(
       city: input.city?.trim() || null,
       country: input.country?.trim() || 'Ghana',
       status: 'lead',
+      assignedMarketerId: input.assignedMarketerId?.trim() || currentAuthUser?.id || 'usr-marketer-nana',
+      assignedMarketerName: input.assignedMarketerName?.trim() || currentAuthUser?.fullName || 'Nana Mensah',
+      assignedMarketerEmail:
+        input.assignedMarketerEmail?.trim().toLowerCase() ||
+        currentAuthUser?.email?.toLowerCase() ||
+        'marketer@collage.com.gh',
       createdAt: nowIso,
       updatedAt: nowIso,
     };
@@ -2264,6 +2392,33 @@ function handleApiRequest(
       return link;
     }
     throw new ApiError(404, 'Showcase link not found.', { error: 'Showcase link not found.' }, { method, url: rawUrl });
+  }
+
+  // GET /api/marketer/targets
+  if (method === 'GET' && pathname === '/api/marketer/targets') {
+    return Array.isArray(store.marketerTargets) ? store.marketerTargets : DEFAULT_MARKETER_TARGETS;
+  }
+
+  // PATCH /api/marketer/targets/:marketerId
+  const targetMatch = pathname.match(/^\/api\/marketer\/targets\/([^/]+)$/);
+  if (method === 'PATCH' && targetMatch) {
+    const marketerId = decodeURIComponent(targetMatch[1]);
+    if (!Array.isArray(store.marketerTargets)) {
+      store.marketerTargets = DEFAULT_MARKETER_TARGETS.map((t) => ({ ...t }));
+    }
+    const target = store.marketerTargets.find(
+      (t) => t.marketerId === marketerId || t.marketerEmail.toLowerCase() === marketerId.toLowerCase(),
+    );
+    if (!target) {
+      throw new ApiError(404, 'Marketer target record not found.', { error: 'Not found' }, { method, url: rawUrl });
+    }
+    const input = parseBody<Partial<MarketerTarget>>();
+    if (input.annualTarget !== undefined) target.annualTarget = Math.max(0, Number(input.annualTarget) || 0);
+    if (input.monthlyTarget !== undefined) target.monthlyTarget = Math.max(0, Number(input.monthlyTarget) || 0);
+    if (input.weeklyTarget !== undefined) target.weeklyTarget = Math.max(0, Number(input.weeklyTarget) || 0);
+    target.updatedAt = new Date().toISOString();
+    saveStore(store);
+    return target;
   }
 
   // ==========================================================================
@@ -2633,16 +2788,97 @@ function handleApiRequest(
   throw new ApiError(404, `Endpoint not found: ${method} ${pathname}`, { error: 'Not found' }, { method, url: rawUrl });
 }
 
+export interface MarketerRosterItem {
+  id: string;
+  fullName: string;
+  email: string;
+  office: string;
+}
+
+export const MARKETER_ROSTER: MarketerRosterItem[] = [
+  {
+    id: 'usr-marketer-nana',
+    fullName: 'Nana Mensah',
+    email: 'marketer@collage.com.gh',
+    office: 'Brand & Marketing Desk',
+  },
+  {
+    id: 'usr-marketer-ama',
+    fullName: 'Ama Serwaa',
+    email: 'ama@collage.com.gh',
+    office: 'Brand & Marketing Desk',
+  },
+  {
+    id: 'usr-marketer-kwesi',
+    fullName: 'Kwesi Boateng',
+    email: 'kwesi@collage.com.gh',
+    office: 'Brand & Marketing Desk',
+  },
+];
+
+export function isClientOwnedByMarketer(
+  client: Client | null | undefined,
+  marketer: { id?: string | null; email?: string | null; fullName?: string | null } | null | undefined,
+): boolean {
+  if (!client || !marketer) return false;
+  const cId = (client.assignedMarketerId || '').trim().toLowerCase();
+  const cEmail = (client.assignedMarketerEmail || '').trim().toLowerCase();
+  const cName = (client.assignedMarketerName || '').trim().toLowerCase();
+
+  const mId = (marketer.id || '').trim().toLowerCase();
+  const mEmail = (marketer.email || '').trim().toLowerCase();
+  const mName = (marketer.fullName || '').trim().toLowerCase();
+
+  if (cId && mId && cId === mId) return true;
+  if (cEmail && mEmail && cEmail === mEmail) return true;
+  if (cName && mName && cName === mName) return true;
+  return false;
+}
+
+export function getMarketerTargets(): MarketerTarget[] {
+  const store = loadStore();
+  return Array.isArray(store.marketerTargets) && store.marketerTargets.length > 0
+    ? store.marketerTargets
+    : DEFAULT_MARKETER_TARGETS;
+}
+
+export function updateMarketerTarget(
+  marketerIdOrEmail: string,
+  updates: { annualTarget: number; monthlyTarget: number; weeklyTarget: number },
+): MarketerTarget[] {
+  const store = loadStore();
+  if (!Array.isArray(store.marketerTargets) || store.marketerTargets.length === 0) {
+    store.marketerTargets = DEFAULT_MARKETER_TARGETS.map((t) => ({ ...t }));
+  }
+  const key = marketerIdOrEmail.trim().toLowerCase();
+  const found = store.marketerTargets.find(
+    (t) => t.marketerId.toLowerCase() === key || t.marketerEmail.toLowerCase() === key,
+  );
+  if (found) {
+    found.annualTarget = Math.max(0, Number(updates.annualTarget) || 0);
+    found.monthlyTarget = Math.max(0, Number(updates.monthlyTarget) || 0);
+    found.weeklyTarget = Math.max(0, Number(updates.weeklyTarget) || 0);
+    found.updatedAt = new Date().toISOString();
+    saveStore(store);
+  }
+  return store.marketerTargets;
+}
+
 export function getMarketerData(): {
   campaigns: MarketingCampaign[];
   showcaseLinks: ShowcaseLink[];
   leads: Client[];
+  targets: MarketerTarget[];
 } {
   const store = loadStore();
   return {
     campaigns: Array.isArray(store.campaigns) ? store.campaigns : [],
     showcaseLinks: Array.isArray(store.showcaseLinks) ? store.showcaseLinks : [],
     leads: (Array.isArray(store.clients) ? store.clients : []).filter((c) => c.status === 'lead'),
+    targets:
+      Array.isArray(store.marketerTargets) && store.marketerTargets.length > 0
+        ? store.marketerTargets
+        : DEFAULT_MARKETER_TARGETS,
   };
 }
 
@@ -2713,16 +2949,22 @@ export async function customFetch<T = unknown>(
         }
         return data;
       }
-      // If server returned a 4xx validation/not-found error, surface it directly
+      // If server returned a 4xx validation/not-found error, surface it directly unless it's a local workflow route
       if (response.status >= 400 && response.status < 500) {
-        const errData = await response.json().catch(() => null);
-        const message =
-          (errData && typeof errData === 'object' && 'error' in errData && String((errData as { error?: unknown }).error)) ||
-          response.statusText;
-        throw new ApiError(response.status, message, errData, {
-          method,
-          url: finalUrl,
-        });
+        const isLocalWorkflowRoute =
+          rawUrl.startsWith('/api/marketer/') ||
+          rawUrl.startsWith('/api/hr/') ||
+          rawUrl.startsWith('/api/admin/');
+        if (!(response.status === 404 && isLocalWorkflowRoute)) {
+          const errData = await response.json().catch(() => null);
+          const message =
+            (errData && typeof errData === 'object' && 'error' in errData && String((errData as { error?: unknown }).error)) ||
+            response.statusText;
+          throw new ApiError(response.status, message, errData, {
+            method,
+            url: finalUrl,
+          });
+        }
       }
     }
   }

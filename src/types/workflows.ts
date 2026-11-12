@@ -37,6 +37,51 @@ export interface ShowcaseLink {
   clicks: number;
 }
 
+export interface MarketerTarget {
+  marketerId: string;
+  marketerName: string;
+  marketerEmail: string;
+  office: string;
+  weeklyTarget: number;
+  monthlyTarget: number;
+  annualTarget: number;
+  updatedAt: string;
+}
+
+export const DEFAULT_MARKETER_TARGETS: MarketerTarget[] = [
+  {
+    marketerId: 'usr-marketer-nana',
+    marketerName: 'Nana Mensah',
+    marketerEmail: 'marketer@collage.com.gh',
+    office: 'Brand & Marketing Desk',
+    weeklyTarget: 15000,
+    monthlyTarget: 60000,
+    annualTarget: 720000,
+    updatedAt: '2026-10-01T08:00:00.000Z',
+  },
+  {
+    marketerId: 'usr-marketer-ama',
+    marketerName: 'Ama Serwaa',
+    marketerEmail: 'ama@collage.com.gh',
+    office: 'Corporate Accounts Desk',
+    weeklyTarget: 12500,
+    monthlyTarget: 50000,
+    annualTarget: 600000,
+    updatedAt: '2026-10-01T08:00:00.000Z',
+  },
+  {
+    marketerId: 'usr-marketer-kwesi',
+    marketerName: 'Kwesi Boateng',
+    marketerEmail: 'kwesi@collage.com.gh',
+    office: 'Outdoor & Events Desk',
+    weeklyTarget: 10000,
+    monthlyTarget: 40000,
+    annualTarget: 480000,
+    updatedAt: '2026-10-01T08:00:00.000Z',
+  },
+];
+
+
 // ----------------------------------------------------------------------------
 // R4 HR Models
 // ----------------------------------------------------------------------------
@@ -254,7 +299,7 @@ export function getCapabilitiesForRole(role: WorkspaceRole): RoleCapability {
     case 'marketer':
       return {
         canManageClients: true,
-        canManageFinances: false,
+        canManageFinances: true,
         canManageRentals: false,
         canManageStaff: false,
         canManageUsers: false,

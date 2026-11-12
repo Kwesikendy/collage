@@ -10,6 +10,7 @@ import {
 
 export interface RoleSwitcherProps {
   currentRole: UserRole;
+  currentEmail?: string;
   onRoleChange: (newUser: WorkspaceUser) => void;
 }
 
@@ -26,7 +27,7 @@ const PERSONA_OPTIONS: Array<{
     label: 'Admin',
     name: 'Kojo Nathan',
     email: 'admin@collage.com.gh',
-    office: 'Accra HQ',
+    office: 'Accra HQ · All Clients',
     icon: Shield,
   },
   {
@@ -34,7 +35,23 @@ const PERSONA_OPTIONS: Array<{
     label: 'Marketer',
     name: 'Nana Mensah',
     email: 'marketer@collage.com.gh',
-    office: 'Brand Desk',
+    office: 'Brand Desk · 3 Clients',
+    icon: Target,
+  },
+  {
+    role: 'marketer',
+    label: 'Marketer',
+    name: 'Ama Serwaa',
+    email: 'ama@collage.com.gh',
+    office: 'Corporate Desk · 1 Client',
+    icon: Target,
+  },
+  {
+    role: 'marketer',
+    label: 'Marketer',
+    name: 'Kwesi Boateng',
+    email: 'kwesi@collage.com.gh',
+    office: 'Outdoor Desk · 1 Client',
     icon: Target,
   },
   {
@@ -47,7 +64,7 @@ const PERSONA_OPTIONS: Array<{
   },
 ];
 
-export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
+export function RoleSwitcher({ currentRole, currentEmail, onRoleChange }: RoleSwitcherProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -70,16 +87,12 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
   }, [open]);
 
   const activeOption =
-    PERSONA_OPTIONS.find((p) => p.role === currentRole) || PERSONA_OPTIONS[0];
+    (currentEmail &&
+      PERSONA_OPTIONS.find((p) => p.email.toLowerCase() === currentEmail.toLowerCase())) ||
+    PERSONA_OPTIONS.find((p) => p.role === currentRole) ||
+    PERSONA_OPTIONS[0];
 
-  function handleSelectRole(role: UserRole) {
-    const email =
-      role === 'admin'
-        ? 'admin@collage.com.gh'
-        : role === 'marketer'
-          ? 'marketer@collage.com.gh'
-          : 'hr@collage.com.gh';
-
+  function handleSelectPersona(email: string) {
     const account = PRESEEDED_ACCOUNTS[email];
     if (account) {
       const updatedUser: WorkspaceUser = {
@@ -108,13 +121,17 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         title="Interactive Demo Role Switcher"
-        className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 text-[11.5px] font-medium text-[#1D1D1B] shadow-xs transition-all hover:border-[#1D1D1B] hover:bg-neutral-50 cursor-pointer"
+        className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white/70 px-3 text-[11.5px] font-medium text-[#1D1D1B] backdrop-blur-md shadow-[0_1px_2px_rgba(15,23,42,0.03),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:border-neutral-300 hover:bg-white/95 cursor-pointer"
         aria-haspopup="true"
         aria-expanded={open}
       >
         <span className="flex h-1.5 w-1.5 rounded-full bg-[#E02B20]" />
         <span className="text-neutral-500 font-mono text-[10.5px]">Role:</span>
-        <span className="font-semibold text-neutral-900">{activeOption.label}</span>
+        <span className="font-semibold text-neutral-900">
+          {activeOption.role === 'marketer'
+            ? `${activeOption.label} (${activeOption.name.split(' ')[0]})`
+            : activeOption.label}
+        </span>
         <ChevronDown
           size={12}
           className={`text-neutral-400 transition-transform duration-150 ${
@@ -124,31 +141,31 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-1.5 w-64 origin-top-right rounded-lg border border-neutral-200 bg-white p-1.5 shadow-lg ring-1 ring-black/5 focus:outline-none">
-          <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-neutral-400">
-            Switch Demo Persona
+        <div className="absolute right-0 z-50 mt-2 w-72 origin-top-right rounded-2xl border border-white/85 bg-white/85 p-1.5 backdrop-blur-2xl shadow-[0_20px_48px_-12px_rgba(15,23,42,0.14),0_0_0_1px_rgba(15,23,42,0.06)] focus:outline-none">
+          <div className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-400">
+            Switch Portal / Marketer Account
           </div>
           <div className="space-y-1">
             {PERSONA_OPTIONS.map((persona) => {
-              const isSelected = persona.role === currentRole;
+              const isSelected = persona.email === activeOption.email;
               const Icon = persona.icon;
               return (
                 <button
-                  key={persona.role}
+                  key={persona.email}
                   type="button"
-                  onClick={() => handleSelectRole(persona.role)}
-                  className={`flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-xs transition-colors cursor-pointer ${
+                  onClick={() => handleSelectPersona(persona.email)}
+                  className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-neutral-100 font-medium text-neutral-900'
-                      : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
+                      ? 'bg-neutral-900/[0.06] font-medium text-neutral-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]'
+                      : 'text-neutral-600 hover:bg-white/70 hover:text-neutral-900'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div
-                      className={`grid h-6 w-6 place-items-center rounded ${
+                      className={`grid h-6 w-6 place-items-center rounded-lg transition-colors ${
                         isSelected
-                          ? 'bg-[#111110] text-white'
-                          : 'bg-neutral-100 text-neutral-500'
+                          ? 'bg-[#141413] text-white shadow-xs'
+                          : 'bg-neutral-100/80 text-neutral-500'
                       }`}
                     >
                       <Icon size={12} />
@@ -169,8 +186,8 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
               );
             })}
           </div>
-          <div className="mt-1 border-t border-neutral-100 pt-1.5 px-2 text-[10px] text-neutral-400 text-center">
-            Live Preview Mode · Zero Logout Required
+          <div className="mt-1 border-t border-neutral-200/50 pt-1.5 px-2 text-[10px] text-neutral-400 text-center">
+            Each Marketer sees only their own clients
           </div>
         </div>
       )}
@@ -179,3 +196,4 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
 }
 
 export default RoleSwitcher;
+

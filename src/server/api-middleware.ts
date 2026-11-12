@@ -187,6 +187,34 @@ export function createNeonApiMiddleware() {
         }
       }
 
+      // --- Marketer Leads (backed by collat_clients) ---
+      if (method === 'GET' && pathname === '/api/marketer/leads') {
+        const leads = await listClientsFromDb({
+          status: 'lead',
+          search: searchParams.get('search'),
+        });
+        sendJson(res, 200, leads);
+        return;
+      }
+
+      if (method === 'POST' && pathname === '/api/marketer/leads') {
+        const body = await readJsonBody(req);
+        const created = await createClientInDb({
+          ...body,
+          status: 'lead',
+        });
+        sendJson(res, 201, created);
+        return;
+      }
+
+      const leadConvertMatch = pathname.match(/^\/api\/marketer\/leads\/([^/]+)\/convert$/);
+      if (method === 'POST' && leadConvertMatch) {
+        const id = decodeURIComponent(leadConvertMatch[1]);
+        const updated = await updateClientInDb(id, { status: 'active' });
+        sendJson(res, 200, updated);
+        return;
+      }
+
       // --- Documents ---
       if (method === 'GET' && pathname === '/api/documents') {
         const docs = await listDocumentsFromDb({

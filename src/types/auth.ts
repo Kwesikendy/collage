@@ -74,6 +74,34 @@ export const PRESEEDED_ACCOUNTS: Record<
     passwordHash: 'Collage2026!',
     plainPassword: 'Collage2026!',
   },
+  'ama@collage.com.gh': {
+    user: {
+      id: 'usr-marketer-ama',
+      email: 'ama@collage.com.gh',
+      firstName: 'Ama',
+      lastName: 'Serwaa',
+      fullName: 'Ama Serwaa',
+      role: 'marketer',
+      office: 'Corporate Accounts Desk',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    passwordHash: 'Collage2026!',
+    plainPassword: 'Collage2026!',
+  },
+  'kwesi@collage.com.gh': {
+    user: {
+      id: 'usr-marketer-kwesi',
+      email: 'kwesi@collage.com.gh',
+      firstName: 'Kwesi',
+      lastName: 'Boateng',
+      fullName: 'Kwesi Boateng',
+      role: 'marketer',
+      office: 'Outdoor & Events Desk',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    passwordHash: 'Collage2026!',
+    plainPassword: 'Collage2026!',
+  },
   'hr@collage.com.gh': {
     user: {
       id: 'usr-hr-efua',
@@ -94,8 +122,8 @@ export const PRESEEDED_ACCOUNTS: Record<
 export const ALL_WORKSPACE_NAV_ITEMS: NavItemConfig[] = [
   // Admin Navigation
   { href: '/dashboard', label: 'Overview', iconName: 'LayoutDashboard', requiredRoles: ['admin'] },
-  { href: '/clients', label: 'Clients Directory', iconName: 'Users', requiredRoles: ['admin'] },
-  { href: '/invoices', label: 'Tax Invoices', iconName: 'ReceiptText', requiredRoles: ['admin'] },
+  { href: '/clients', label: 'Clients Directory', iconName: 'Users', requiredRoles: ['admin', 'marketer'] },
+  { href: '/invoices', label: 'Tax Invoices', iconName: 'ReceiptText', requiredRoles: ['admin', 'marketer'] },
   { href: '/operations', label: 'Rentals & Production', iconName: 'Layers', requiredRoles: ['admin'] },
   { href: '/admin/users', label: 'User & Role Access', iconName: 'UserCheck', requiredRoles: ['admin'] },
   { href: '/admin/system', label: 'System Diagnostics', iconName: 'Activity', requiredRoles: ['admin'] },

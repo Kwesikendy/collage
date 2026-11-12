@@ -56,6 +56,10 @@ import {
   fetchNeonSession,
   getStoredAuthUser,
   syncStoreFromNeon,
+  MARKETER_ROSTER,
+  isClientOwnedByMarketer,
+  getMarketerTargets,
+  updateMarketerTarget,
   type NeonAuthUser,
   type Client,
   type ClientInput,
@@ -363,6 +367,8 @@ const adminNav = [
 
 const marketerNav = [
   { href: '/dashboard', label: 'Marketing Hub', icon: Target },
+  { href: '/clients', label: 'My Clients', icon: Users },
+  { href: '/invoices', label: 'Invoices', icon: ReceiptText },
   { href: '/leads', label: 'Client Leads', icon: UserPlus },
   { href: '/campaigns', label: 'Campaigns', icon: Megaphone },
 ];
@@ -447,20 +453,20 @@ function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="app-shell flex bg-[#F7F7F8] text-[#1D1D1B]">
+    <div className="app-shell flex text-[#1D1D1B]">
       {mobileOpen && (
         <button
           aria-label="Close navigation"
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/35 backdrop-blur-xs md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
       <aside
-        className={`sidebar no-print fixed inset-y-0 left-0 z-40 flex w-[236px] shrink-0 flex-col border-r border-white/[0.08] bg-[#141413] text-[#FFFFFF] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
+        className={`sidebar no-print fixed inset-y-0 left-0 z-40 flex w-[240px] shrink-0 flex-col border-r border-white/[0.07] bg-[#141413]/95 backdrop-blur-2xl text-[#FFFFFF] transition-transform md:sticky md:top-0 md:h-dvh md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-[60px] items-center justify-between border-b border-white/[0.08] px-5">
+        <div className="flex h-[64px] items-center justify-between border-b border-white/[0.06] px-5">
           <Link href="/" className="no-underline">
             <Brand inverse />
           </Link>
@@ -473,7 +479,7 @@ function Shell({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        <nav className="flex flex-col py-4" aria-label="Main navigation">
+        <nav className="flex flex-col gap-1 px-2.5 py-4" aria-label="Main navigation">
           {nav.map((item) => {
             const Icon = item.icon;
             const active =
@@ -484,10 +490,10 @@ function Shell({ children }: { children: ReactNode }) {
                 href={item.href}
                 data-testid={`link-${item.label.toLowerCase()}`}
                 onClick={() => setMobileOpen(false)}
-                className={`group flex h-10 items-center gap-3 px-5 text-[13px] no-underline transition-colors ${
+                className={`group flex h-10 items-center gap-3 rounded-xl px-3.5 text-[13px] no-underline transition-all duration-150 ${
                   active
-                    ? 'border-l-2 border-l-[#E02B20] bg-white/[0.06] font-medium text-white pl-[18px]'
-                    : 'text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200'
+                    ? 'bg-white/[0.08] font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/[0.08]'
+                    : 'text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-200'
                 }`}
               >
                 <Icon
@@ -499,27 +505,27 @@ function Shell({ children }: { children: ReactNode }) {
                       : 'text-neutral-500 group-hover:text-neutral-300'
                   }
                 />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="mt-auto px-4 py-2 border-t border-white/[0.05]">
+        <div className="mt-auto px-3 py-2 border-t border-white/[0.05]">
           <Link
             href="/privacy"
             data-testid="link-privacy"
             onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] text-neutral-400 no-underline transition-colors hover:bg-white/[0.04] hover:text-neutral-200"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-[12px] text-neutral-400 no-underline transition-colors hover:bg-white/[0.04] hover:text-neutral-200"
           >
             <ShieldCheck size={14} className="text-neutral-500" />
             <span>Privacy Policy</span>
           </Link>
         </div>
 
-        <div className="border-t border-white/[0.08] p-4">
-          <div className="flex items-center gap-3">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.05] font-mono text-[11px] font-semibold text-white">
+        <div className="p-3">
+          <div className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.04] p-2.5 backdrop-blur-md">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.06] font-mono text-[11px] font-semibold text-white">
               {user?.firstName?.slice(0, 1) || 'K'}
               {user?.lastName?.slice(0, 1) || 'N'}
             </div>
@@ -537,7 +543,7 @@ function Shell({ children }: { children: ReactNode }) {
               aria-label="Sign out"
               title="Sign out"
               onClick={() => signOut({ redirectUrl: '/' })}
-              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/[0.06] hover:text-white cursor-pointer"
+              className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/[0.08] hover:text-white cursor-pointer"
             >
               <LogOut size={14} />
             </button>
@@ -547,7 +553,7 @@ function Shell({ children }: { children: ReactNode }) {
 
       <main className="min-w-0 flex-1">
         <header className="no-print sticky top-0 z-20 pt-3 px-4 md:px-8">
-          <div className="mx-auto flex max-w-[1360px] items-center justify-between gap-3 rounded-full border border-neutral-200/90 bg-white px-4 py-2 sm:px-6 text-[#1D1D1B] shadow-[0_8px_28px_rgba(29,29,27,0.06)]">
+          <div className="mx-auto flex max-w-[1360px] items-center justify-between gap-3 rounded-2xl border border-white/85 bg-white/70 px-4 py-2.5 sm:px-5 text-[#1D1D1B] backdrop-blur-2xl shadow-[0_6px_28px_-6px_rgba(15,23,42,0.045),0_0_0_1px_rgba(15,23,42,0.05),inset_0_1px_0_rgba(255,255,255,0.9)]">
             <div className="flex items-center gap-3">
               <button
                 aria-label="Open navigation"
@@ -556,12 +562,12 @@ function Shell({ children }: { children: ReactNode }) {
               >
                 <Menu size={18} />
               </button>
-              <div className="flex items-center gap-2 text-[12px] text-neutral-500">
-                <span className="font-bold text-[#1D1D1B]">Collage</span>
-                <span className="h-3.5 w-px bg-neutral-200" aria-hidden="true" />
-                <span className="font-medium text-neutral-600">{roleName}</span>
+              <div className="flex items-center gap-2 text-[12.5px] text-neutral-500">
+                <span className="font-semibold text-[#1D1D1B]">Collage</span>
+                <span className="h-3.5 w-px bg-neutral-200/80" aria-hidden="true" />
+                <span className="text-neutral-500">{roleName}</span>
                 <span className="text-neutral-300">/</span>
-                <span className="rounded-full bg-neutral-100 px-3 py-1 font-semibold text-[#1D1D1B]">
+                <span className="font-semibold text-[#1D1D1B]">
                   {page}
                 </span>
               </div>
@@ -570,12 +576,13 @@ function Shell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-2">
               <Link
                 href="/portfolio"
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-[#1D1D1B] no-underline transition-colors hover:bg-neutral-100"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-medium text-neutral-700 no-underline transition-colors hover:bg-white/80 hover:text-neutral-950"
               >
                 <span>Public Portfolio</span>
               </Link>
               <RoleSwitcher
                 currentRole={currentRole}
+                currentEmail={user?.email}
                 onRoleChange={(newUser) => {
                   setNeonUser?.(newUser);
                   queryClient.invalidateQueries();
@@ -585,7 +592,7 @@ function Shell({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={handleResetDemo}
                 title="Restore initial sample records (including Invoice 00211026.01)"
-                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 text-[11.5px] font-semibold text-[#1D1D1B] transition-colors hover:border-[#1D1D1B] hover:bg-neutral-100 cursor-pointer"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white/70 px-3 text-[11.5px] font-medium text-[#1D1D1B] backdrop-blur-md shadow-[0_1px_2px_rgba(15,23,42,0.03),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:border-neutral-300 hover:bg-white/95 cursor-pointer"
               >
                 <RotateCcw size={12} />
                 <span className="hidden sm:inline">
@@ -625,18 +632,18 @@ function PageTitle({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="mb-6 flex flex-col justify-between gap-4 border-b border-neutral-200/60 pb-5 sm:flex-row sm:items-end">
       <div>
         {eyebrow && (
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#c61c2e]">
+          <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[.14em] text-[#c61c2e]">
             {eyebrow}
           </div>
         )}
-        <h1 className="m-0 font-sans text-[28px] font-extrabold tracking-[-0.035em] text-[#1c1c21] md:text-[32px]">
+        <h1 className="m-0 font-sans text-[26px] font-semibold tracking-[-0.03em] text-neutral-950 md:text-[28px]">
           {title}
         </h1>
         {description && (
-          <p className="mb-0 mt-1.5 text-[13px] text-[#736e67]">{description}</p>
+          <p className="mb-0 mt-1 text-[13px] text-neutral-500 max-w-2xl">{description}</p>
         )}
       </div>
       {action}
@@ -648,7 +655,7 @@ function Alert({ children }: { children: ReactNode }) {
   return (
     <div
       role="alert"
-      className="flex items-center gap-2 rounded-lg border border-[#f0d4d5] bg-[#fff5f3] p-3.5 text-[12px] text-[#9f2d3d]"
+      className="flex items-center gap-2 rounded-xl border border-[#E02B20]/20 bg-[#E02B20]/[0.06] backdrop-blur-md p-3.5 text-[12px] text-[#9f2d3d]"
     >
       <CircleAlert size={16} />
       {children}
@@ -679,13 +686,13 @@ function Empty({
   action?: ReactNode;
 }) {
   return (
-    <div className="grid min-h-[270px] place-items-center p-7 text-center">
+    <div className="grid min-h-[260px] place-items-center p-7 text-center">
       <div className="max-w-[340px]">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-[#f3ede6] text-[#9c7468]">
-          <Icon size={21} />
+        <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl border border-neutral-200/70 bg-white/70 backdrop-blur-md text-neutral-500 shadow-xs">
+          <Icon size={19} />
         </div>
-        <h3 className="mb-1 mt-4 text-[15px] font-bold text-[#38383d]">{title}</h3>
-        <p className="mb-4 mt-0 text-[12px] leading-5 text-[#89847e]">{detail}</p>
+        <h3 className="mb-1 mt-4 text-[14.5px] font-semibold text-neutral-900">{title}</h3>
+        <p className="mb-4 mt-0 text-[12px] leading-5 text-neutral-500">{detail}</p>
         {action}
       </div>
     </div>
@@ -699,20 +706,20 @@ function Status({ value }: { value: string }) {
     value === 'active' ||
     value === 'delivered' ||
     value === 'returned'
-      ? 'bg-[#e8f2eb] text-[#3d6e4d]'
+      ? 'bg-emerald-500/10 text-emerald-800 border border-emerald-500/20'
       : value === 'partially_paid' ||
           value === 'deployed' ||
           value === 'in_production' ||
           value === 'quality_check'
-        ? 'bg-[#fff2df] text-[#a36c22]'
+        ? 'bg-amber-500/10 text-amber-800 border border-amber-500/20'
         : value === 'issued'
-          ? 'bg-[#fcebed] text-[#c61c2e]'
+          ? 'bg-[#c61c2e]/10 text-[#c61c2e] border border-[#c61c2e]/20'
           : value === 'declined' || value === 'archived' || value === 'cancelled'
-            ? 'bg-[#f1efed] text-[#77716c]'
-            : 'bg-[#f2eee7] text-[#83714e]';
+            ? 'bg-neutral-500/10 text-neutral-600 border border-neutral-500/15'
+            : 'bg-neutral-500/10 text-neutral-700 border border-neutral-500/15';
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${cls}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10.5px] font-medium capitalize backdrop-blur-xs ${cls}`}
     >
       {value.replaceAll('_', ' ')}
     </span>
@@ -745,16 +752,16 @@ function Modal({
         aria-modal="true"
         aria-labelledby="dialog-title"
       >
-        <div className="flex items-start justify-between border-b border-[#eee8e0] px-5 py-4 md:px-6">
+        <div className="flex items-start justify-between border-b border-neutral-200/60 px-5 py-4 md:px-6">
           <div>
             <h2
               id="dialog-title"
-              className="m-0 font-sans text-[18px] font-bold tracking-[-0.025em] text-[#1f1e24]"
+              className="m-0 font-sans text-[17px] font-semibold tracking-[-0.02em] text-neutral-950"
             >
               {title}
             </h2>
             {subtitle && (
-              <p className="mb-0 mt-1 text-[12px] text-[#89847e]">{subtitle}</p>
+              <p className="mb-0 mt-1 text-[12px] text-neutral-500">{subtitle}</p>
             )}
           </div>
           <button
@@ -816,16 +823,26 @@ function ClientForm({
   onCreated?: (created: Client) => void;
 }) {
   const qc = useQueryClient();
+  const { user } = useAppUser();
+  const isMarketer = user?.role === 'marketer';
   const create = useCreateClient();
   const update = useUpdateClient();
   const busy = create.isPending || update.isPending;
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [selectedMarketerId, setSelectedMarketerId] = useState<string>(
+    client?.assignedMarketerId ||
+      (isMarketer ? user?.id || 'usr-marketer-nana' : 'usr-marketer-nana'),
+  );
 
   useEffect(() => {
     setError('');
     setSuccess(false);
-  }, [client]);
+    setSelectedMarketerId(
+      client?.assignedMarketerId ||
+        (isMarketer ? user?.id || 'usr-marketer-nana' : 'usr-marketer-nana'),
+    );
+  }, [client, isMarketer, user?.id]);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -836,6 +853,15 @@ function ClientForm({
       setError('Company name is required.');
       return;
     }
+
+    const chosenMarketer = isMarketer
+      ? {
+          id: user?.id || 'usr-marketer-nana',
+          fullName: user?.fullName || 'Nana Mensah',
+          email: user?.email || 'marketer@collage.com.gh',
+        }
+      : MARKETER_ROSTER.find((m) => m.id === selectedMarketerId) || null;
+
     const value: ClientInput = {
       companyName: companyName.slice(0, 180),
       contactName: String(f.get('contactName') || '').trim().slice(0, 180) || null,
@@ -845,6 +871,9 @@ function ClientForm({
       city: String(f.get('city') || '').trim().slice(0, 100) || null,
       country: String(f.get('country') || 'Ghana').trim().slice(0, 100),
       status: (String(f.get('status') || 'active') as ClientInput['status']) || 'active',
+      assignedMarketerId: chosenMarketer ? chosenMarketer.id : null,
+      assignedMarketerName: chosenMarketer ? chosenMarketer.fullName : null,
+      assignedMarketerEmail: chosenMarketer ? chosenMarketer.email : null,
     };
     const finish = (savedClient?: Client) => {
       setSuccess(true);
@@ -939,13 +968,36 @@ function ClientForm({
           <option value="lead">Lead</option>
         </Select>
       </div>
-      <Input
-        label="Address"
-        name="address"
-        maxLength={400}
-        defaultValue={client?.address || ''}
-        placeholder="Street address or landmark"
-      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input
+          label="Address"
+          name="address"
+          maxLength={400}
+          defaultValue={client?.address || ''}
+          placeholder="Street address or landmark"
+        />
+        {isMarketer ? (
+          <div>
+            <div className="field-label">Assigned Marketer (Account Owner)</div>
+            <div className="mt-1 flex h-[38px] items-center rounded-md border border-emerald-200 bg-emerald-50/70 px-3 text-xs font-semibold text-emerald-900">
+              {user?.fullName || 'Nana Mensah'} (Your Exclusive Client)
+            </div>
+          </div>
+        ) : (
+          <Select
+            label="Assigned Marketer (Delegate Client)"
+            value={selectedMarketerId}
+            onChange={(e) => setSelectedMarketerId(e.target.value)}
+          >
+            <option value="">Unassigned (House Account)</option>
+            {MARKETER_ROSTER.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.fullName} ({m.email})
+              </option>
+            ))}
+          </Select>
+        )}
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Country" name="country" maxLength={100} defaultValue={client?.country || 'Ghana'} />
         <div className="flex items-end justify-end gap-2">
@@ -1101,28 +1153,47 @@ function PaymentModal({
 }
 
 function ClientList() {
+  const [, navigate] = useLocation();
+  const { user } = useAppUser();
+  const isMarketer = user?.role === 'marketer';
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<Client | undefined>();
   const [confirmArchive, setConfirmArchive] = useState<Client | undefined>();
   const [filter, setFilter] = useState('all');
+  const [marketerFilter, setMarketerFilter] = useState('all');
+  const [delegationNotice, setDelegationNotice] = useState<string | null>(null);
+  const [targetsModalOpen, setTargetsModalOpen] = useState(false);
+  const [allTargets, setAllTargets] = useState(() => getMarketerTargets());
   const qc = useQueryClient();
   const query = useGetClients();
   const archive = useArchiveClient();
   const updateClient = useUpdateClient();
 
-  const allClients = query.data || [];
+  const rawClients = query.data || [];
+  // Strict isolation: Marketers ONLY see clients they brought in or that Admin delegated to them
+  const roleScopedClients = isMarketer
+    ? rawClients.filter((c) => isClientOwnedByMarketer(c, user))
+    : rawClients.filter((c) => {
+        if (marketerFilter === 'all') return true;
+        if (marketerFilter === 'unassigned') return !c.assignedMarketerId && !c.assignedMarketerEmail;
+        return (
+          c.assignedMarketerId === marketerFilter ||
+          c.assignedMarketerEmail?.toLowerCase() === marketerFilter.toLowerCase()
+        );
+      });
+
   const counts = {
-    all: allClients.length,
-    active: allClients.filter((c) => c.status === 'active').length,
-    lead: allClients.filter((c) => c.status === 'lead').length,
-    archived: allClients.filter((c) => c.status === 'archived').length,
+    all: roleScopedClients.length,
+    active: roleScopedClients.filter((c) => c.status === 'active').length,
+    lead: roleScopedClients.filter((c) => c.status === 'lead').length,
+    archived: roleScopedClients.filter((c) => c.status === 'archived').length,
   };
 
-  const clients = allClients.filter(
+  const clients = roleScopedClients.filter(
     (c) =>
       (filter === 'all' || c.status === filter) &&
-      `${c.companyName} ${c.contactName || ''} ${c.email || ''} ${c.phone || ''} ${c.city || ''}`
+      `${c.companyName} ${c.contactName || ''} ${c.email || ''} ${c.phone || ''} ${c.city || ''} ${c.assignedMarketerName || ''}`
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
@@ -1154,45 +1225,135 @@ function ClientList() {
     );
   }
 
+  function handleDelegateClient(c: Client, marketerId: string) {
+    const chosen = MARKETER_ROSTER.find((m) => m.id === marketerId) || null;
+    updateClient.mutate(
+      {
+        id: c.id,
+        data: {
+          assignedMarketerId: chosen ? chosen.id : null,
+          assignedMarketerName: chosen ? chosen.fullName : null,
+          assignedMarketerEmail: chosen ? chosen.email : null,
+        },
+      },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: getGetClientsQueryKey() });
+          qc.invalidateQueries({ queryKey: getGetClientQueryKey(c.id) });
+          setDelegationNotice(
+            chosen
+              ? `Delegated "${c.companyName}" to ${chosen.fullName}.`
+              : `Removed marketer assignment from "${c.companyName}".`,
+          );
+          setTimeout(() => setDelegationNotice(null), 3500);
+        },
+      },
+    );
+  }
+
   return (
     <>
-      <PageTitle
-        eyebrow="Relationships"
-        title="Clients"
-        description="Keep every relationship, contact person and job history close at hand."
-        action={
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setEditing(undefined);
-              setModal(true);
-            }}
-          >
-            <Plus size={16} />
-            Add client
+      {delegationNotice && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-900">
+          <span>{delegationNotice}</span>
+          <button type="button" onClick={() => setDelegationNotice(null)} className="text-emerald-700 hover:text-emerald-950">
+            <X size={14} />
           </button>
+        </div>
+      )}
+
+      <PageTitle
+        eyebrow={isMarketer ? 'My Assigned Portfolio' : 'Relationships & Marketer Delegation'}
+        title={isMarketer ? 'My Clients' : 'Clients'}
+        description={
+          isMarketer
+            ? `Showing ONLY clients brought in by or delegated to ${user?.fullName || 'you'}. You can generate invoices directly for any of your clients.`
+            : 'Full company client directory. Admin has access to all clients and can delegate any client to a marketer.'
+        }
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            {!isMarketer && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setAllTargets(getMarketerTargets());
+                  setTargetsModalOpen(true);
+                }}
+              >
+                <Target size={15} />
+                Marketer Targets
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => navigate('/invoices?new=1')}
+            >
+              <ReceiptText size={15} />
+              + Generate Invoice
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setEditing(undefined);
+                setModal(true);
+              }}
+            >
+              <Plus size={16} />
+              {isMarketer ? 'Add my client' : 'Add client'}
+            </button>
+          </div>
         }
       />
+
+      {isMarketer && (
+        <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] backdrop-blur-md px-4 py-3 text-xs text-emerald-950 shadow-2xs">
+          <ShieldCheck size={16} className="text-emerald-700 shrink-0" />
+          <div>
+            <strong>Strict Client Isolation Active:</strong> To prevent client encroachment between marketers, you only see clients that you brought in or that Admin has delegated to <strong>{user?.fullName}</strong>.
+          </div>
+        </div>
+      )}
+
       <div className="panel overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-[#eee8e0] px-4 py-4 lg:flex-row lg:items-center lg:justify-between md:px-5">
-          <div className="relative w-full max-w-[350px]">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a958e]"
-            />
-            <input
-              aria-label="Search clients"
-              data-testid="input-search-clients"
-              className="field !pl-9"
-              placeholder="Search company, contact, phone, city…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        <div className="flex flex-col gap-3 border-b border-neutral-200/60 px-4 py-4 lg:flex-row lg:items-center lg:justify-between md:px-5">
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+            <div className="relative w-full sm:w-[280px]">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+              />
+              <input
+                aria-label="Search clients"
+                data-testid="input-search-clients"
+                className="field !pl-9"
+                placeholder="Search company, contact, phone, city…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            {!isMarketer && (
+              <select
+                aria-label="Filter by assigned marketer"
+                value={marketerFilter}
+                onChange={(e) => setMarketerFilter(e.target.value)}
+                className="field !w-auto min-w-[190px] text-xs font-medium"
+              >
+                <option value="all">All Marketers (Company-wide)</option>
+                {MARKETER_ROSTER.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    Marketer: {m.fullName}
+                  </option>
+                ))}
+                <option value="unassigned">Unassigned Clients</option>
+              </select>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             {(
               [
-                ['all', 'All clients', counts.all],
+                ['all', isMarketer ? 'My clients' : 'All clients', counts.all],
                 ['active', 'Active', counts.active],
                 ['lead', 'Leads', counts.lead],
                 ['archived', 'Archived', counts.archived],
@@ -1224,11 +1385,13 @@ function ClientList() {
         ) : clients.length === 0 ? (
           <Empty
             icon={Users}
-            title={search ? 'No matching clients' : 'A good relationship starts here'}
+            title={search ? 'No matching clients' : 'No clients in this view yet'}
             detail={
               search
                 ? 'Try another name, contact or city.'
-                : 'Add your first client to keep requests, quotes and invoices connected.'
+                : isMarketer
+                  ? 'Add a client that you brought in, or ask Admin to delegate a client to your portfolio.'
+                  : 'Add your first client to keep requests, quotes and invoices connected.'
             }
             action={
               !search && (
@@ -1240,19 +1403,22 @@ function ClientList() {
                   }}
                 >
                   <Plus size={15} />
-                  Add first client
+                  Add client
                 </button>
               )
             }
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse text-left">
+            <table className="w-full min-w-[820px] border-collapse text-left">
               <thead>
-                <tr className="border-b border-[#eee8e0] text-[10px] font-bold uppercase tracking-[.1em] text-[#99928b]">
+                <tr className="border-b border-neutral-200/60 bg-white/40 text-[10.5px] font-semibold uppercase tracking-[.08em] text-neutral-500">
                   <th className="px-5 py-3">Company / contact</th>
                   <th className="px-4 py-3">Location</th>
                   <th className="px-4 py-3">Email & phone</th>
+                  <th className="px-4 py-3">
+                    {isMarketer ? 'Account Owner' : 'Assigned Marketer (Delegate)'}
+                  </th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
@@ -1261,31 +1427,60 @@ function ClientList() {
                 {clients.map((c) => (
                   <tr
                     key={c.id}
-                    className="table-row border-b border-[#f0ece6] last:border-0"
+                    className="table-row border-b border-neutral-200/50 last:border-0"
                   >
                     <td className="px-5 py-4">
                       <Link
                         href={`/clients/${c.id}`}
-                        className="text-[13px] font-bold text-[#333338] hover:text-[#af273c]"
+                        className="text-[13px] font-semibold text-neutral-900 hover:text-[#E02B20] no-underline transition-colors"
                       >
                         {c.companyName}
                       </Link>
-                      <div className="mt-1 text-[11px] text-[#89847e]">
+                      <div className="mt-0.5 text-[11.5px] text-neutral-500">
                         {c.contactName ? `Attn: ${c.contactName}` : 'No contact added'}
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-[12px] text-[#68666a]">
+                    <td className="px-4 py-4 text-[12px] text-neutral-600">
                       {[c.city, c.country].filter(Boolean).join(', ') || '-'}
                     </td>
-                    <td className="px-4 py-4 text-[12px] text-[#68666a]">
+                    <td className="px-4 py-4 text-[12px] text-neutral-600">
                       {c.email && <div>{c.email}</div>}
-                      <div className="mt-1 text-[#96918b]">{c.phone || '-'}</div>
+                      <div className="mt-0.5 text-neutral-400 font-mono text-[11.5px]">{c.phone || '-'}</div>
+                    </td>
+                    <td className="px-4 py-4 text-[12px]">
+                      {isMarketer ? (
+                        <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-900 backdrop-blur-xs">
+                          {c.assignedMarketerName || user?.fullName}
+                        </span>
+                      ) : (
+                        <select
+                          aria-label={`Delegate ${c.companyName} to marketer`}
+                          value={c.assignedMarketerId || ''}
+                          onChange={(e) => handleDelegateClient(c, e.target.value)}
+                          className="rounded-lg border border-neutral-200/90 bg-white/75 backdrop-blur-md px-2.5 py-1.5 text-[11.5px] font-medium text-neutral-800 hover:border-[#c61c2e] focus:border-[#c61c2e] focus:outline-none cursor-pointer transition-colors"
+                        >
+                          <option value="">Unassigned (House)</option>
+                          {MARKETER_ROSTER.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.fullName}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="px-4 py-4">
                       <Status value={c.status} />
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/invoices?new=1&clientId=${encodeURIComponent(c.id)}`)}
+                          className="btn btn-primary !h-8 !min-h-8 !px-2.5 text-[11px]"
+                        >
+                          <Plus size={12} />
+                          Invoice
+                        </button>
                         {c.status === 'lead' && (
                           <button
                             type="button"
@@ -1320,7 +1515,7 @@ function ClientList() {
                         >
                           <Pencil size={14} />
                         </button>
-                        {c.status !== 'archived' && (
+                        {c.status !== 'archived' && !isMarketer && (
                           <button
                             aria-label={`Archive ${c.companyName}`}
                             className="btn btn-quiet !h-8 !min-h-8 !px-2 text-[#a53b47]"
@@ -1341,8 +1536,12 @@ function ClientList() {
       </div>
       {modal && (
         <Modal
-          title={editing ? 'Edit client' : 'Add a client'}
-          subtitle="A single source of truth for every piece of work."
+          title={editing ? 'Edit client' : isMarketer ? 'Add my client' : 'Add a client'}
+          subtitle={
+            isMarketer
+              ? `This client will be assigned exclusively to ${user?.fullName}.`
+              : 'Assign or delegate this client to a marketer or keep as a house account.'
+          }
           onClose={() => setModal(false)}
         >
           <ClientForm
@@ -1350,6 +1549,89 @@ function ClientList() {
             client={editing}
             onClose={() => setModal(false)}
           />
+        </Modal>
+      )}
+      {targetsModalOpen && (
+        <Modal
+          title="Marketer Monetary Targets (Weekly, Monthly & Annual)"
+          subtitle="Set the Weekly, Monthly, and Annual revenue targets (in GHS) that appear on each marketer's portal when they log in."
+          wide
+          onClose={() => setTargetsModalOpen(false)}
+        >
+          <div className="space-y-4">
+            {allTargets.map((t) => (
+              <div
+                key={t.marketerId}
+                className="glass-subcard p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-900">{t.marketerName}</div>
+                    <div className="text-xs text-neutral-500 font-mono">{t.marketerEmail}</div>
+                  </div>
+                  <span className="rounded-full bg-[#c61c2e]/10 border border-[#c61c2e]/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase text-[#c61c2e]">
+                    Active Quota
+                  </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Input
+                    label="Weekly Target (GHS)"
+                    type="number"
+                    min="0"
+                    step="100"
+                    defaultValue={t.weeklyTarget}
+                    onBlur={(e) => {
+                      const updated = updateMarketerTarget(t.marketerId, {
+                        weeklyTarget: Number(e.target.value) || 0,
+                        monthlyTarget: t.monthlyTarget,
+                        annualTarget: t.annualTarget,
+                      });
+                      setAllTargets([...updated]);
+                    }}
+                  />
+                  <Input
+                    label="Monthly Target (GHS)"
+                    type="number"
+                    min="0"
+                    step="500"
+                    defaultValue={t.monthlyTarget}
+                    onBlur={(e) => {
+                      const updated = updateMarketerTarget(t.marketerId, {
+                        weeklyTarget: t.weeklyTarget,
+                        monthlyTarget: Number(e.target.value) || 0,
+                        annualTarget: t.annualTarget,
+                      });
+                      setAllTargets([...updated]);
+                    }}
+                  />
+                  <Input
+                    label="Annual Target (GHS)"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    defaultValue={t.annualTarget}
+                    onBlur={(e) => {
+                      const updated = updateMarketerTarget(t.marketerId, {
+                        weeklyTarget: t.weeklyTarget,
+                        monthlyTarget: t.monthlyTarget,
+                        annualTarget: Number(e.target.value) || 0,
+                      });
+                      setAllTargets([...updated]);
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setTargetsModalOpen(false)}
+              >
+                <Check size={15} /> Done
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
       {confirmArchive && (
@@ -1384,6 +1666,10 @@ function ClientList() {
 
 function ClientDetail() {
   const { id = '' } = useParams<{ id: string }>();
+  const { user } = useAppUser();
+  const isMarketer = user?.role === 'marketer';
+  const qc = useQueryClient();
+  const updateClient = useUpdateClient();
   const [edit, setEdit] = useState(false);
   const [newDocKind, setNewDocKind] = useState<'quotation' | 'invoice' | null>(null);
   const {
@@ -1401,6 +1687,23 @@ function ClientDetail() {
   const totalInvoiced = clientInvoices.reduce((s, d) => s + d.total, 0);
   const totalPaid = clientInvoices.reduce((s, d) => s + d.amountPaid, 0);
   const totalBalance = clientInvoices.reduce((s, d) => s + d.balance, 0);
+
+  if (!isLoading && client && isMarketer && !isClientOwnedByMarketer(client, user)) {
+    return (
+      <div className="panel p-8 text-center max-w-md mx-auto my-12">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-red-50 text-[#c61c2e] mb-4">
+          <ShieldCheck size={24} />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900">Restricted Client Portfolio</h3>
+        <p className="text-xs text-slate-600 mt-2 mb-6 leading-relaxed">
+          This client belongs to another marketer&apos;s portfolio ({client.assignedMarketerName || 'Assigned Marketer'}). Marketers only have access to clients they have brought in or that Admin has delegated to them.
+        </p>
+        <Link href="/clients" className="btn btn-primary no-underline">
+          <ArrowLeft size={14} /> Back to My Clients
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -1425,7 +1728,7 @@ function ClientDetail() {
           <div className="mb-5">
             <Link href="/clients" className="btn btn-quiet !px-0 text-[12px]">
               <ArrowLeft size={15} />
-              All clients
+              {isMarketer ? 'My clients' : 'All clients'}
             </Link>
           </div>
           <PageTitle
@@ -1475,7 +1778,7 @@ function ClientDetail() {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
             <section className="panel p-5">
-              <h2 className="m-0 text-[14px] font-bold">Contact details</h2>
+              <h2 className="m-0 text-[14px] font-bold">Contact & Ownership details</h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {[
                   ['Contact (Attn)', client.contactName],
@@ -1490,6 +1793,47 @@ function ClientDetail() {
                     <div className="text-[13px] text-[#424147]">{v || '-'}</div>
                   </div>
                 ))}
+              </div>
+              <div className="mt-5 border-t border-[#eee8e0] pt-4">
+                <div className="field-label mb-1">
+                  {isMarketer ? 'Assigned Marketer (Account Owner)' : 'Delegate / Assign to Marketer'}
+                </div>
+                {isMarketer ? (
+                  <div className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-900">
+                    {client.assignedMarketerName || user?.fullName}
+                  </div>
+                ) : (
+                  <select
+                    value={client.assignedMarketerId || ''}
+                    onChange={(e) => {
+                      const chosen = MARKETER_ROSTER.find((m) => m.id === e.target.value) || null;
+                      updateClient.mutate(
+                        {
+                          id: client.id,
+                          data: {
+                            assignedMarketerId: chosen ? chosen.id : null,
+                            assignedMarketerName: chosen ? chosen.fullName : null,
+                            assignedMarketerEmail: chosen ? chosen.email : null,
+                          },
+                        },
+                        {
+                          onSuccess: () => {
+                            qc.invalidateQueries({ queryKey: getGetClientQueryKey(client.id) });
+                            qc.invalidateQueries({ queryKey: getGetClientsQueryKey() });
+                          },
+                        },
+                      );
+                    }}
+                    className="field text-xs font-medium"
+                  >
+                    <option value="">Unassigned (House Account)</option>
+                    {MARKETER_ROSTER.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.fullName} ({m.email})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="mt-6 border-t border-[#eee8e0] pt-4 text-[10px] text-[#98918a]">
                 Added {dateFmt(client.createdAt)} · Updated {dateFmt(client.updatedAt)}
@@ -2280,23 +2624,27 @@ function DocumentForm({
       );
   }
 
+  const { user: docFormUser } = useAppUser();
+  const isDocFormMarketer = docFormUser?.role === 'marketer';
+  const selectableClients = (clients.data || []).filter(
+    (c) => c.status !== 'archived' && (!isDocFormMarketer || isClientOwnedByMarketer(c, docFormUser)),
+  );
+
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Select
-          label="Client"
+          label={isDocFormMarketer ? 'My Client (Assigned Portfolio Only)' : 'Client'}
           value={clientId}
           onChange={(e) => setClientId(e.target.value)}
           required
         >
           <option value="">Choose a client</option>
-          {(clients.data || [])
-            .filter((c) => c.status !== 'archived')
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.companyName}
-              </option>
-            ))}
+          {selectableClients.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.companyName}
+            </option>
+          ))}
         </Select>
         <Input
           label="Subject / Project title"
@@ -2363,8 +2711,8 @@ function DocumentForm({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[#e9e3db]">
-        <div className="grid grid-cols-[1fr_68px_96px_105px_100px_32px] items-center gap-2 bg-[#f5f1eb] px-3 py-2 text-[9px] font-bold uppercase tracking-[.09em] text-[#8c867e]">
+      <div className="overflow-hidden rounded-xl border border-neutral-200/70 bg-white/55 backdrop-blur-md">
+        <div className="grid grid-cols-[1fr_68px_96px_105px_100px_32px] items-center gap-2 border-b border-neutral-200/60 bg-white/60 px-3 py-2 text-[9.5px] font-semibold uppercase tracking-[.08em] text-neutral-500">
           <span>Item Description</span>
           <span>Qty</span>
           <select
@@ -2376,7 +2724,7 @@ function DocumentForm({
               setDurationUnit(nextUnit);
               setItems((prev) => prev.map((it) => ({ ...it, durationUnit: nextUnit })));
             }}
-            className="w-full cursor-pointer rounded-md border border-[#cfc6b8] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[.05em] text-[#1D1D1B] shadow-2xs transition-colors hover:border-[#a81a29] focus:border-[#c61c2e] focus:outline-none"
+            className="w-full cursor-pointer rounded-md border border-neutral-200/90 bg-white/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-[.05em] text-[#1D1D1B] shadow-2xs transition-colors hover:border-[#a81a29] focus:border-[#c61c2e] focus:outline-none"
           >
             <option value="days">Days</option>
             <option value="months">Months</option>
@@ -2385,7 +2733,7 @@ function DocumentForm({
           <span className="text-right">Line Total</span>
           <span />
         </div>
-        <div className="divide-y divide-[#f0ece6]">
+        <div className="divide-y divide-neutral-200/50">
           {items.map((item, idx) => {
             const qty = Number.isFinite(Number(item.quantity))
               ? Math.max(0, Number(item.quantity))
@@ -2458,7 +2806,7 @@ function DocumentForm({
                   value={item.unitPrice}
                   onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value) })}
                 />
-                <div className="mono pt-2 text-right text-[12px] font-semibold text-[#292a2f]">
+                <div className="mono pt-2 text-right text-[12px] font-semibold text-neutral-900">
                   {fmt(computedRowTotal)}
                 </div>
                 <button
@@ -2474,7 +2822,7 @@ function DocumentForm({
             );
           })}
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee8e0] bg-[#faf8f4] px-3 py-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200/60 bg-white/50 px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -2541,10 +2889,10 @@ function DocumentForm({
       </div>
 
       {/* Live Ghanaian Tax Preview Box */}
-      <div className="rounded-lg border border-[#e6dfd6] bg-[#f7f3ed] p-4 text-[12px]">
+      <div className="glass-subcard p-4 text-[12px]">
         <div className="grid gap-1.5 sm:grid-cols-2">
-          <div className="text-[11px] text-[#79736c]">
-            <div className="font-bold uppercase tracking-wider text-[#333]">
+          <div className="text-[11px] text-neutral-500">
+            <div className="font-semibold uppercase tracking-wider text-neutral-800">
               Statutory Ghana Tax Breakdown
             </div>
             <div className="mt-1">
@@ -2553,8 +2901,8 @@ function DocumentForm({
           </div>
           <div className="space-y-1 text-[11px]">
             <div className="flex justify-between">
-              <span className="text-[#777]">Subtotal:</span>
-              <span className="mono">{fmt(Number(livePricing.subtotal))}</span>
+              <span className="text-neutral-500">Subtotal:</span>
+              <span className="mono text-neutral-900">{fmt(Number(livePricing.subtotal))}</span>
             </div>
             {Number(livePricing.discountAmount) > 0 && (
               <div className="flex justify-between text-[#a82b3e]">
@@ -2563,20 +2911,20 @@ function DocumentForm({
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-[#777]">
+              <span className="text-neutral-500">
                 GETFund ({rates.getfund}%) + NHIL ({rates.nhil}%):
               </span>
-              <span className="mono">
+              <span className="mono text-neutral-900">
                 {fmt(
                   Number(livePricing.getfundAmount) + Number(livePricing.nhilAmount),
                 )}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#777]">VAT ({rates.vat}%):</span>
-              <span className="mono">{fmt(Number(livePricing.vatAmount))}</span>
+              <span className="text-neutral-500">VAT ({rates.vat}%):</span>
+              <span className="mono text-neutral-900">{fmt(Number(livePricing.vatAmount))}</span>
             </div>
-            <div className="flex justify-between border-t border-[#ded7cd] pt-1 text-[13px] font-bold text-[#1e1f23]">
+            <div className="flex justify-between border-t border-neutral-200/70 pt-1 text-[13px] font-semibold text-neutral-950">
               <span>Total Payment Due:</span>
               <span className="mono text-[#c61c2e]">
                 {fmt(Number(livePricing.total))}
@@ -2614,20 +2962,48 @@ function DocumentForm({
 
 function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
   const [, navigate] = useLocation();
+  const { user } = useAppUser();
+  const isMarketer = user?.role === 'marketer';
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState(false);
+  const [preselectedClientId, setPreselectedClientId] = useState<string | undefined>();
   const [editing, setEditing] = useState<SalesDocument | undefined>();
   const [payingDoc, setPayingDoc] = useState<SalesDocument | undefined>();
   const [filter, setFilter] = useState('all');
   const convert = useConvertQuotation();
 
+  const clientsQuery = useGetClients(undefined, { query: { queryKey: getGetClientsQueryKey() } });
   const query = useGetDocuments(
     { kind },
     { query: { queryKey: getGetDocumentsQueryKey({ kind }) } },
   );
 
-  const allDocs = query.data || [];
+  // Auto-open Create Invoice modal if navigated with ?new=1&clientId=...
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') === '1') {
+      const cid = params.get('clientId') || undefined;
+      setPreselectedClientId(cid);
+      setEditing(undefined);
+      setModal(true);
+      // Clean query string so refreshing doesn't re-trigger
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const ownedClientIds = new Set(
+    (clientsQuery.data || [])
+      .filter((c) => !isMarketer || isClientOwnedByMarketer(c, user))
+      .map((c) => c.id),
+  );
+
+  const rawDocs = query.data || [];
+  const allDocs = isMarketer
+    ? rawDocs.filter((d) => ownedClientIds.has(d.clientId))
+    : rawDocs;
+
   const docs = allDocs.filter(
     (d) =>
       (filter === 'all' || d.status === filter) &&
@@ -2636,7 +3012,7 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
         .includes(search.toLowerCase()),
   );
 
-  const title = kind === 'quotation' ? 'Quotations' : 'Invoices';
+  const title = kind === 'quotation' ? 'Quotations' : isMarketer ? 'My Client Invoices' : 'Invoices';
   const statuses =
     kind === 'quotation'
       ? (['all', 'issued', 'accepted', 'draft', 'declined', 'cancelled'] as const)
@@ -2657,17 +3033,20 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
   return (
     <>
       <PageTitle
-        eyebrow={kind === 'quotation' ? 'Shape the work' : 'Keep cash moving'}
+        eyebrow={kind === 'quotation' ? 'Shape the work' : isMarketer ? `Invoices for ${user?.fullName}'s Clients` : 'Keep cash moving'}
         title={title}
         description={
           kind === 'quotation'
             ? 'Move a brief into a clear, considered proposal with Ghanaian taxes calculated.'
-            : 'Every bill, balance and payment in one place.'
+            : isMarketer
+              ? 'Generate and manage official Collage invoices strictly for clients in your assigned portfolio.'
+              : 'Every bill, balance and payment in one place.'
         }
         action={
           <button
             className="btn btn-primary"
             onClick={() => {
+              setPreselectedClientId(undefined);
               setEditing(undefined);
               setModal(true);
             }}
@@ -2681,26 +3060,26 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
       {/* Financial Summary Strip */}
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <div className="panel p-4">
-          <div className="text-[11px] font-semibold text-[#77736e]">
+          <div className="text-[11px] font-medium uppercase tracking-[.06em] text-neutral-500">
             {kind === 'quotation' ? 'Total quoted pipeline' : 'Total billed'}
           </div>
-          <div className="mono mt-1.5 text-[22px] font-bold text-[#292a2f]">
+          <div className="mono mt-1.5 text-[22px] font-semibold text-neutral-950">
             {fmt(totalValue)}
           </div>
         </div>
         <div className="panel p-4">
-          <div className="text-[11px] font-semibold text-[#77736e]">
+          <div className="text-[11px] font-medium uppercase tracking-[.06em] text-neutral-500">
             {kind === 'quotation' ? 'Accepted proposals' : 'Total collected'}
           </div>
-          <div className="mono mt-1.5 text-[22px] font-bold text-[#3d6e4d]">
+          <div className="mono mt-1.5 text-[22px] font-semibold text-emerald-700">
             {fmt(totalPaidOrAccepted)}
           </div>
         </div>
         <div className="panel p-4">
-          <div className="text-[11px] font-semibold text-[#77736e]">
+          <div className="text-[11px] font-medium uppercase tracking-[.06em] text-neutral-500">
             {kind === 'quotation' ? 'Active proposals count' : 'Outstanding balance'}
           </div>
-          <div className="mono mt-1.5 text-[22px] font-bold text-[#c61c2e]">
+          <div className="mono mt-1.5 text-[22px] font-semibold text-[#c61c2e]">
             {kind === 'quotation'
               ? `${allDocs.filter((d) => d.status === 'issued' || d.status === 'draft').length} open`
               : fmt(totalBalance)}
@@ -2709,11 +3088,11 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
       </div>
 
       <div className="panel overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-[#eee8e0] px-4 py-4 lg:flex-row lg:items-center lg:justify-between md:px-5">
+        <div className="flex flex-col gap-3 border-b border-neutral-200/60 px-4 py-4 lg:flex-row lg:items-center lg:justify-between md:px-5">
           <div className="relative w-full max-w-[340px]">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a958e]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
             />
             <input
               aria-label={`Search ${title.toLowerCase()}`}
@@ -2780,7 +3159,7 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] border-collapse text-left">
               <thead>
-                <tr className="border-b border-[#eee8e0] text-[10px] font-bold uppercase tracking-[.1em] text-[#99928b]">
+                <tr className="border-b border-neutral-200/60 bg-white/40 text-[10.5px] font-semibold uppercase tracking-[.08em] text-neutral-500">
                   <th className="px-5 py-3">Reference</th>
                   <th className="px-4 py-3">Client / subject</th>
                   <th className="px-4 py-3">Issued</th>
@@ -2798,40 +3177,40 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
                   return (
                     <tr
                       key={d.id}
-                      className="table-row border-b border-[#f0ece6] last:border-0"
+                      className="table-row border-b border-neutral-200/50 last:border-0"
                     >
                       <td className="px-5 py-4">
                         <Link
                           href={href}
-                          className="mono text-[11px] font-semibold text-[#a82b3e]"
+                          className="mono text-[11.5px] font-semibold text-[#c61c2e] no-underline hover:underline"
                         >
                           {d.number}
                         </Link>
-                        <div className="mt-1 text-[10px] capitalize text-[#928c85]">
+                        <div className="mt-0.5 text-[10.5px] capitalize text-neutral-400">
                           {d.kind}
                         </div>
                       </td>
                       <td className="max-w-[270px] px-4 py-4">
                         <Link
                           href={href}
-                          className="block truncate text-[12px] font-semibold text-[#45434a] hover:text-[#a82b3e]"
+                          className="block truncate text-[12.5px] font-semibold text-neutral-900 no-underline hover:text-[#E02B20] transition-colors"
                         >
                           {d.clientName}
                         </Link>
-                        <div className="mt-1 truncate text-[11px] text-[#89847e]">
+                        <div className="mt-0.5 truncate text-[11.5px] text-neutral-500">
                           {d.subject}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-[12px] text-[#6f6b66]">
+                      <td className="px-4 py-4 text-[12px] text-neutral-600 tabular-nums">
                         {dateFmt(d.issueDate)}
                       </td>
                       <td className="px-4 py-4">
                         <Status value={d.status} />
                       </td>
-                      <td className="mono px-4 py-4 text-right text-[12px] font-semibold">
+                      <td className="mono px-4 py-4 text-right text-[12.5px] font-semibold text-neutral-950">
                         {fmt(d.total)}
                       </td>
-                      <td className="mono px-4 py-4 text-right text-[12px] text-[#6f6b66]">
+                      <td className="mono px-4 py-4 text-right text-[12px] text-neutral-600">
                         {fmt(d.balance)}
                       </td>
                       <td className="px-5 py-4 text-right">
@@ -2905,9 +3284,20 @@ function DocumentList({ kind }: { kind: 'quotation' | 'invoice' }) {
           title={editing ? `Update ${kind} ${editing.number}` : `Create ${kind}`}
           subtitle="Clear scope now means fewer questions later."
           wide
-          onClose={() => setModal(false)}
+          onClose={() => {
+            setModal(false);
+            setPreselectedClientId(undefined);
+          }}
         >
-          <DocumentForm kind={kind} doc={editing} onClose={() => setModal(false)} />
+          <DocumentForm
+            kind={kind}
+            doc={editing}
+            defaultClientId={preselectedClientId}
+            onClose={() => {
+              setModal(false);
+              setPreselectedClientId(undefined);
+            }}
+          />
         </Modal>
       )}
       {payingDoc && (
@@ -5216,11 +5606,11 @@ function Router() {
           )}
         </Route>
 
-        {/* Admin Routes - Protected with RoleGuard allowedRoles={['admin']} */}
+        {/* Shared Admin & Marketer Routes (with strict per-marketer client isolation) */}
         <Route path="/clients">
           {() => (
             <Shell>
-              <RoleGuard allowedRoles={['admin']}>
+              <RoleGuard allowedRoles={['admin', 'marketer']}>
                 <ClientList />
               </RoleGuard>
             </Shell>
@@ -5229,7 +5619,7 @@ function Router() {
         <Route path="/clients/:id">
           {() => (
             <Shell>
-              <RoleGuard allowedRoles={['admin']}>
+              <RoleGuard allowedRoles={['admin', 'marketer']}>
                 <ClientDetail />
               </RoleGuard>
             </Shell>
@@ -5238,7 +5628,7 @@ function Router() {
         <Route path="/quotations">
           {() => (
             <Shell>
-              <RoleGuard allowedRoles={['admin']}>
+              <RoleGuard allowedRoles={['admin', 'marketer']}>
                 <DocumentList kind="quotation" />
               </RoleGuard>
             </Shell>
@@ -5247,7 +5637,7 @@ function Router() {
         <Route path="/quotations/:id">
           {() => (
             <Shell>
-              <RoleGuard allowedRoles={['admin']}>
+              <RoleGuard allowedRoles={['admin', 'marketer']}>
                 <DocumentDetail />
               </RoleGuard>
             </Shell>
@@ -5256,7 +5646,7 @@ function Router() {
         <Route path="/invoices">
           {() => (
             <Shell>
-              <RoleGuard allowedRoles={['admin']}>
+              <RoleGuard allowedRoles={['admin', 'marketer']}>
                 <DocumentList kind="invoice" />
               </RoleGuard>
             </Shell>
@@ -5265,7 +5655,7 @@ function Router() {
         <Route path="/invoices/:id">
           {() => (
             <Shell>
-              <RoleGuard allowedRoles={['admin']}>
+              <RoleGuard allowedRoles={['admin', 'marketer']}>
                 <DocumentDetail />
               </RoleGuard>
             </Shell>

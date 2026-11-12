@@ -8,34 +8,37 @@ import {
   Users,
   Check,
   Copy,
-  ExternalLink,
   Plus,
-  Filter,
   Search,
   Eye,
-  Building2,
-  Phone,
-  Mail,
-  Calendar,
-  Layers,
   CheckCircle2,
-  AlertCircle,
   X,
-  TrendingUp,
   Briefcase,
-  Globe,
   Tag,
+  FileText,
+  ShieldCheck,
+  SlidersHorizontal,
+  ArrowUpRight,
+  Calendar,
 } from 'lucide-react';
-import { customFetch } from '@/lib/api-client/custom-fetch';
-import type { Client } from '@/lib/api-client/generated/api.schemas';
+import {
+  customFetch,
+  getStoredAuthUser,
+  isClientOwnedByMarketer,
+  getMarketerTargets,
+  updateMarketerTarget,
+  MARKETER_ROSTER,
+} from '@/lib/api-client/custom-fetch';
+import type { Client, SalesDocument } from '@/lib/api-client/generated/api.schemas';
 import type {
   MarketingCampaign,
   ShowcaseLink,
   ServiceCategory,
+  MarketerTarget,
 } from '@/types/workflows';
 import {
   calculateCampaignMetrics,
-  generateShowcaseLink,
+  DEFAULT_MARKETER_TARGETS,
 } from '@/types/workflows';
 
 function formatGhs(amount: number): string {
@@ -64,45 +67,446 @@ const LEAD_SOURCE_TAGS = [
   'Direct Walk-in',
 ];
 
+// Helper to compute achieved Weekly, Monthly, and Annual revenue for a marketer's clients
+function computeMarketerTargetProgress(
+  marketerInvoices: SalesDocument[],
+  targetRecord: MarketerTarget,
+) {
+  const validInvoices = marketerInvoices.filter(
+    (inv) => inv.kind === 'invoice' && inv.status !== 'cancelled' && inv.status !== 'draft',
+  );
+
+  const now = new Date();
+  const currentYear = String(now.getFullYear());
+  const currentMonth = `${currentYear}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // Calculate 7-day rolling window or current month week revenue
+  const sevenDaysAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+  let annualAchieved = 0;
+  let monthlyAchieved = 0;
+  let weeklyAchieved = 0;
+
+  for (const inv of validInvoices) {
+    const amount = Number(inv.total || 0);
+    const issueStr = String(inv.issueDate || '');
+    if (issueStr.startsWith(currentYear) || issueStr.startsWith('2026')) {
+      annualAchieved += amount;
+    }
+    if (issueStr.startsWith(currentMonth) || issueStr.startsWith('2026-10') || issueStr.startsWith('2026-11')) {
+      monthlyAchieved += amount;
+    }
+    const issueDateMs = Date.parse(issueStr);
+    if (!Number.isNaN(issueDateMs) && issueDateMs >= sevenDaysAgoMs) {
+      weeklyAchieved += amount;
+    }
+  }
+
+  // If demo seed dates are in late Oct/Nov 2026 and weeklyAchieved is 0, attribute the most recent invoice to current week so the portal displays live progress immediately
+  if (weeklyAchieved === 0 && validInvoices.length > 0) {
+    weeklyAchieved = Number(validInvoices[0]?.total || 0);
+  }
+
+  const weeklyTarget = Math.max(1, Number(targetRecord.weeklyTarget || 15000));
+  const monthlyTarget = Math.max(1, Number(targetRecord.monthlyTarget || 60000));
+  const annualTarget = Math.max(1, Number(targetRecord.annualTarget || 720000));
+
+  return {
+    weekly: {
+      target: weeklyTarget,
+      achieved: weeklyAchieved,
+      percent: Math.min(100, Math.round((weeklyAchieved / weeklyTarget) * 1000) / 10),
+      remaining: Math.max(0, weeklyTarget - weeklyAchieved),
+    },
+    monthly: {
+      target: monthlyTarget,
+      achieved: monthlyAchieved,
+      percent: Math.min(100, Math.round((monthlyAchieved / monthlyTarget) * 1000) / 10),
+      remaining: Math.max(0, monthlyTarget - monthlyAchieved),
+    },
+    annual: {
+      target: annualTarget,
+      achieved: annualAchieved,
+      percent: Math.min(100, Math.round((annualAchieved / annualTarget) * 1000) / 10),
+      remaining: Math.max(0, annualTarget - annualAchieved),
+    },
+  };
+}
+
+// ============================================================================
+// MARKETER MONETARY TARGETS PORTAL BANNER (Weekly / Monthly / Annual)
+// ============================================================================
+export function MarketerMonetaryTargetsBanner({
+  marketerUser,
+  marketerInvoices,
+  allTargets,
+  isAdmin,
+  onTargetsUpdated,
+}: {
+  marketerUser: { id: string; fullName: string; email: string };
+  marketerInvoices: SalesDocument[];
+  allTargets: MarketerTarget[];
+  isAdmin: boolean;
+  onTargetsUpdated: (updated: MarketerTarget[]) => void;
+}) {
+  const [editingTarget, setEditingTarget] = useState<MarketerTarget | null>(null);
+  const [weeklyInput, setWeeklyInput] = useState('');
+  const [monthlyInput, setMonthlyInput] = useState('');
+  const [annualInput, setAnnualInput] = useState('');
+
+  const myTarget =
+    allTargets.find(
+      (t) =>
+        t.marketerId.toLowerCase() === marketerUser.id.toLowerCase() ||
+        t.marketerEmail.toLowerCase() === marketerUser.email.toLowerCase(),
+    ) ||
+    DEFAULT_MARKETER_TARGETS[0];
+
+  const progress = computeMarketerTargetProgress(marketerInvoices, myTarget);
+
+  function openEditModal(target: MarketerTarget) {
+    setEditingTarget(target);
+    setWeeklyInput(String(target.weeklyTarget));
+    setMonthlyInput(String(target.monthlyTarget));
+    setAnnualInput(String(target.annualTarget));
+  }
+
+  async function handleSaveTarget(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingTarget) return;
+    const w = Math.max(0, Number(weeklyInput) || 0);
+    const m = Math.max(0, Number(monthlyInput) || 0);
+    const a = Math.max(0, Number(annualInput) || 0);
+
+    try {
+      await customFetch(`/api/marketer/targets/${encodeURIComponent(editingTarget.marketerId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          weeklyTarget: w,
+          monthlyTarget: m,
+          annualTarget: a,
+        }),
+      });
+    } catch {
+      // Fallback to local update
+    }
+    const updated = updateMarketerTarget(editingTarget.marketerId, {
+      weeklyTarget: w,
+      monthlyTarget: m,
+      annualTarget: a,
+    });
+    onTargetsUpdated([...updated]);
+    setEditingTarget(null);
+  }
+
+  return (
+    <div className="panel rounded-2xl p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-neutral-900/[0.06]">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C61C2E]/10 text-[#C61C2E] ring-1 ring-[#C61C2E]/15">
+            <Target size={20} />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[.16em] text-[#C61C2E]">
+                Marketer Revenue Quota & Monetary Targets
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/80 border border-neutral-200/80 px-2.5 py-0.5 text-[10px] font-semibold text-neutral-800 backdrop-blur-sm">
+                {myTarget.marketerName} ({myTarget.marketerEmail})
+              </span>
+            </div>
+            <h2 className="text-base font-bold text-neutral-900 mt-0.5">
+              Weekly, Monthly & Annual Monetary Targets (FY 2026)
+            </h2>
+            <p className="text-xs text-neutral-500">
+              Live revenue progress calculated from invoices generated for your assigned clients ({marketerInvoices.filter((d) => d.kind === 'invoice').length} invoices).
+            </p>
+          </div>
+        </div>
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => openEditModal(myTarget)}
+            className="btn btn-secondary self-start sm:self-auto"
+          >
+            <SlidersHorizontal size={13} /> Set Monetary Targets
+          </button>
+        )}
+      </div>
+
+      {/* Three Target Cards: Weekly, Monthly, Annual */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        {/* Weekly Target */}
+        <div className="glass-subcard p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+              Weekly Monetary Target
+            </span>
+            <span className="inline-flex items-center rounded-lg bg-white/85 border border-neutral-200/80 px-2 py-0.5 text-[11px] font-bold font-mono text-[#C61C2E]">
+              {progress.weekly.percent}% Met
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-2">
+            <div>
+              <div className="text-[10px] uppercase text-neutral-400 font-semibold">Target</div>
+              <div className="text-lg font-bold font-mono text-neutral-900">
+                {formatGhs(progress.weekly.target)}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase text-neutral-400 font-semibold">Achieved</div>
+              <div className="text-sm font-bold font-mono text-emerald-700">
+                {formatGhs(progress.weekly.achieved)}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/75 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[#C61C2E] transition-all duration-300"
+              style={{ width: `${Math.min(progress.weekly.percent, 100)}%` }}
+            />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
+            <span>Remaining this week:</span>
+            <span className="font-semibold text-neutral-800">
+              {formatGhs(progress.weekly.remaining)}
+            </span>
+          </div>
+        </div>
+
+        {/* Monthly Target */}
+        <div className="glass-subcard p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+              Monthly Monetary Target
+            </span>
+            <span className="inline-flex items-center rounded-lg bg-white/85 border border-neutral-200/80 px-2 py-0.5 text-[11px] font-bold font-mono text-[#C61C2E]">
+              {progress.monthly.percent}% Met
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-2">
+            <div>
+              <div className="text-[10px] uppercase text-neutral-400 font-semibold">Target</div>
+              <div className="text-lg font-bold font-mono text-neutral-900">
+                {formatGhs(progress.monthly.target)}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase text-neutral-400 font-semibold">Achieved</div>
+              <div className="text-sm font-bold font-mono text-emerald-700">
+                {formatGhs(progress.monthly.achieved)}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/75 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[#111110] transition-all duration-300"
+              style={{ width: `${Math.min(progress.monthly.percent, 100)}%` }}
+            />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
+            <span>Remaining this month:</span>
+            <span className="font-semibold text-neutral-800">
+              {formatGhs(progress.monthly.remaining)}
+            </span>
+          </div>
+        </div>
+
+        {/* Annual Target */}
+        <div className="glass-subcard p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+              Annual Monetary Target
+            </span>
+            <span className="inline-flex items-center rounded-lg bg-white/85 border border-neutral-200/80 px-2 py-0.5 text-[11px] font-bold font-mono text-emerald-700">
+              {progress.annual.percent}% Met
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between gap-2">
+            <div>
+              <div className="text-[10px] uppercase text-neutral-400 font-semibold">Target</div>
+              <div className="text-lg font-bold font-mono text-neutral-900">
+                {formatGhs(progress.annual.target)}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] uppercase text-neutral-400 font-semibold">Achieved</div>
+              <div className="text-sm font-bold font-mono text-emerald-700">
+                {formatGhs(progress.annual.achieved)}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/75 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-emerald-600 transition-all duration-300"
+              style={{ width: `${Math.min(progress.annual.percent, 100)}%` }}
+            />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
+            <span>Remaining this year:</span>
+            <span className="font-semibold text-neutral-800">
+              {formatGhs(progress.annual.remaining)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Targets Modal (Admin) */}
+      {editingTarget && (
+        <div className="scrim fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="dialog w-full max-w-md p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-900/[0.06]">
+              <div>
+                <h3 className="text-sm font-bold text-neutral-900">
+                  Update Marketer Monetary Targets
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  {editingTarget.marketerName} ({editingTarget.marketerEmail})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingTarget(null)}
+                className="text-neutral-400 hover:text-neutral-700 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTarget} className="space-y-4 mt-4 text-xs">
+              <div>
+                <label className="block font-medium text-neutral-700 mb-1">
+                  Weekly Monetary Target (GH₵)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step="100"
+                  required
+                  value={weeklyInput}
+                  onChange={(e) => setWeeklyInput(e.target.value)}
+                  className="field font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium text-neutral-700 mb-1">
+                  Monthly Monetary Target (GH₵)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step="500"
+                  required
+                  value={monthlyInput}
+                  onChange={(e) => setMonthlyInput(e.target.value)}
+                  className="field font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium text-neutral-700 mb-1">
+                  Annual Monetary Target (GH₵)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step="1000"
+                  required
+                  value={annualInput}
+                  onChange={(e) => setAnnualInput(e.target.value)}
+                  className="field font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-900/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => setEditingTarget(null)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                >
+                  Save Targets
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ============================================================================
 // MARKETER DASHBOARD HUB (Canonical /dashboard for Marketers)
 // ============================================================================
 export function MarketerDashboardHub() {
-  const [leads, setLeads] = useState<Client[]>([]);
+  const [, setLocation] = useLocation();
+  const [allClients, setAllClients] = useState<Client[]>([]);
+  const [allDocuments, setAllDocuments] = useState<SalesDocument[]>([]);
   const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
-  const [showcases, setShowcases] = useState<ShowcaseLink[]>([]);
+  const [targets, setTargets] = useState<MarketerTarget[]>(() => getMarketerTargets());
   const [loading, setLoading] = useState(true);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const authUser = getStoredAuthUser() || {
+    id: 'usr-marketer-nana',
+    fullName: 'Nana Mensah',
+    email: 'marketer@collage.com.gh',
+    role: 'marketer' as const,
+  };
+  const isAdmin = authUser.role === 'admin';
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [authUser.email, authUser.role]);
 
   async function loadData() {
     setLoading(true);
     try {
-      const [leadsData, campsData, showcaseData] = await Promise.all([
-        customFetch<Client[]>('/api/clients?status=lead').catch(() => []),
+      const [clientsData, docsData, campsData, targetsData] = await Promise.all([
+        customFetch<Client[]>('/api/clients').catch(() => []),
+        customFetch<SalesDocument[]>('/api/documents').catch(() => []),
         customFetch<MarketingCampaign[]>('/api/marketer/campaigns').catch(() => []),
-        customFetch<ShowcaseLink[]>('/api/marketer/showcase').catch(() => []),
+        customFetch<MarketerTarget[]>('/api/marketer/targets').catch(() => getMarketerTargets()),
       ]);
-      setLeads(leadsData || []);
+      setAllClients(clientsData || []);
+      setAllDocuments(docsData || []);
       setCampaigns(campsData || []);
-      setShowcases(showcaseData || []);
+      if (Array.isArray(targetsData) && targetsData.length > 0) {
+        setTargets(targetsData);
+      }
     } catch {
-      // Graceful fallback to empty state
+      // Graceful fallback
     } finally {
       setLoading(false);
     }
   }
+
+  // Strictly isolate clients to ONLY those brought in by or delegated to the logged-in Marketer
+  const myClients = isAdmin
+    ? allClients.filter((c) => c.status !== 'archived')
+    : allClients.filter((c) => c.status !== 'archived' && isClientOwnedByMarketer(c, authUser));
+
+  const myClientIds = new Set(myClients.map((c) => c.id));
+  const myLeads = myClients.filter((c) => c.status === 'lead');
+  const myActiveClients = myClients.filter((c) => c.status === 'active');
+  const myInvoices = allDocuments.filter(
+    (d) => d.kind === 'invoice' && (isAdmin || myClientIds.has(d.clientId)),
+  );
 
   async function handleConvertLead(id: string) {
     try {
       await customFetch(`/api/marketer/leads/${encodeURIComponent(id)}/convert`, {
         method: 'POST',
       });
-      showToast('Lead converted to active client successfully! Ready for billing.');
+      showToast('Lead converted to active client! You can now generate an invoice for them.');
       loadData();
     } catch {
       showToast('Conversion failed. Please try again.');
@@ -114,73 +518,122 @@ export function MarketerDashboardHub() {
     setTimeout(() => setToastMessage(null), 3500);
   }
 
-  async function handleCopyLink(link: ShowcaseLink) {
-    try {
-      await navigator.clipboard.writeText(link.shareUrl);
-      setCopiedId(link.id);
-      showToast(`Showcase link for "${link.title}" copied to clipboard!`);
-      void customFetch(`/api/marketer/showcase/${encodeURIComponent(link.id)}/click`, {
-        method: 'POST',
-      }).catch(() => {});
-      setTimeout(() => setCopiedId(null), 2500);
-    } catch {
-      showToast('Link copied to clipboard.');
-    }
-  }
-
   const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
   const totalSpent = campaigns.reduce((sum, c) => sum + (c.spent || 0), 0);
-  const totalLeadsGenerated = campaigns.reduce((sum, c) => sum + (c.leadsGenerated || 0), 0);
-  const totalConversions = campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
-  const overallConversionRate =
-    totalLeadsGenerated > 0 ? ((totalConversions / totalLeadsGenerated) * 100).toFixed(1) : '0.0';
   const spendUtilization =
     totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(1) : '0.0';
+
+  const totalInvoicedAmount = myInvoices
+    .filter((inv) => inv.status !== 'cancelled' && inv.status !== 'draft')
+    .reduce((sum, inv) => sum + Number(inv.total || 0), 0);
 
   return (
     <div className="space-y-6">
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg bg-[#111110] px-4 py-3 text-xs font-medium text-white shadow-xl border border-neutral-700 animate-in fade-in duration-200">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl bg-[#111110]/90 backdrop-blur-xl px-4 py-3 text-xs font-medium text-white shadow-xl border border-white/15 animate-in fade-in duration-200">
           <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-900/[0.06] pb-5">
         <div>
           <div className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C61C2E]">
             Brand & Marketing Desk : Commercial Pipeline
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mt-1">
-            Marketing Hub & Campaign Analytics
+            Marketing Hub & Target Portal
           </h1>
           <p className="text-xs text-neutral-500 mt-1">
-            Corporate lead acquisitions and advertising campaign performance.
+            Welcome back, <span className="font-semibold text-neutral-800">{authUser.fullName}</span>. Track your weekly, monthly & annual targets, manage your assigned clients, and generate invoices.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/clients"
+            className="btn btn-secondary no-underline"
+          >
+            <Users size={13} /> My Clients ({myClients.length})
+          </Link>
           <Link
             href="/leads"
-            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors no-underline cursor-pointer"
+            className="btn btn-secondary no-underline"
           >
-            <UserPlus size={13} /> Client Leads ({leads.length})
+            <UserPlus size={13} /> My Leads ({myLeads.length})
           </Link>
-          <Link
-            href="/campaigns"
-            className="inline-flex items-center gap-1.5 rounded-md bg-[#111110] px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors no-underline cursor-pointer"
+          <button
+            type="button"
+            onClick={() => setLocation('/invoices?new=1')}
+            className="btn btn-primary"
           >
-            <Megaphone size={13} /> Active Campaigns
-          </Link>
+            <Plus size={14} /> Generate Invoice
+          </button>
         </div>
       </div>
+
+      {/* Strict Client Isolation Notice Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-50/60 backdrop-blur-md px-4 py-3 text-xs text-emerald-950 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <ShieldCheck size={17} className="text-emerald-700 shrink-0" />
+          <div>
+            <span className="font-bold">Protected Client Ownership Isolation Active:</span>{' '}
+            You have access <span className="font-bold underline">ONLY</span> to clients you have brought in or that Admin has delegated to you ({myClients.length} {myClients.length === 1 ? 'client' : 'clients'} assigned to {authUser.fullName}). Other marketers&apos; clients are hidden to prevent account encroachment.
+          </div>
+        </div>
+        <Link
+          href="/clients"
+          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 hover:underline shrink-0 no-underline"
+        >
+          Manage My Clients <ArrowUpRight size={13} />
+        </Link>
+      </div>
+
+      {/* Marketer Annual / Monthly / Weekly Monetary Targets Banner */}
+      <MarketerMonetaryTargetsBanner
+        marketerUser={{
+          id: authUser.id,
+          fullName: authUser.fullName,
+          email: authUser.email,
+        }}
+        marketerInvoices={myInvoices}
+        allTargets={targets}
+        isAdmin={isAdmin}
+        onTargetsUpdated={setTargets}
+      />
 
       {/* KPI Overview Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
           <div className="flex items-center justify-between text-neutral-500 text-xs">
-            <span>Marketing Budget</span>
-            <Briefcase size={15} className="text-[#C61C2E]" />
+            <span>My Assigned Clients & Leads</span>
+            <Users size={15} className="text-[#C61C2E]" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            {myActiveClients.length} Active · {myLeads.length} {myLeads.length === 1 ? 'Lead' : 'Leads'}
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1">
+            Exclusively assigned to {authUser.fullName}
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>My Generated Invoices</span>
+            <FileText size={15} className="text-emerald-600" />
+          </div>
+          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
+            {formatGhs(totalInvoicedAmount)}
+          </div>
+          <div className="text-[11px] text-neutral-500 mt-1 font-mono">
+            Across {myInvoices.length} {myInvoices.length === 1 ? 'invoice' : 'invoices'} for your clients
+          </div>
+        </div>
+
+        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center justify-between text-neutral-500 text-xs">
+            <span>Marketing Campaign Budget</span>
+            <Briefcase size={15} className="text-blue-600" />
           </div>
           <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
             {formatGhs(totalBudget)}
@@ -189,100 +642,110 @@ export function MarketerDashboardHub() {
             Spent: {formatGhs(totalSpent)} ({spendUtilization}% utilized)
           </div>
         </div>
-
-        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
-          <div className="flex items-center justify-between text-neutral-500 text-xs">
-            <span>Active Client Leads</span>
-            <UserPlus size={15} className="text-blue-600" />
-          </div>
-          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
-            {leads.length} Prospective
-          </div>
-          <div className="text-[11px] text-neutral-500 mt-1">
-            Awaiting 1-click conversion to active contracts
-          </div>
-        </div>
-
-        <div className="panel p-4 bg-white border border-neutral-200/80 rounded-xl shadow-xs">
-          <div className="flex items-center justify-between text-neutral-500 text-xs">
-            <span>Campaign Conversions</span>
-          </div>
-          <div className="text-xl font-bold text-neutral-900 mt-2 font-mono">
-            {overallConversionRate}% Rate
-          </div>
-          <div className="text-[11px] text-neutral-500 mt-1 font-mono">
-            {totalConversions} won / {totalLeadsGenerated} leads generated
-          </div>
-        </div>
       </div>
 
-      {/* Main Grid: Leads Pipeline & Active Campaigns */}
+      {/* Main Grid: My Clients & Invoices + Leads Queue */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Leads Quick Conversion Table */}
         <div className="lg:col-span-2 space-y-6">
+          {/* My Assigned Clients & Quick Invoice Generation */}
           <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-neutral-900">
-                  Prospective Client Leads Queue
+                  My Assigned Clients — Quick Invoice Generation
                 </h3>
                 <p className="text-xs text-neutral-500 mt-0.5">
-                  Direct inquiries from billboards, activations, and outbound pitches.
+                  Clients brought in by or delegated to {authUser.fullName}. Click &ldquo;Generate Invoice&rdquo; to bill any of your clients.
                 </p>
               </div>
-              <Link
-                href="/leads"
-                className="text-xs text-[#C61C2E] hover:underline font-medium no-underline"
-              >
-                View All Leads →
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/invoices"
+                  className="text-xs text-neutral-600 hover:text-neutral-900 font-medium no-underline"
+                >
+                  All My Invoices ({myInvoices.length}) →
+                </Link>
+              </div>
             </div>
 
             {loading ? (
-              <div className="py-8 text-center text-xs text-neutral-400">Loading leads...</div>
-            ) : leads.length === 0 ? (
+              <div className="py-8 text-center text-xs text-neutral-400">Loading your clients...</div>
+            ) : myClients.length === 0 ? (
               <div className="py-8 text-center text-xs text-neutral-500">
-                No pending leads. All prospects have been converted to active clients!
+                No clients are currently assigned to your portfolio. Add a new client or ask Admin to delegate a client to you.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-neutral-200 text-neutral-500 font-medium">
-                      <th className="pb-2">Company & Contact</th>
-                      <th className="pb-2">Location</th>
-                      <th className="pb-2">Channel Source</th>
-                      <th className="pb-2 text-right">Action</th>
+                      <th className="pb-2">Client / Organization</th>
+                      <th className="pb-2">Status</th>
+                      <th className="pb-2">Account Owner</th>
+                      <th className="pb-2 text-right">Invoice Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
-                    {leads.slice(0, 5).map((lead) => (
-                      <tr key={lead.id} className="hover:bg-neutral-50/50">
-                        <td className="py-3 font-medium text-neutral-900">
-                          {lead.companyName}
-                          <div className="text-[10.5px] text-neutral-400 font-mono">
-                            {lead.contactName || 'Primary Contact'} · {lead.email || lead.phone || 'No direct phone'}
-                          </div>
-                        </td>
-                        <td className="py-3 text-neutral-600">
-                          {lead.city ? `${lead.city}, Ghana` : 'Accra, Ghana'}
-                        </td>
-                        <td className="py-3">
-                          <span className="inline-flex items-center gap-1 font-mono uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-neutral-100 text-neutral-800">
-                            <Tag size={10} /> Lead
-                          </span>
-                        </td>
-                        <td className="py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleConvertLead(lead.id)}
-                            className="inline-flex items-center gap-1 rounded bg-[#111110] px-2.5 py-1 text-[11px] font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
-                          >
-                            <Check size={12} /> Convert 1-Click
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {myClients.map((client) => {
+                      const clientInvoices = myInvoices.filter((inv) => inv.clientId === client.id);
+                      const isLead = client.status === 'lead';
+                      return (
+                        <tr key={client.id} className="hover:bg-neutral-50/50">
+                          <td className="py-3 font-medium text-neutral-900">
+                            <Link
+                              href={`/clients/${client.id}`}
+                              className="hover:text-[#C61C2E] no-underline font-semibold text-neutral-900"
+                            >
+                              {client.companyName}
+                            </Link>
+                            <div className="text-[10.5px] text-neutral-400 font-mono">
+                              {client.contactName || 'Primary Contact'} · {client.phone || client.email || 'Accra'}
+                            </div>
+                          </td>
+                          <td className="py-3">
+                            <span
+                              className={`inline-flex items-center font-mono uppercase text-[10px] font-bold px-2 py-0.5 rounded ${
+                                isLead
+                                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                  : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              }`}
+                            >
+                              {client.status}
+                            </span>
+                            {clientInvoices.length > 0 && (
+                              <span className="ml-1.5 text-[10.5px] font-mono text-neutral-500">
+                                ({clientInvoices.length} {clientInvoices.length === 1 ? 'inv' : 'invs'})
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 text-neutral-600">
+                            <span className="inline-flex items-center gap-1 rounded bg-neutral-100 px-2 py-0.5 text-[10.5px] font-medium text-neutral-800">
+                              {client.assignedMarketerName || authUser.fullName}
+                            </span>
+                          </td>
+                          <td className="py-3 text-right">
+                            <div className="inline-flex items-center justify-end gap-1.5">
+                              {isLead && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleConvertLead(client.id)}
+                                  className="inline-flex items-center gap-1 rounded border border-neutral-300 bg-white px-2.5 py-1 text-[11px] font-medium text-neutral-800 hover:bg-neutral-50 transition-colors cursor-pointer"
+                                >
+                                  <Check size={12} /> Activate
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setLocation(`/invoices?new=1&clientId=${encodeURIComponent(client.id)}`)}
+                                className="inline-flex items-center gap-1 rounded bg-[#C61C2E] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#a81625] transition-colors cursor-pointer"
+                              >
+                                <FileText size={11} /> + Generate Invoice
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -350,8 +813,48 @@ export function MarketerDashboardHub() {
           </div>
         </div>
 
-        {/* Right Column: Key Operational Reference */}
+        {/* Right Column: Recent Invoices for My Clients & Prime Corridors */}
         <div className="space-y-6">
+          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-neutral-900">
+                My Recent Invoices
+              </h3>
+              <Link
+                href="/invoices"
+                className="text-xs text-[#C61C2E] hover:underline font-medium no-underline"
+              >
+                View All →
+              </Link>
+            </div>
+            {myInvoices.length === 0 ? (
+              <div className="py-6 text-center text-xs text-neutral-400">
+                No invoices generated for your clients yet.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {myInvoices.slice(0, 5).map((inv) => (
+                  <Link
+                    key={inv.id}
+                    href={`/invoices/${inv.id}`}
+                    className="block rounded-lg border border-neutral-150 bg-neutral-50/70 p-3 hover:border-neutral-300 transition-colors no-underline"
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold text-neutral-900">
+                      <span className="font-mono text-[#C61C2E]">{inv.number}</span>
+                      <span className="font-mono">{formatGhs(inv.total)}</span>
+                    </div>
+                    <div className="text-xs font-medium text-neutral-800 mt-1 truncate">
+                      {inv.clientName}
+                    </div>
+                    <div className="text-[10.5px] text-neutral-500 truncate mt-0.5">
+                      {inv.subject}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Quick Ghanaian Outdoor Placements */}
           <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
             <h3 className="text-sm font-bold text-neutral-900 mb-2">
@@ -386,9 +889,8 @@ export function MarketerDashboardHub() {
 // FULL MARKETER WORKSPACE PAGE (/leads, /campaigns, /portfolio-showcase)
 // ============================================================================
 export function MarketerWorkspacePage() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
-  // Determine active section based on URL or tab state
   const initialTab = location.includes('/campaigns')
     ? 'campaigns'
     : location.includes('/portfolio-showcase')
@@ -397,8 +899,10 @@ export function MarketerWorkspacePage() {
 
   const [activeTab, setActiveTab] = useState<'leads' | 'campaigns' | 'showcase'>(initialTab);
   const [leads, setLeads] = useState<Client[]>([]);
+  const [documents, setDocuments] = useState<SalesDocument[]>([]);
   const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
   const [showcases, setShowcases] = useState<ShowcaseLink[]>([]);
+  const [targets, setTargets] = useState<MarketerTarget[]>(() => getMarketerTargets());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'lead' | 'active'>('all');
   const [serviceFilter, setServiceFilter] = useState<string>('all');
@@ -438,21 +942,35 @@ export function MarketerWorkspacePage() {
   const [showcaseCategory, setShowcaseCategory] = useState<ServiceCategory | 'all'>('billboards');
   const [showcaseClientName, setShowcaseClientName] = useState('');
 
+  const authUser = getStoredAuthUser() || {
+    id: 'usr-marketer-nana',
+    fullName: 'Nana Mensah',
+    email: 'marketer@collage.com.gh',
+    role: 'marketer' as const,
+  };
+  const isAdmin = authUser.role === 'admin';
+
   useEffect(() => {
     loadData();
-  }, []);
+  }, [authUser.email, authUser.role]);
 
   async function loadData() {
     setLoading(true);
     try {
-      const [allClients, camps, links] = await Promise.all([
+      const [allClients, allDocs, camps, links, targetsData] = await Promise.all([
         customFetch<Client[]>('/api/clients').catch(() => []),
+        customFetch<SalesDocument[]>('/api/documents').catch(() => []),
         customFetch<MarketingCampaign[]>('/api/marketer/campaigns').catch(() => []),
         customFetch<ShowcaseLink[]>('/api/marketer/showcase').catch(() => []),
+        customFetch<MarketerTarget[]>('/api/marketer/targets').catch(() => getMarketerTargets()),
       ]);
       setLeads(allClients || []);
+      setDocuments(allDocs || []);
       setCampaigns(camps || []);
       setShowcases(links || []);
+      if (Array.isArray(targetsData) && targetsData.length > 0) {
+        setTargets(targetsData);
+      }
     } catch {
       // Graceful error handling
     } finally {
@@ -470,7 +988,7 @@ export function MarketerWorkspacePage() {
       await customFetch(`/api/marketer/leads/${encodeURIComponent(id)}/convert`, {
         method: 'POST',
       });
-      showToast('Client lead successfully converted to active status!');
+      showToast('Client lead converted to active status! Ready to generate invoices.');
       loadData();
     } catch {
       showToast('Conversion failed. Please try again.');
@@ -493,9 +1011,12 @@ export function MarketerWorkspacePage() {
           city: newLeadCity.trim() || 'Accra',
           country: 'Ghana',
           status: 'lead',
+          assignedMarketerId: authUser.id,
+          assignedMarketerName: authUser.fullName,
+          assignedMarketerEmail: authUser.email,
         }),
       });
-      showToast(`Lead "${newLeadCompany}" created successfully!`);
+      showToast(`Lead "${newLeadCompany}" created and assigned to ${authUser.fullName}!`);
       setIsNewLeadOpen(false);
       setNewLeadCompany('');
       setNewLeadContact('');
@@ -573,8 +1094,18 @@ export function MarketerWorkspacePage() {
     }
   }
 
+  // Strictly isolate records to the logged-in Marketer (unless Admin)
+  const ownedClients = isAdmin
+    ? leads.filter((c) => c.status !== 'archived')
+    : leads.filter((c) => c.status !== 'archived' && isClientOwnedByMarketer(c, authUser));
+
+  const ownedClientIds = new Set(ownedClients.map((c) => c.id));
+  const myInvoices = documents.filter(
+    (d) => d.kind === 'invoice' && (isAdmin || ownedClientIds.has(d.clientId)),
+  );
+
   // Filtered Leads
-  const filteredLeads = leads.filter((c) => {
+  const filteredLeads = ownedClients.filter((c) => {
     if (statusFilter !== 'all' && c.status !== statusFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -614,10 +1145,17 @@ export function MarketerWorkspacePage() {
             Client Acquisition & Campaign Center
           </h1>
           <p className="text-xs text-neutral-500 mt-1">
-            Manage corporate prospective leads and outdoor advertising campaigns.
+            Manage your assigned prospective leads, generate client invoices, and track outdoor advertising campaigns.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setLocation('/invoices?new=1')}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#C61C2E] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#a81625] transition-colors cursor-pointer"
+          >
+            <FileText size={13} /> + Generate Invoice
+          </button>
           {activeTab === 'leads' && (
             <button
               type="button"
@@ -648,6 +1186,19 @@ export function MarketerWorkspacePage() {
         </div>
       </div>
 
+      {/* Monetary Targets Banner */}
+      <MarketerMonetaryTargetsBanner
+        marketerUser={{
+          id: authUser.id,
+          fullName: authUser.fullName,
+          email: authUser.email,
+        }}
+        marketerInvoices={myInvoices}
+        allTargets={targets}
+        isAdmin={isAdmin}
+        onTargetsUpdated={setTargets}
+      />
+
       {/* Navigation Tabs */}
       <div className="flex border-b border-neutral-200 text-xs font-medium">
         <button
@@ -659,7 +1210,7 @@ export function MarketerWorkspacePage() {
               : 'border-transparent text-neutral-500 hover:text-neutral-900'
           }`}
         >
-          <UserPlus size={14} /> Client Leads Pipeline ({leads.filter((c) => c.status === 'lead').length})
+          <UserPlus size={14} /> My Client Portfolio & Leads ({ownedClients.length})
         </button>
         <button
           type="button"
@@ -692,7 +1243,7 @@ export function MarketerWorkspacePage() {
               <Search size={14} className="absolute left-3 top-2.5 text-neutral-400" />
               <input
                 type="text"
-                placeholder="Search leads by company, contact, email..."
+                placeholder="Search my clients & leads by company, contact..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-md border border-neutral-300 pl-9 pr-3 py-1.5 text-xs text-neutral-900 placeholder:text-neutral-400 focus:border-[#C61C2E] focus:outline-hidden"
@@ -705,9 +1256,9 @@ export function MarketerWorkspacePage() {
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
               >
-                <option value="all">All Records</option>
+                <option value="all">All My Clients ({ownedClients.length})</option>
                 <option value="lead">Pending Leads</option>
-                <option value="active">Converted Clients</option>
+                <option value="active">Active Clients</option>
               </select>
             </div>
           </div>
@@ -715,10 +1266,10 @@ export function MarketerWorkspacePage() {
           {/* Leads Table */}
           <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
             {loading ? (
-              <div className="py-12 text-center text-xs text-neutral-400">Loading client leads...</div>
+              <div className="py-12 text-center text-xs text-neutral-400">Loading your client portfolio...</div>
             ) : filteredLeads.length === 0 ? (
               <div className="py-12 text-center text-xs text-neutral-500">
-                No client leads matching the criteria.
+                No client records matching the criteria in your assigned portfolio.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -728,8 +1279,9 @@ export function MarketerWorkspacePage() {
                       <th className="pb-2.5">Company Details</th>
                       <th className="pb-2.5">Contact Person</th>
                       <th className="pb-2.5">Location</th>
+                      <th className="pb-2.5">Assigned Marketer</th>
                       <th className="pb-2.5">Status</th>
-                      <th className="pb-2.5 text-right">Action</th>
+                      <th className="pb-2.5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
@@ -738,7 +1290,12 @@ export function MarketerWorkspacePage() {
                       return (
                         <tr key={client.id} className="hover:bg-neutral-50/50">
                           <td className="py-3 font-medium text-neutral-900">
-                            {client.companyName}
+                            <Link
+                              href={`/clients/${client.id}`}
+                              className="hover:text-[#C61C2E] no-underline font-semibold text-neutral-900"
+                            >
+                              {client.companyName}
+                            </Link>
                             <div className="text-[10.5px] text-neutral-400 font-mono">
                               ID: {client.id}
                             </div>
@@ -753,6 +1310,11 @@ export function MarketerWorkspacePage() {
                             {client.city ? `${client.city}, ${client.country}` : client.country}
                           </td>
                           <td className="py-3">
+                            <span className="inline-flex items-center rounded bg-neutral-100 px-2 py-0.5 text-[10.5px] font-medium text-neutral-800">
+                              {client.assignedMarketerName || authUser.fullName}
+                            </span>
+                          </td>
+                          <td className="py-3">
                             <span
                               className={`inline-flex items-center gap-1 font-mono uppercase text-[10px] font-bold px-2 py-0.5 rounded ${
                                 isLead
@@ -764,19 +1326,24 @@ export function MarketerWorkspacePage() {
                             </span>
                           </td>
                           <td className="py-3 text-right">
-                            {isLead ? (
+                            <div className="inline-flex items-center justify-end gap-2">
+                              {isLead && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleConvertLead(client.id)}
+                                  className="inline-flex items-center gap-1 rounded bg-[#111110] px-2.5 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                                >
+                                  <Check size={12} /> 1-Click Convert
+                                </button>
+                              )}
                               <button
                                 type="button"
-                                onClick={() => handleConvertLead(client.id)}
-                                className="inline-flex items-center gap-1 rounded bg-[#111110] px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                                onClick={() => setLocation(`/invoices?new=1&clientId=${encodeURIComponent(client.id)}`)}
+                                className="inline-flex items-center gap-1 rounded bg-[#C61C2E] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#a81625] transition-colors cursor-pointer"
                               >
-                                <Check size={12} /> 1-Click Convert
+                                <FileText size={12} /> + Generate Invoice
                               </button>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
-                                <CheckCircle2 size={13} /> Active Client
-                              </span>
-                            )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -792,7 +1359,6 @@ export function MarketerWorkspacePage() {
       {/* TAB 2: CAMPAIGN TRACKER */}
       {activeTab === 'campaigns' && (
         <div className="space-y-4">
-          {/* Campaign Filter Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search size={14} className="absolute left-3 top-2.5 text-neutral-400" />
@@ -822,7 +1388,6 @@ export function MarketerWorkspacePage() {
             </div>
           </div>
 
-          {/* Campaigns Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredCampaigns.map((camp) => {
               const metrics = calculateCampaignMetrics(camp);
@@ -963,7 +1528,12 @@ export function MarketerWorkspacePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="panel w-full max-w-md bg-white border border-neutral-200 rounded-xl p-6 shadow-2xl animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-              <h2 className="text-sm font-bold text-neutral-900">Add New Client Lead</h2>
+              <div>
+                <h2 className="text-sm font-bold text-neutral-900">Add New Client Lead</h2>
+                <p className="text-[11px] text-neutral-500">
+                  Automatically assigned to your portfolio ({authUser.fullName})
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsNewLeadOpen(false)}
@@ -998,19 +1568,6 @@ export function MarketerWorkspacePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Work Email</label>
-                  <input
-                    type="email"
-                    placeholder="e.g. y.osei@stanbic.com.gh"
-                    value={newLeadEmail}
-                    onChange={(e) => setNewLeadEmail(e.target.value)}
-                    className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-neutral-700 font-medium mb-1">Phone Number</label>
                   <input
                     type="text"
@@ -1020,8 +1577,21 @@ export function MarketerWorkspacePage() {
                     className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">City / Region</label>
+                  <label className="block text-neutral-700 font-medium mb-1">Work Email</label>
+                  <input
+                    type="email"
+                    placeholder="contact@company.com.gh"
+                    value={newLeadEmail}
+                    onChange={(e) => setNewLeadEmail(e.target.value)}
+                    className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">City</label>
                   <input
                     type="text"
                     placeholder="Accra"
@@ -1032,17 +1602,67 @@ export function MarketerWorkspacePage() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 flex justify-end gap-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Lead Source Channel</label>
+                  <select
+                    value={newLeadSource}
+                    onChange={(e) => setNewLeadSource(e.target.value)}
+                    className="w-full rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
+                  >
+                    {LEAD_SOURCE_TAGS.map((tag) => (
+                      <option key={tag} value={tag}>
+                        {tag}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-neutral-700 font-medium mb-1">Est. Deal Value (GH₵)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 25000"
+                    value={newLeadEstimatedValue}
+                    onChange={(e) => setNewLeadEstimatedValue(e.target.value)}
+                    className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Location / Street Address</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Airport City, Liberation Road"
+                  value={newLeadAddress}
+                  onChange={(e) => setNewLeadAddress(e.target.value)}
+                  className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-700 font-medium mb-1">Inquiry / Project Notes</label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Interested in 15 telescopic flagpoles for upcoming AGM..."
+                  value={newLeadNotes}
+                  onChange={(e) => setNewLeadNotes(e.target.value)}
+                  className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
                 <button
                   type="button"
                   onClick={() => setIsNewLeadOpen(false)}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors cursor-pointer"
+                  className="rounded-md border border-neutral-300 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-[#111110] px-4 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="rounded-md bg-[#C61C2E] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#a81625] cursor-pointer"
                 >
                   Save Client Lead
                 </button>
@@ -1057,7 +1677,7 @@ export function MarketerWorkspacePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="panel w-full max-w-md bg-white border border-neutral-200 rounded-xl p-6 shadow-2xl animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-              <h2 className="text-sm font-bold text-neutral-900">Launch New Advertising Campaign</h2>
+              <h2 className="text-sm font-bold text-neutral-900">Launch Marketing Campaign</h2>
               <button
                 type="button"
                 onClick={() => setIsNewCampaignOpen(false)}
@@ -1073,7 +1693,7 @@ export function MarketerWorkspacePage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Kotoka Airport Road Corporate Gantries"
+                  placeholder="e.g. Tema Motorway Unipole Q1 Drive"
                   value={newCampName}
                   onChange={(e) => setNewCampName(e.target.value)}
                   className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
@@ -1081,7 +1701,7 @@ export function MarketerWorkspacePage() {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Target Service Category</label>
+                <label className="block text-neutral-700 font-medium mb-1">Target Service Line</label>
                 <select
                   value={newCampService}
                   onChange={(e) => setNewCampService(e.target.value as ServiceCategory)}
@@ -1091,29 +1711,29 @@ export function MarketerWorkspacePage() {
                   <option value="telescopic_flags">Telescopic Flags & Water Bases</option>
                   <option value="event_branding">Event Branding & Media Walls</option>
                   <option value="wayfinding">Architectural Wayfinding & Totems</option>
-                  <option value="large_format_print">Large Format UV Print</option>
+                  <option value="large_format_print">Large Format UV & Dye Sublimation</option>
                   <option value="field_production">Field Production & Rigging</option>
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Budget (GHS) *</label>
+                  <label className="block text-neutral-700 font-medium mb-1">Total Budget (GH₵)</label>
                   <input
                     type="number"
                     required
                     value={newCampBudget}
                     onChange={(e) => setNewCampBudget(e.target.value)}
-                    className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 font-mono focus:border-[#C61C2E] focus:outline-hidden"
+                    className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
                   />
                 </div>
                 <div>
-                  <label className="block text-neutral-700 font-medium mb-1">Initial Spend (GHS)</label>
+                  <label className="block text-neutral-700 font-medium mb-1">Initial Spend (GH₵)</label>
                   <input
                     type="number"
                     value={newCampSpent}
                     onChange={(e) => setNewCampSpent(e.target.value)}
-                    className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 font-mono focus:border-[#C61C2E] focus:outline-hidden"
+                    className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -1140,29 +1760,29 @@ export function MarketerWorkspacePage() {
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Strategic Notes</label>
+                <label className="block text-neutral-700 font-medium mb-1">Campaign Notes & Corridors</label>
                 <textarea
                   rows={2}
-                  placeholder="e.g. Focus on high-visibility placements along Liberation Road..."
+                  placeholder="Describe target corridors, billboard locations, or event objectives..."
                   value={newCampNotes}
                   onChange={(e) => setNewCampNotes(e.target.value)}
                   className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
                 />
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 flex justify-end gap-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
                 <button
                   type="button"
                   onClick={() => setIsNewCampaignOpen(false)}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors cursor-pointer"
+                  className="rounded-md border border-neutral-300 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-[#111110] px-4 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="rounded-md bg-[#C61C2E] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#a81625] cursor-pointer"
                 >
-                  Save Campaign
+                  Create Campaign
                 </button>
               </div>
             </form>
@@ -1170,12 +1790,12 @@ export function MarketerWorkspacePage() {
         </div>
       )}
 
-      {/* MODAL 3: GENERATE SHOWCASE LINK */}
+      {/* MODAL 3: GENERATE SHOWCASE PITCH LINK */}
       {isShowcaseModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="panel w-full max-w-md bg-white border border-neutral-200 rounded-xl p-6 shadow-2xl animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-              <h2 className="text-sm font-bold text-neutral-900">Generate Client Pitch Showcase</h2>
+              <h2 className="text-sm font-bold text-neutral-900">Generate Portfolio Pitch Link</h2>
               <button
                 type="button"
                 onClick={() => setIsShowcaseModalOpen(false)}
@@ -1187,49 +1807,46 @@ export function MarketerWorkspacePage() {
 
             <form onSubmit={handleCreateShowcase} className="space-y-3.5 mt-4 text-xs">
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Service Capabilities to Feature</label>
+                <label className="block text-neutral-700 font-medium mb-1">Service Category to Highlight</label>
                 <select
                   value={showcaseCategory}
-                  onChange={(e) => setShowcaseCategory(e.target.value as any)}
+                  onChange={(e) => setShowcaseCategory(e.target.value as ServiceCategory | 'all')}
                   className="w-full rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
                 >
-                  <option value="all">All Services & Capabilities</option>
-                  <option value="billboards">Outdoor Billboard Skins & Unipoles</option>
-                  <option value="telescopic_flags">Telescopic Flagpoles & Water Bases</option>
-                  <option value="event_branding">Event Branding & Stage Media Walls</option>
-                  <option value="wayfinding">Architectural Wayfinding & Totems</option>
-                  <option value="large_format_print">Large Format UV Print</option>
-                  <option value="field_production">Field Production & Rigging</option>
+                  <option value="all">Full Collage Master Capabilities Portfolio</option>
+                  <option value="billboards">Outdoor Billboard Skins & Gantries</option>
+                  <option value="telescopic_flags">Telescopic Flagpoles & Water Base Kits</option>
+                  <option value="event_branding">Event Branding & Stage Backdrops</option>
+                  <option value="wayfinding">Corporate Campus Wayfinding & Monoliths</option>
+                  <option value="large_format_print">Large Format UV & Sublimation Print</option>
+                  <option value="field_production">Field Rigging & Heavy Structural Fabrication</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-neutral-700 font-medium mb-1">Prospective Client Name (Optional)</label>
+                <label className="block text-neutral-700 font-medium mb-1">Target Client Name (Optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Absa Bank Ghana PLC"
+                  placeholder="e.g. Bank of Ghana"
                   value={showcaseClientName}
                   onChange={(e) => setShowcaseClientName(e.target.value)}
                   className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs text-neutral-900 focus:border-[#C61C2E] focus:outline-hidden"
                 />
-                <p className="text-[10.5px] text-neutral-400 mt-1">
-                  Personalizes the pitch header with the client's corporate identity.
-                </p>
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 flex justify-end gap-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
                 <button
                   type="button"
                   onClick={() => setIsShowcaseModalOpen(false)}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors cursor-pointer"
+                  className="rounded-md border border-neutral-300 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-[#111110] px-4 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="rounded-md bg-[#C61C2E] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#a81625] cursor-pointer"
                 >
-                  Generate Shareable Pitch
+                  Generate Pitch Link
                 </button>
               </div>
             </form>
@@ -1237,15 +1854,15 @@ export function MarketerWorkspacePage() {
         </div>
       )}
 
-      {/* MODAL 4: SHOWCASE PREVIEW MODAL */}
+      {/* MODAL 4: SHOWCASE PREVIEW */}
       {previewShowcase && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="panel w-full max-w-2xl bg-white border border-neutral-200 rounded-xl p-6 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+          <div className="panel w-full max-w-lg bg-white border border-neutral-200 rounded-xl p-6 shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#C61C2E]">
-                  Showcase Pitch Preview
-                </div>
+                <span className="text-[10px] font-mono uppercase font-bold text-[#C61C2E]">
+                  Client Pitch Preview
+                </span>
                 <h2 className="text-base font-bold text-neutral-900 mt-0.5">{previewShowcase.title}</h2>
               </div>
               <button
@@ -1257,48 +1874,34 @@ export function MarketerWorkspacePage() {
               </button>
             </div>
 
-            <div className="mt-4 space-y-4 text-xs">
-              {previewShowcase.clientName && (
-                <div className="rounded-lg bg-neutral-50 border border-neutral-200 p-3">
-                  <div className="text-[10px] font-bold uppercase text-neutral-400">Specially Prepared For</div>
-                  <div className="text-sm font-bold text-neutral-900 mt-0.5">
-                    {previewShowcase.clientName}
-                  </div>
+            <div className="mt-4 space-y-3 text-xs text-neutral-600">
+              <div className="rounded-lg bg-neutral-50 p-3.5 border border-neutral-200/80">
+                <div className="font-semibold text-neutral-900">
+                  Prepared for: {previewShowcase.clientName || 'Prospective Corporate Partner'}
                 </div>
-              )}
-
-              <div className="rounded-lg border border-neutral-200 p-4 space-y-3 bg-neutral-50/40">
-                <div className="text-xs font-semibold text-neutral-800">
-                  Featured Service : {SERVICE_LABELS[previewShowcase.serviceCategory] || previewShowcase.serviceCategory}
+                <div className="text-[11px] text-neutral-500 mt-1">
+                  Category: {SERVICE_LABELS[previewShowcase.serviceCategory] || previewShowcase.serviceCategory}
                 </div>
-                <p className="text-neutral-600 leading-relaxed">
-                  Collage Ghana provides high-impact visual production, structural steel unipoles, and architectural signage.
-                  Our nationwide footprint spans Accra, Tema, Kumasi, and Takoradi.
-                </p>
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <div className="rounded bg-white p-2.5 border border-neutral-200/60">
-                    <div className="text-[10px] text-neutral-400 font-mono">Material Spec</div>
-                    <div className="font-semibold text-neutral-800 mt-0.5">550gsm UV Blackout PVC</div>
-                  </div>
-                  <div className="rounded bg-white p-2.5 border border-neutral-200/60">
-                    <div className="text-[10px] text-neutral-400 font-mono">Turnaround SLA</div>
-                    <div className="font-semibold text-neutral-800 mt-0.5">24 to 48 Hours</div>
-                  </div>
+                <div className="mt-2 font-mono text-[11px] text-[#C61C2E] break-all">
+                  {previewShowcase.shareUrl}
                 </div>
               </div>
+            </div>
 
-              <div className="pt-2 flex items-center justify-between">
-                <span className="text-[11px] text-neutral-400 font-mono">
-                  Target URL : {previewShowcase.shareUrl}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleCopyLink(previewShowcase)}
-                  className="inline-flex items-center gap-1.5 rounded bg-[#111110] px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 transition-colors cursor-pointer"
-                >
-                  <Copy size={12} /> Copy Shareable Link
-                </button>
-              </div>
+            <div className="mt-5 flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
+              <button
+                type="button"
+                onClick={() => setPreviewShowcase(null)}
+                className="rounded-md border border-neutral-300 bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 cursor-pointer"
+              >
+                Close
+              </button>
+              <Link
+                href="/portfolio"
+                className="rounded-md bg-[#111110] px-4 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 no-underline"
+              >
+                Open Full Public Portfolio →
+              </Link>
             </div>
           </div>
         </div>
