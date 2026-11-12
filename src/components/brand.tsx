@@ -14,13 +14,11 @@ export function Brand({
 }) {
   if (dark || white) {
     return (
-      <div
-        className={`inline-flex items-center transition-transform duration-200 hover:scale-[1.02] ${className}`}
-      >
+      <div className={`inline-flex items-center shrink-0 ${className}`}>
         <img
           src={collageLogoWhite}
           alt="Collage"
-          className="h-8 md:h-9 w-auto object-contain"
+          className="h-6 sm:h-8 md:h-9 w-auto max-w-[100px] sm:max-w-none object-contain"
         />
       </div>
     );
@@ -28,13 +26,21 @@ export function Brand({
 
   return inverse ? (
     <div
-      className={`inline-flex items-center rounded-xl bg-white px-3.5 py-1.5 shadow-sm transition-transform duration-200 hover:scale-[1.02] ${className}`}
+      className={`inline-flex items-center rounded-xl bg-white px-3 py-1.5 shadow-sm shrink-0 ${className}`}
     >
-      <img src={collageLogo} alt="Collage · Creating Results" className="h-7 w-auto object-contain" />
+      <img
+        src={collageLogo}
+        alt="Collage · Creating Results"
+        className="h-6 sm:h-7 w-auto max-w-[105px] sm:max-w-none object-contain"
+      />
     </div>
   ) : (
-    <div className={`inline-flex items-center transition-transform duration-200 hover:scale-[1.02] ${className}`}>
-      <img src={collageLogo} alt="Collage · Creating Results" className="h-8 md:h-9 w-auto object-contain" />
+    <div className={`inline-flex items-center shrink-0 ${className}`}>
+      <img
+        src={collageLogo}
+        alt="Collage · Creating Results"
+        className="h-6 sm:h-8 md:h-9 w-auto max-w-[105px] sm:max-w-none object-contain"
+      />
     </div>
   );
 }

@@ -187,7 +187,7 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
         {/* Editorial Section Header */}
         <div className="mx-auto max-w-3xl text-center">
           <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-[#E02B20] uppercase">
-            02 // The Living Thread
+            The Living Thread
           </p>
           <h2
             className="mt-3.5 text-[clamp(32px,4.5vw,54px)] font-medium tracking-[-0.04em] text-[#F5F3ED] leading-[1.04]"
@@ -229,9 +229,6 @@ function LivingThreadStage({ workspaceHref }: { workspaceHref: string }) {
                       transition={{ duration: 0.3, ease: fluidEase }}
                     />
                   )}
-                  <span className="relative z-10 text-[10.5px] text-[#E02B20]">
-                    {tab.code}
-                  </span>
                   <span className="relative z-10">{tab.label}</span>
                 </button>
               );
@@ -640,7 +637,7 @@ function PortfolioTeaserStage() {
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <span className="font-mono text-xs uppercase tracking-widest text-[#E02B20]">
-              02.5 // Services & Capabilities
+              Services & Capabilities
             </span>
             <h2
               id="portfolio-teaser-heading"
@@ -725,8 +722,8 @@ interface DirectoryRoom {
 const DIRECTORY_ROOMS: DirectoryRoom[] = [
   {
     id: 'clients',
-    number: '01',
-    label: '01 / Clients Directory',
+    number: '',
+    label: 'Clients Directory',
     route: '/clients',
     subtitle:
       'Corporate profiles, GRA TIN numbers, primary decision-makers, and full billing histories.',
@@ -741,8 +738,8 @@ const DIRECTORY_ROOMS: DirectoryRoom[] = [
   },
   {
     id: 'quotations',
-    number: '02',
-    label: '02 / Quotation Engine',
+    number: '',
+    label: 'Quotation Engine',
     route: '/quotations',
     subtitle:
       'Multi-day equipment & print scoping with automated 2.5% GETFund, 2.5% NHIL, and 15% VAT.',
@@ -757,8 +754,8 @@ const DIRECTORY_ROOMS: DirectoryRoom[] = [
   },
   {
     id: 'invoices',
-    number: '03',
-    label: '03 / Invoice & Tax Ledger',
+    number: '',
+    label: 'Invoice & Tax Ledger',
     route: '/invoices',
     subtitle:
       'One-click quote conversion, partial Mobile Money & bank transfer tranches, and print-ready sheets.',
@@ -773,8 +770,8 @@ const DIRECTORY_ROOMS: DirectoryRoom[] = [
   },
   {
     id: 'operations',
-    number: '04',
-    label: '04 / Operations & Equipment',
+    number: '',
+    label: 'Operations & Equipment',
     route: '/operations',
     subtitle:
       'Telescopic flag pole dispatch, return schedules, and PrintD Pigh sublimation work orders.',
@@ -814,7 +811,7 @@ function WorkspaceRoomsDirectory({ hasClerk }: { hasClerk: boolean }) {
           {/* Left Column (Sticky) */}
           <div className="lg:col-span-5 lg:sticky lg:top-28">
             <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-[#E02B20] uppercase">
-              03 // The Architecture
+              The Architecture
             </p>
             <h2
               className="mt-3.5 text-[clamp(30px,3.8vw,48px)] font-medium tracking-[-0.04em] text-[#F5F3ED] leading-[1.05]"
@@ -1078,7 +1075,7 @@ function ClosingWorkspaceFrame({
 const HERO_OPERATIONAL_SCENARIOS = [
   {
     id: 'dispatch',
-    label: '01 · Brief & Scope',
+    label: 'Brief & Scope',
     invoiceRef: 'INV #00081126.01',
     invoiceClient: 'GHS 105,285.96 · Kasapreko',
     settlementAmount: 'GHS 65,000.00 · Ecobank',
@@ -1087,7 +1084,7 @@ const HERO_OPERATIONAL_SCENARIOS = [
   },
   {
     id: 'rigging',
-    label: '02 · Field Rigging',
+    label: 'Field Rigging',
     invoiceRef: 'INV #00141126.02',
     invoiceClient: 'GHS 48,450.00 · MTN Ghana',
     settlementAmount: 'GHS 48,450.00 · Stanbic',
@@ -1096,7 +1093,7 @@ const HERO_OPERATIONAL_SCENARIOS = [
   },
   {
     id: 'settlement',
-    label: '03 · Settled in Full',
+    label: 'Settled in Full',
     invoiceRef: 'INV #00191126.01',
     invoiceClient: 'GHS 82,900.00 · Standard Chartered',
     settlementAmount: 'GHS 82,900.00 · Cleared',
@@ -1106,148 +1103,64 @@ const HERO_OPERATIONAL_SCENARIOS = [
 ] as const;
 
 function HeroInteractiveVisual() {
-  const reduce = useReducedMotion();
-  const cardRef = useRef<HTMLDivElement>(null);
   const [activeScenarioIndex, setActiveScenarioIndex] = useState(0);
   const activeScenario = HERO_OPERATIONAL_SCENARIOS[activeScenarioIndex];
 
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [4.5, -4.5]), {
-    stiffness: 120,
-    damping: 20,
-  });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4.5, 4.5]), {
-    stiffness: 120,
-    damping: 20,
-  });
-
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    if (reduce || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const xPct = (e.clientX - rect.left) / width - 0.5;
-    const yPct = (e.clientY - rect.top) / height - 0.5;
-    mouseX.set(xPct);
-    mouseY.set(yPct);
-  };
-
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
-
   return (
-    <motion.div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={reduce ? undefined : { rotateX, rotateY, transformStyle: 'preserve-3d' }}
-      className="landing-hero__visual relative flex flex-col justify-center items-center"
-      initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.7, delay: 0.15, ease }}
-    >
+    <div className="landing-hero__visual relative flex flex-col justify-center items-center w-full">
       <div className="relative flex w-full justify-center items-center">
-        {/* Restrained Ambient Atmospheric Glow Behind Logo */}
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute -inset-6 sm:-inset-10 rounded-full blur-3xl"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(229, 35, 43, 0.08) 0%, rgba(27, 25, 24, 0.45) 48%, transparent 72%)',
-          }}
-          animate={
-            reduce
-              ? {}
-              : {
-                  scale: [1, 1.05, 1],
-                  opacity: [0.45, 0.7, 0.45],
-                }
-          }
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        {/* Central Circular Operations Visualization */}
+        <div className="relative z-10 w-full flex justify-center">
+          <LandingMark />
+        </div>
+      </div>
 
-        {/* Subtle Architectural Rotating Registration Ring */}
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute h-[300px] w-[300px] sm:h-[400px] sm:w-[400px] rounded-full border border-dashed border-[#33302E]/80"
-          animate={reduce ? {} : { rotate: 360 }}
-          transition={{ duration: 90, repeat: Infinity, ease: 'linear' }}
-        />
-
-        {/* Floating Notification Card: Live Invoice Dispatch (Warm Ivory #F4F0E9) */}
-        <motion.div
-          className="absolute -top-2 right-0 sm:-right-3 z-20 flex items-center gap-2.5 rounded-xl border border-[#33302E]/20 bg-[#F4F0E9] px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.34)] cursor-pointer select-none"
+      {/* Clean Static Operational Status Strip (Fits Mobile & Desktop without Clipping) */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-md z-20">
+        <button
+          type="button"
           onClick={() =>
             setActiveScenarioIndex((prev) => (prev + 1) % HERO_OPERATIONAL_SCENARIOS.length)
           }
-          animate={reduce ? {} : { y: [0, -5, 0] }}
-          transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
-          whileHover={{ scale: 1.025, y: -6 }}
+          className="flex items-center gap-2.5 rounded-xl border border-[#33302E] bg-[#1B1918] px-3.5 py-2.5 text-left transition-colors hover:border-[#C9C2B9]/40 cursor-pointer"
         >
-          <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-[#E5232B]/12 text-[#E5232B]">
-            <ReceiptText size={15} />
-          </div>
-          <div className="text-left font-mono text-[10.5px] leading-tight">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[#100F0E]">{activeScenario.invoiceRef}</span>
-              <span className="rounded bg-[#E5232B]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#E5232B] tracking-wider">
+          <ReceiptText size={15} className="text-[#E5232B] shrink-0" />
+          <div className="font-mono text-[10.5px] leading-tight min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-bold text-[#F4F0E9]">{activeScenario.invoiceRef}</span>
+              <span className="text-[9px] font-bold text-[#E5232B] tracking-wider">
                 DISPATCHED
               </span>
             </div>
-            <div className="mt-0.5 text-[9.5px] text-[#1B1918]/75 font-sans font-medium">
+            <div className="mt-0.5 text-[10px] text-[#C9C2B9] font-sans truncate">
               {activeScenario.invoiceClient}
             </div>
           </div>
-        </motion.div>
+        </button>
 
-        {/* Central Circular Operations Visualization */}
-        <div className="relative z-10">
-          <LandingMark />
-        </div>
-
-        {/* Floating Notification Card: Cleared Wire Settlement (Warm Ivory #F4F0E9 + Success Green #008F68) */}
-        <motion.div
-          className="absolute -bottom-2 left-0 sm:-left-4 z-20 flex items-center gap-2.5 rounded-xl border border-[#33302E]/20 bg-[#F4F0E9] px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.34)] cursor-pointer select-none"
+        <button
+          type="button"
           onClick={() =>
             setActiveScenarioIndex((prev) => (prev + 1) % HERO_OPERATIONAL_SCENARIOS.length)
           }
-          animate={reduce ? {} : { y: [0, 5, 0] }}
-          transition={{ duration: 5.8, delay: 0.5, repeat: Infinity, ease: 'easeInOut' }}
-          whileHover={{ scale: 1.025, y: 6 }}
+          className="flex items-center gap-2.5 rounded-xl border border-[#33302E] bg-[#1B1918] px-3.5 py-2.5 text-left transition-colors hover:border-[#C9C2B9]/40 cursor-pointer"
         >
-          <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-[#008F68]/14 text-[#008F68]">
-            <CheckCircle2 size={15} />
-          </div>
-          <div className="text-left font-mono text-[10.5px] leading-tight">
-            <div className="flex items-center gap-1.5">
+          <CheckCircle2 size={15} className="text-[#008F68] shrink-0" />
+          <div className="font-mono text-[10.5px] leading-tight min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-bold text-[#008F68]">SETTLED IN FULL</span>
-              <span className="text-[#33302E]/50">·</span>
-              <span className="text-[9px] text-[#1B1918]/70">{activeScenario.settlementChannel}</span>
+              <span className="text-[9px] text-[#C9C2B9]/80">{activeScenario.settlementChannel}</span>
             </div>
-            <div className="mt-0.5 text-[9.5px] text-[#100F0E] font-sans font-semibold">
+            <div className="mt-0.5 text-[10px] text-[#F4F0E9] font-sans font-medium truncate">
               {activeScenario.settlementAmount}
             </div>
           </div>
-        </motion.div>
-
-        {/* Floating Pill: Statutory Tax Engine */}
-        <motion.div
-          className="absolute -bottom-2 right-1 sm:right-4 z-20 hidden md:flex items-center gap-2 rounded-full border border-[#33302E] bg-[#1B1918]/95 px-3 py-1 text-[9.5px] font-mono font-medium text-[#C9C2B9] shadow-[0_8px_20px_rgba(0,0,0,0.35)] backdrop-blur-sm cursor-default select-none"
-          animate={reduce ? {} : { y: [0, -4, 0] }}
-          transition={{ duration: 4.6, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[#008F68]" />
-          <span>{activeScenario.taxNote}</span>
-        </motion.div>
+        </button>
       </div>
 
       {/* Interactive Operational Scenario Selector Nodes */}
       <div
-        className="mt-5 flex flex-wrap items-center justify-center gap-1.5 z-20"
+        className="mt-3 flex flex-wrap items-center justify-center gap-1.5 z-20"
         role="group"
         aria-label="Operational scenarios"
       >
@@ -1258,23 +1171,18 @@ function HeroInteractiveVisual() {
               key={scenario.id}
               type="button"
               onClick={() => setActiveScenarioIndex(idx)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-mono transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[10.5px] font-mono transition-colors cursor-pointer ${
                 isActive
-                  ? 'border-[#E5232B]/50 bg-[#1B1918] text-[#F4F0E9]'
-                  : 'border-[#33302E] bg-[#100F0E]/70 text-[#C9C2B9]/80 hover:border-[#C9C2B9]/35 hover:text-[#F4F0E9]'
+                  ? 'border-[#E5232B] bg-[#1B1918] text-[#F4F0E9]'
+                  : 'border-[#33302E] bg-[#100F0E] text-[#C9C2B9]/80 hover:border-[#C9C2B9]/35 hover:text-[#F4F0E9]'
               }`}
             >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  isActive ? 'bg-[#E5232B]' : 'bg-[#33302E]'
-                }`}
-              />
               <span>{scenario.label}</span>
             </button>
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1288,89 +1196,78 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
 
   return (
     <div className="landing min-h-[100dvh] overflow-x-hidden bg-[#100F0E] text-[#F4F0E9]">
-      {/* Top Dark Hero Stage (#100F0E primary with subtle #1B1918 warm depth) */}
-      <div
-        className="relative"
-        style={{
-          background: [
-            'radial-gradient(ellipse 65% 55% at 22% 30%, rgba(27, 25, 24, 0.9) 0%, transparent 72%)',
-            'radial-gradient(ellipse 52% 48% at 78% 42%, rgba(229, 35, 43, 0.045) 0%, rgba(27, 25, 24, 0.5) 55%, transparent 78%)',
-            'linear-gradient(180deg, #100F0E 0%, #100F0E 78%, #1B1918 100%)',
-          ].join(', '),
-        }}
-      >
+      {/* Top Dark Hero Stage (Clean #100F0E surface without spotlight halos) */}
+      <div className="relative bg-[#100F0E]">
         <header className="sticky top-0 z-40 pt-3 sm:pt-4 px-3 sm:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#33302E] bg-[#1B1918]/88 px-4 py-2 sm:px-6 sm:py-2.5 text-[#F4F0E9] shadow-[0_14px_38px_rgba(0,0,0,0.42)] backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4 rounded-2xl sm:rounded-full border border-[#33302E] bg-[#1B1918]/92 px-3.5 py-2 sm:px-6 sm:py-2.5 text-[#F4F0E9] backdrop-blur-xl">
             {/* Left: Brand */}
-            <div className="flex items-center">
+            <div className="flex items-center shrink-0">
               <Link href="/" aria-label="Collage home" className="shrink-0">
                 <Brand dark />
               </Link>
             </div>
 
-            {/* Center: Dark-Glass Pill Navigation Links */}
-            <nav className="flex items-center gap-1 sm:gap-1.5" aria-label="Landing">
+            {/* Center: Desktop Navigation Links (Hidden on Mobile to prevent logo overlap) */}
+            <nav className="hidden md:flex items-center gap-1.5" aria-label="Landing">
               <Link
                 href="/portfolio"
-                className="rounded-full border border-[#33302E] bg-[#100F0E]/65 px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9] no-underline transition-colors hover:border-[#C9C2B9]/35 hover:bg-[#F4F0E9]/[0.06]"
+                className="rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-[#F4F0E9] no-underline transition-colors hover:bg-[#F4F0E9]/[0.06]"
               >
                 Portfolio
               </Link>
               <Link
                 href="/portfolio#services"
-                className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+                className="rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
               >
                 Services
               </Link>
               <Link
                 href="/portfolio#about"
-                className="hidden md:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+                className="rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
               >
                 About
               </Link>
               <a
                 href="#workspace"
-                className="hidden sm:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+                className="rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
               >
                 Workspace
               </a>
               <Link
                 href="/portfolio#contact"
-                className="hidden lg:inline-flex rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+                className="rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-[#F4F0E9]/90 no-underline transition-colors hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
               >
                 Contact
               </Link>
             </nav>
 
-            {/* Right: Subtle Circular Icon Actions + Brand Red Workspace CTA */}
-            <div className="flex items-center gap-2">
+            {/* Right: Mobile-Safe Actions + Brand Red Workspace CTA */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Link
                 href="/portfolio"
-                title="Services & Portfolio"
-                aria-label="Services & Portfolio"
-                className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#33302E] bg-[#100F0E]/55 text-[#C9C2B9] transition-colors hover:border-[#C9C2B9]/40 hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+                className="md:hidden rounded-lg border border-[#33302E] bg-[#100F0E] px-2.5 py-1.5 text-[11.5px] font-medium text-[#F4F0E9] no-underline"
               >
-                <Building2 size={15} />
+                Portfolio
               </Link>
               <Link
                 href="/sign-in"
                 title="Operator Sign In"
                 aria-label="Operator Sign In"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#33302E] bg-[#100F0E]/55 text-[#C9C2B9] transition-colors hover:border-[#C9C2B9]/40 hover:bg-[#F4F0E9]/[0.06] hover:text-[#F4F0E9]"
+                className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-[#33302E] bg-[#100F0E] text-[#C9C2B9] transition-colors hover:border-[#C9C2B9]/40 hover:text-[#F4F0E9]"
               >
-                <User size={15} />
+                <User size={14} />
               </Link>
               {hasClerk ? (
                 <Link
                   href="/sign-up"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#E5232B] px-4 py-2 text-[12.5px] font-semibold text-[#F4F0E9] no-underline shadow-[0_6px_18px_rgba(229,35,43,0.25)] transition-colors hover:bg-[#cf1d25]"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#E5232B] px-3.5 sm:px-4 py-1.5 sm:py-2 text-[12px] font-semibold text-[#F4F0E9] no-underline transition-colors hover:bg-[#cf1d25]"
                 >
                   <span>Create account</span>
                 </Link>
               ) : (
                 <Link
                   href="/sign-in"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#E5232B] px-4 sm:px-5 py-2 text-[12.5px] font-semibold text-[#F4F0E9] no-underline shadow-[0_6px_18px_rgba(229,35,43,0.25)] transition-colors hover:bg-[#cf1d25]"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#E5232B] px-3.5 sm:px-5 py-1.5 sm:py-2 text-[12px] sm:text-[12.5px] font-semibold text-[#F4F0E9] no-underline transition-colors hover:bg-[#cf1d25]"
                 >
                   <span>Workspace</span>
                   <ArrowRight size={13} aria-hidden="true" />
@@ -1383,35 +1280,25 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
         <main>
           <section className="landing-hero landing-wrap">
             <div className="landing-hero__copy">
-              <FadeIn delay={0.06}>
-                <p className="landing-kicker text-[#E5232B]">Collage</p>
-              </FadeIn>
-
               <h1 className="landing-headline text-[#F4F0E9]">
-                <LineReveal delay={0.16}>
+                <LineReveal delay={0.1}>
                   <span className="text-[#F4F0E9]">From first brief</span>
                 </LineReveal>
-                <LineReveal delay={0.3}>
+                <LineReveal delay={0.22}>
                   <span className="landing-headline__accent relative inline-block text-[#E5232B]">
                     to paid in full.
-                    <motion.span
-                      className="absolute left-0 -bottom-1.5 h-[2px] w-full bg-[#E5232B]/85 rounded-full"
-                      initial={reduce ? false : { scaleX: 0, originX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ duration: 0.8, delay: 0.8, ease: fluidEase }}
-                    />
                   </span>
                 </LineReveal>
               </h1>
 
-              <FadeIn delay={0.48} y={8}>
+              <FadeIn delay={0.34} y={8}>
                 <p className="landing-lede text-[#C9C2B9]">
                   The unified Ghanaian operations engine. Connect client briefs, statutory Ghana tax
                   scopes, equipment rentals, and reconciled invoices on one living desk.
                 </p>
               </FadeIn>
 
-              <FadeIn delay={0.65} className="landing-actions" y={8}>
+              <FadeIn delay={0.46} className="landing-actions" y={8}>
                 <Link
                   href={workspaceHref}
                   className="landing-cta landing-cta--solid group relative overflow-hidden"
@@ -1421,10 +1308,9 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
                     <ArrowRight
                       size={16}
                       aria-hidden="true"
-                      className="transition-transform duration-300 group-hover:translate-x-1"
+                      className="transition-transform duration-200 group-hover:translate-x-1"
                     />
                   </span>
-                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
                 </Link>
                 <Link href="/portfolio" className="landing-cta landing-cta--ghost group">
                   <span className="flex items-center gap-1.5">
@@ -1432,7 +1318,7 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
                     <ArrowUpRight
                       size={14}
                       aria-hidden="true"
-                      className="text-[#C9C2B9] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#E5232B]"
+                      className="text-[#C9C2B9] transition-colors group-hover:text-[#E5232B]"
                     />
                   </span>
                 </Link>
@@ -1443,32 +1329,20 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
                 )}
               </FadeIn>
 
-              {/* Feature Indicators - Muted Ivory on Refined Secondary Dark Surface */}
-              <FadeIn delay={0.8} y={8}>
-                <div className="mt-8 rounded-2xl border border-[#33302E] bg-[#1B1918]/65 px-4 py-3.5 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="flex items-center gap-2 text-[12px] text-[#C9C2B9] font-medium group cursor-default">
-                    <div className="h-6 w-6 rounded-md border border-[#33302E] bg-[#100F0E] text-[#E5232B] flex items-center justify-center shrink-0 transition-colors group-hover:border-[#E5232B]/50">
-                      <ShieldCheck size={13} />
-                    </div>
-                    <span className="group-hover:text-[#F4F0E9] transition-colors">
-                      100% Ghana Tax (GRA)
-                    </span>
+              {/* Flattened Feature Indicators (No nested icon boxes or card-in-card) */}
+              <FadeIn delay={0.58} y={8}>
+                <div className="mt-8 border-t border-[#33302E] pt-5 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-[12.5px] text-[#C9C2B9] font-medium">
+                  <div className="inline-flex items-center gap-2">
+                    <ShieldCheck size={15} className="text-[#E5232B] shrink-0" />
+                    <span>100% Ghana Tax (GRA)</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[12px] text-[#C9C2B9] font-medium group cursor-default">
-                    <div className="h-6 w-6 rounded-md border border-[#33302E] bg-[#100F0E] text-[#C9C2B9] flex items-center justify-center shrink-0 transition-colors group-hover:border-[#C9C2B9]/50 group-hover:text-[#F4F0E9]">
-                      <Layers size={13} />
-                    </div>
-                    <span className="group-hover:text-[#F4F0E9] transition-colors">
-                      Rigging & Rental Days
-                    </span>
+                  <div className="inline-flex items-center gap-2">
+                    <Layers size={15} className="text-[#C9C2B9] shrink-0" />
+                    <span>Rigging & Rental Days</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[12px] text-[#C9C2B9] font-medium group cursor-default col-span-2 sm:col-span-1">
-                    <div className="h-6 w-6 rounded-md border border-[#33302E] bg-[#100F0E] text-[#E5232B] flex items-center justify-center shrink-0 transition-colors group-hover:border-[#E5232B]/50">
-                      <Printer size={13} />
-                    </div>
-                    <span className="group-hover:text-[#F4F0E9] transition-colors">
-                      Sister Dispatch (PrintD)
-                    </span>
+                  <div className="inline-flex items-center gap-2">
+                    <Printer size={15} className="text-[#E5232B] shrink-0" />
+                    <span>Sister Dispatch (PrintD)</span>
                   </div>
                 </div>
               </FadeIn>
@@ -1477,29 +1351,18 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
             <HeroInteractiveVisual />
           </section>
 
-          <section className="landing-marquee" aria-label="Collage capabilities">
-            <div className="landing-marquee__track">
-              {[...services, ...services].map((service, i) => (
-                <span key={`${service}-${i}`} className="landing-marquee__item">
-                  {service}
-                  <i aria-hidden="true" />
-                </span>
-              ))}
-            </div>
-          </section>
-
           {/* Deep Obsidian Canvas Below Hero */}
-          <div className="relative bg-[#100F0E] text-[#F4F0E9]">
-            {/* Section 02: The Living Thread Document & Financial Ledger */}
+          <div className="relative bg-[#100F0E] text-[#F4F0E9] border-t border-[#33302E]">
+            {/* The Living Thread Document & Financial Ledger */}
             <LivingThreadStage workspaceHref={workspaceHref} />
 
-            {/* Section 02.5: Featured Client Portfolio Teaser */}
+            {/* Featured Client Portfolio Teaser */}
             <PortfolioTeaserStage />
 
-            {/* Section 03: The Four Workspace Rooms */}
+            {/* The Four Workspace Rooms */}
             <WorkspaceRoomsDirectory hasClerk={hasClerk} />
 
-            {/* Section 04: Workspace Entry & Colophon */}
+            {/* Workspace Entry & Colophon */}
             <ClosingWorkspaceFrame workspaceHref={workspaceHref} hasClerk={hasClerk} />
           </div>
         </main>

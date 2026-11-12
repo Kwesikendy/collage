@@ -200,28 +200,25 @@ export function MarketerMonetaryTargetsBanner({
   }
 
   return (
-    <div className="panel rounded-2xl p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-neutral-900/[0.06]">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C61C2E]/10 text-[#C61C2E] ring-1 ring-[#C61C2E]/15">
-            <Target size={20} />
+    <div className="panel overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-neutral-200">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Target size={15} className="text-[#C61C2E] shrink-0" />
+            <span className="text-[11px] font-bold uppercase tracking-[.14em] text-[#C61C2E]">
+              Marketer Revenue Quota & Monetary Targets
+            </span>
+            <span className="text-xs text-neutral-400">·</span>
+            <span className="text-xs font-medium text-neutral-700">
+              {myTarget.marketerName} ({myTarget.marketerEmail})
+            </span>
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[.16em] text-[#C61C2E]">
-                Marketer Revenue Quota & Monetary Targets
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/80 border border-neutral-200/80 px-2.5 py-0.5 text-[10px] font-semibold text-neutral-800 backdrop-blur-sm">
-                {myTarget.marketerName} ({myTarget.marketerEmail})
-              </span>
-            </div>
-            <h2 className="text-base font-bold text-neutral-900 mt-0.5">
-              Weekly, Monthly & Annual Monetary Targets (FY 2026)
-            </h2>
-            <p className="text-xs text-neutral-500">
-              Live revenue progress calculated from invoices generated for your assigned clients ({marketerInvoices.filter((d) => d.kind === 'invoice').length} invoices).
-            </p>
-          </div>
+          <h2 className="text-base font-bold text-neutral-900 mt-1">
+            Weekly, Monthly & Annual Monetary Targets (FY 2026)
+          </h2>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Live revenue progress calculated from invoices generated for your assigned clients ({marketerInvoices.filter((d) => d.kind === 'invoice').length} invoices).
+          </p>
         </div>
 
         {isAdmin && (
@@ -235,19 +232,19 @@ export function MarketerMonetaryTargetsBanner({
         )}
       </div>
 
-      {/* Three Target Cards: Weekly, Monthly, Annual */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      {/* Three Target Sections Flattened with Dividers (No cards-inside-cards) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-neutral-200">
         {/* Weekly Target */}
-        <div className="glass-subcard p-4">
+        <div className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
               Weekly Monetary Target
             </span>
-            <span className="inline-flex items-center rounded-lg bg-white/85 border border-neutral-200/80 px-2 py-0.5 text-[11px] font-bold font-mono text-[#C61C2E]">
+            <span className="text-[11.5px] font-bold font-mono text-[#C61C2E]">
               {progress.weekly.percent}% Met
             </span>
           </div>
-          <div className="mt-2 flex items-baseline justify-between gap-2">
+          <div className="mt-2.5 flex items-baseline justify-between gap-2">
             <div>
               <div className="text-[10px] uppercase text-neutral-400 font-semibold">Target</div>
               <div className="text-lg font-bold font-mono text-neutral-900">
@@ -261,7 +258,7 @@ export function MarketerMonetaryTargetsBanner({
               </div>
             </div>
           </div>
-          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/75 overflow-hidden">
+          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
             <div
               className="h-full rounded-full bg-[#C61C2E] transition-all duration-300"
               style={{ width: `${Math.min(progress.weekly.percent, 100)}%` }}
@@ -276,16 +273,16 @@ export function MarketerMonetaryTargetsBanner({
         </div>
 
         {/* Monthly Target */}
-        <div className="glass-subcard p-4">
+        <div className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
               Monthly Monetary Target
             </span>
-            <span className="inline-flex items-center rounded-lg bg-white/85 border border-neutral-200/80 px-2 py-0.5 text-[11px] font-bold font-mono text-[#C61C2E]">
+            <span className="text-[11.5px] font-bold font-mono text-[#C61C2E]">
               {progress.monthly.percent}% Met
             </span>
           </div>
-          <div className="mt-2 flex items-baseline justify-between gap-2">
+          <div className="mt-2.5 flex items-baseline justify-between gap-2">
             <div>
               <div className="text-[10px] uppercase text-neutral-400 font-semibold">Target</div>
               <div className="text-lg font-bold font-mono text-neutral-900">
@@ -299,7 +296,7 @@ export function MarketerMonetaryTargetsBanner({
               </div>
             </div>
           </div>
-          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/75 overflow-hidden">
+          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
             <div
               className="h-full rounded-full bg-[#111110] transition-all duration-300"
               style={{ width: `${Math.min(progress.monthly.percent, 100)}%` }}
@@ -314,16 +311,16 @@ export function MarketerMonetaryTargetsBanner({
         </div>
 
         {/* Annual Target */}
-        <div className="glass-subcard p-4">
+        <div className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
               Annual Monetary Target
             </span>
-            <span className="inline-flex items-center rounded-lg bg-white/85 border border-neutral-200/80 px-2 py-0.5 text-[11px] font-bold font-mono text-emerald-700">
+            <span className="text-[11.5px] font-bold font-mono text-emerald-700">
               {progress.annual.percent}% Met
             </span>
           </div>
-          <div className="mt-2 flex items-baseline justify-between gap-2">
+          <div className="mt-2.5 flex items-baseline justify-between gap-2">
             <div>
               <div className="text-[10px] uppercase text-neutral-400 font-semibold">Target</div>
               <div className="text-lg font-bold font-mono text-neutral-900">
@@ -337,7 +334,7 @@ export function MarketerMonetaryTargetsBanner({
               </div>
             </div>
           </div>
-          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/75 overflow-hidden">
+          <div className="mt-3 h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
             <div
               className="h-full rounded-full bg-emerald-600 transition-all duration-300"
               style={{ width: `${Math.min(progress.annual.percent, 100)}%` }}
@@ -635,7 +632,7 @@ export function MarketerDashboardHub() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-neutral-900">
-                  My Assigned Clients — Quick Invoice Generation
+                  My Assigned Clients
                 </h3>
                 <p className="text-xs text-neutral-500 mt-0.5">
                   Clients brought in by or delegated to {authUser.fullName}. Click &ldquo;Generate Invoice&rdquo; to bill any of your clients.
@@ -755,18 +752,18 @@ export function MarketerDashboardHub() {
                 No invoices generated for your clients yet.
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="divide-y divide-neutral-200">
                 {myInvoices.slice(0, 5).map((inv) => (
                   <Link
                     key={inv.id}
                     href={`/invoices/${inv.id}`}
-                    className="block rounded-lg border border-neutral-150 bg-neutral-50/70 p-3 hover:border-neutral-300 transition-colors no-underline"
+                    className="block py-3 first:pt-1 last:pb-1 hover:bg-neutral-50/70 transition-colors no-underline"
                   >
                     <div className="flex items-center justify-between text-xs font-bold text-neutral-900">
                       <span className="font-mono text-[#C61C2E]">{inv.number}</span>
                       <span className="font-mono">{formatGhs(inv.total)}</span>
                     </div>
-                    <div className="text-xs font-medium text-neutral-800 mt-1 truncate">
+                    <div className="text-xs font-medium text-neutral-800 mt-0.5 truncate">
                       {inv.clientName}
                     </div>
                     <div className="text-[10.5px] text-neutral-500 truncate mt-0.5">

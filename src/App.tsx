@@ -552,31 +552,31 @@ function Shell({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="min-w-0 flex-1">
-        <header className="no-print sticky top-0 z-20 pt-3 px-4 md:px-8">
-          <div className="mx-auto flex max-w-[1360px] items-center justify-between gap-3 rounded-2xl border border-white/85 bg-white/70 px-4 py-2.5 sm:px-5 text-[#1D1D1B] backdrop-blur-2xl shadow-[0_6px_28px_-6px_rgba(15,23,42,0.045),0_0_0_1px_rgba(15,23,42,0.05),inset_0_1px_0_rgba(255,255,255,0.9)]">
-            <div className="flex items-center gap-3">
+        <header className="no-print sticky top-0 z-20 pt-2.5 sm:pt-3 px-3 sm:px-4 md:px-8">
+          <div className="mx-auto flex max-w-[1360px] items-center justify-between gap-2 rounded-xl border border-neutral-200/90 bg-white/90 px-3 py-2 sm:px-5 sm:py-2.5 text-[#1D1D1B] backdrop-blur-xl shadow-xs">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 aria-label="Open navigation"
                 onClick={() => setMobileOpen(true)}
-                className="btn btn-quiet !px-2 md:hidden"
+                className="btn btn-quiet !h-8 !min-h-8 !px-1.5 md:hidden shrink-0"
               >
                 <Menu size={18} />
               </button>
-              <div className="flex items-center gap-2 text-[12.5px] text-neutral-500">
-                <span className="font-semibold text-[#1D1D1B]">Collage</span>
-                <span className="h-3.5 w-px bg-neutral-200/80" aria-hidden="true" />
-                <span className="text-neutral-500">{roleName}</span>
-                <span className="text-neutral-300">/</span>
-                <span className="font-semibold text-[#1D1D1B]">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-[12.5px] text-neutral-500 min-w-0">
+                <span className="hidden sm:inline font-semibold text-[#1D1D1B]">Collage</span>
+                <span className="hidden sm:inline h-3.5 w-px bg-neutral-200" aria-hidden="true" />
+                <span className="hidden md:inline text-neutral-500">{roleName}</span>
+                <span className="hidden md:inline text-neutral-300">/</span>
+                <span className="font-semibold text-[#1D1D1B] truncate">
                   {page}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Link
                 href="/portfolio"
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-medium text-neutral-700 no-underline transition-colors hover:bg-white/80 hover:text-neutral-950"
+                className="hidden lg:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium text-neutral-700 no-underline transition-colors hover:bg-neutral-100 hover:text-neutral-950"
               >
                 <span>Public Portfolio</span>
               </Link>
@@ -592,7 +592,7 @@ function Shell({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={handleResetDemo}
                 title="Restore initial sample records (including Invoice 00211026.01)"
-                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white/70 px-3 text-[11.5px] font-medium text-[#1D1D1B] backdrop-blur-md shadow-[0_1px_2px_rgba(15,23,42,0.03),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:border-neutral-300 hover:bg-white/95 cursor-pointer"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 sm:px-3 text-[11.5px] font-medium text-[#1D1D1B] transition-colors hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer shrink-0"
               >
                 <RotateCcw size={12} />
                 <span className="hidden sm:inline">
@@ -686,13 +686,13 @@ function Empty({
   action?: ReactNode;
 }) {
   return (
-    <div className="grid min-h-[260px] place-items-center p-7 text-center">
+    <div className="grid min-h-[240px] place-items-center p-7 text-center">
       <div className="max-w-[340px]">
-        <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl border border-neutral-200/70 bg-white/70 backdrop-blur-md text-neutral-500 shadow-xs">
-          <Icon size={19} />
+        <div className="mb-1 inline-flex items-center justify-center gap-2 text-[14.5px] font-semibold text-neutral-900">
+          <Icon size={17} className="text-neutral-400 shrink-0" />
+          <h3 className="m-0 text-[14.5px] font-semibold text-neutral-900">{title}</h3>
         </div>
-        <h3 className="mb-1 mt-4 text-[14.5px] font-semibold text-neutral-900">{title}</h3>
-        <p className="mb-4 mt-0 text-[12px] leading-5 text-neutral-500">{detail}</p>
+        <p className="mb-4 mt-1 text-[12px] leading-5 text-neutral-500">{detail}</p>
         {action}
       </div>
     </div>
@@ -2318,9 +2318,9 @@ function Dashboard() {
             )}
           </section>
 
-          {/* Field Equipment Dispatch Summary Card */}
-          <section className="rounded-2xl border border-white/80 bg-white/72 backdrop-blur-xl shadow-[0_8px_32px_rgba(15,23,42,0.04)] p-5">
-            <div className="flex items-center justify-between border-b border-neutral-200/60 pb-3.5">
+          {/* Field Equipment Dispatch Summary Card (Flattened with divider, no cards-inside-cards) */}
+          <section className="panel p-5">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-3.5">
               <h2 className="m-0 text-[15px] font-semibold tracking-tight text-neutral-900">
                 Field Equipment Dispatch
               </h2>
@@ -2334,19 +2334,19 @@ function Dashboard() {
 
             {isLoading ? (
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="skeleton h-20 w-full rounded-xl" />
-                <div className="skeleton h-20 w-full rounded-xl" />
+                <div className="skeleton h-16 w-full rounded-lg" />
+                <div className="skeleton h-16 w-full rounded-lg" />
               </div>
             ) : (
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-3 grid grid-cols-2 divide-x divide-neutral-200">
                 <Link
                   href="/operations"
-                  className="rounded-xl border border-white/90 bg-white/60 p-3.5 no-underline transition-all duration-200 hover:bg-white hover:shadow-sm"
+                  className="pr-4 py-1 no-underline group"
                 >
-                  <div className="text-[22px] font-semibold text-neutral-950 tabular-nums">
+                  <div className="text-[22px] font-semibold text-neutral-950 tabular-nums group-hover:text-[#E02B20] transition-colors">
                     {activeRentalsCount}
                   </div>
-                  <div className="mt-0.5 text-[12.5px] font-medium text-neutral-700">
+                  <div className="mt-0.5 text-[12.5px] font-medium text-neutral-800">
                     Active rentals
                   </div>
                   <div className="text-[11px] text-neutral-500">
@@ -2356,12 +2356,12 @@ function Dashboard() {
 
                 <Link
                   href="/operations"
-                  className="rounded-xl border border-white/90 bg-white/60 p-3.5 no-underline transition-all duration-200 hover:bg-white hover:shadow-sm"
+                  className="pl-4 py-1 no-underline group"
                 >
-                  <div className="text-[22px] font-semibold text-neutral-950 tabular-nums">
+                  <div className="text-[22px] font-semibold text-neutral-950 tabular-nums group-hover:text-[#E02B20] transition-colors">
                     {activePrintJobsCount}
                   </div>
-                  <div className="mt-0.5 text-[12.5px] font-medium text-neutral-700">
+                  <div className="mt-0.5 text-[12.5px] font-medium text-neutral-800">
                     Print jobs
                   </div>
                   <div className="text-[11px] text-neutral-500">
@@ -2671,14 +2671,14 @@ function DocumentForm({
         </div>
       </div>
 
-      {/* Quick Catalog Picker */}
-      <div className="rounded-xl border border-neutral-200/80 bg-white/60 p-3.5 backdrop-blur-md">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+      {/* Flattened Quick Catalog Picker (No nested card-inside-card) */}
+      <div className="border-t border-b border-neutral-200 py-3.5">
+        <div className="mb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-700">
             Quick add Collage catalog item (tap to insert)
           </span>
-          <span className="text-[10.5px] text-neutral-500">
-            Tip: Set <strong>{durationUnit === 'months' ? 'Months' : 'Days'} = 0</strong> for printed or flat-rate items (calculates Qty × Unit Price)
+          <span className="text-[11px] text-neutral-500">
+            Set <strong>{durationUnit === 'months' ? 'Months' : 'Days'} = 0</strong> for printed or flat-rate items (calculates Qty × Unit Price)
           </span>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -2687,23 +2687,45 @@ function DocumentForm({
               key={preset.description}
               type="button"
               onClick={() => addPreset(preset)}
-              className="toggle-token !py-1 !px-2.5 !text-[11px]"
+              className="toggle-token !py-1.5 !px-2.5 !text-[11.5px]"
             >
-              <Plus size={11} />
-              <span>{preset.description}</span>
-              <span className="mono text-[10px] text-[#c61c2e]">
-                GHS {preset.unitPrice}
-              </span>
-              <span className="rounded bg-neutral-200/70 px-1 py-0.2 text-[9px] font-semibold text-neutral-600">
-                {preset.days === 0 ? '0d · Print/Flat' : `${preset.days}d · Rental`}
+              <Plus size={12} className="shrink-0 text-neutral-500" />
+              <span className="font-medium text-neutral-800">{preset.description}</span>
+              <span className="mono text-[11px] font-semibold text-[#c61c2e] shrink-0">
+                · GHS {preset.unitPrice}
               </span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-neutral-200/70 bg-white/55 backdrop-blur-md">
-        <div className="grid grid-cols-[1fr_68px_96px_105px_100px_32px] items-center gap-2 border-b border-neutral-200/60 bg-white/60 px-3 py-2 text-[9.5px] font-semibold uppercase tracking-[.08em] text-neutral-500">
+      {/* Responsive Line Items Table (Stacked on Mobile, 6-Col Grid on Desktop) */}
+      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+        {/* Mobile Header with Days/Months Switcher */}
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 md:hidden">
+          <span className="text-[10.5px] font-semibold uppercase tracking-wider text-neutral-600">
+            Line Items ({items.length})
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10.5px] text-neutral-500">Duration unit:</span>
+            <select
+              aria-label="Duration unit (Days or Months)"
+              value={durationUnit}
+              onChange={(e) => {
+                const nextUnit = e.target.value as 'days' | 'months';
+                setDurationUnit(nextUnit);
+                setItems((prev) => prev.map((it) => ({ ...it, durationUnit: nextUnit })));
+              }}
+              className="cursor-pointer rounded-md border border-neutral-300 bg-white px-2 py-1 text-[10.5px] font-semibold uppercase text-[#1D1D1B]"
+            >
+              <option value="days">Days</option>
+              <option value="months">Months</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Desktop 6-Column Header */}
+        <div className="hidden md:grid md:grid-cols-[1fr_72px_96px_110px_104px_32px] items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[.08em] text-neutral-500">
           <span>Item Description</span>
           <span>Qty</span>
           <select
@@ -2715,7 +2737,7 @@ function DocumentForm({
               setDurationUnit(nextUnit);
               setItems((prev) => prev.map((it) => ({ ...it, durationUnit: nextUnit })));
             }}
-            className="w-full cursor-pointer rounded-md border border-neutral-200/90 bg-white/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-[.05em] text-[#1D1D1B] shadow-2xs transition-colors hover:border-[#a81a29] focus:border-[#c61c2e] focus:outline-none"
+            className="w-full cursor-pointer rounded-md border border-neutral-300 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[.05em] text-[#1D1D1B] transition-colors hover:border-[#a81a29] focus:border-[#c61c2e] focus:outline-none"
           >
             <option value="days">Days</option>
             <option value="months">Months</option>
@@ -2724,7 +2746,8 @@ function DocumentForm({
           <span className="text-right">Line Total</span>
           <span />
         </div>
-        <div className="divide-y divide-neutral-200/50">
+
+        <div className="divide-y divide-neutral-200">
           {items.map((item, idx) => {
             const qty = Number.isFinite(Number(item.quantity))
               ? Math.max(0, Number(item.quantity))
@@ -2741,71 +2764,111 @@ function DocumentForm({
             return (
               <div
                 key={idx}
-                className="grid grid-cols-[1fr_68px_96px_105px_100px_32px] items-start gap-2 p-2.5"
+                className="p-3 md:p-2.5 space-y-2.5 md:space-y-0 md:grid md:grid-cols-[1fr_72px_96px_110px_104px_32px] md:items-start md:gap-2"
               >
-                <input
-                  aria-label="Item description"
-                  className="field"
-                  maxLength={300}
-                  value={item.description}
-                  onChange={(e) => updateItem(idx, { description: e.target.value })}
-                  placeholder="Description of work or rental"
-                />
-                <input
-                  aria-label="Quantity"
-                  className="field"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={item.quantity}
-                  onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
-                />
-                <div className="flex flex-col gap-1">
+                {/* Description + Mobile Remove Button */}
+                <div className="flex items-center gap-2">
                   <input
-                    aria-label={durationUnit === 'months' ? 'Months' : 'Days'}
-                    className="field"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={item.days}
-                    onChange={(e) =>
-                      updateItem(idx, {
-                        days: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
-                      })
-                    }
+                    aria-label="Item description"
+                    className="field flex-1"
+                    maxLength={300}
+                    value={item.description}
+                    onChange={(e) => updateItem(idx, { description: e.target.value })}
+                    placeholder="Description of work or rental"
                   />
-                  {rawDays === 0 ? (
-                    <span className="text-[9.5px] font-medium text-emerald-700 leading-tight">
-                      Qty × Unit Price
+                  <button
+                    type="button"
+                    aria-label="Remove line item"
+                    disabled={items.length <= 1}
+                    onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}
+                    className="btn btn-quiet md:hidden !h-9 !min-h-9 !w-9 !px-0 text-[#a53b47] shrink-0"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+
+                {/* Mobile 3-Col Numeric Inputs + Desktop Inline Inputs */}
+                <div className="grid grid-cols-3 gap-2 md:contents">
+                  <div>
+                    <span className="block text-[10px] font-medium text-neutral-500 mb-1 md:hidden">
+                      Qty
                     </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => updateItem(idx, { days: 0 })}
-                      className="text-left text-[9.5px] font-medium text-neutral-500 underline hover:text-[#c61c2e] cursor-pointer leading-tight"
-                    >
-                      Set 0 (No {durationUnit})
-                    </button>
-                  )}
+                    <input
+                      aria-label="Quantity"
+                      className="field"
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="block text-[10px] font-medium text-neutral-500 md:hidden">
+                      {durationUnit === 'months' ? 'Months' : 'Days'}
+                    </span>
+                    <input
+                      aria-label={durationUnit === 'months' ? 'Months' : 'Days'}
+                      className="field"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={item.days}
+                      onChange={(e) =>
+                        updateItem(idx, {
+                          days: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)),
+                        })
+                      }
+                    />
+                    {rawDays === 0 ? (
+                      <span className="text-[9.5px] font-medium text-emerald-700 leading-tight">
+                        Qty × Unit Price
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => updateItem(idx, { days: 0 })}
+                        className="text-left text-[9.5px] font-medium text-neutral-500 underline hover:text-[#c61c2e] cursor-pointer leading-tight"
+                      >
+                        Set 0 (No {durationUnit})
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="block text-[10px] font-medium text-neutral-500 mb-1 md:hidden">
+                      Unit Price
+                    </span>
+                    <input
+                      aria-label="Unit price in GHS"
+                      className="field"
+                      type="number"
+                      min="0"
+                      step=".01"
+                      value={item.unitPrice}
+                      onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value) })}
+                    />
+                  </div>
                 </div>
-                <input
-                  aria-label="Unit price in GHS"
-                  className="field"
-                  type="number"
-                  min="0"
-                  step=".01"
-                  value={item.unitPrice}
-                  onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value) })}
-                />
-                <div className="mono pt-2 text-right text-[12px] font-semibold text-neutral-900">
-                  {fmt(computedRowTotal)}
+
+                {/* Line Total */}
+                <div className="flex items-center justify-between md:block border-t border-neutral-100 pt-2 md:border-0 md:pt-2 text-right">
+                  <span className="text-[11px] font-medium text-neutral-500 md:hidden">
+                    Line Total:
+                  </span>
+                  <span className="mono text-[12.5px] font-semibold text-neutral-900">
+                    {fmt(computedRowTotal)}
+                  </span>
                 </div>
+
+                {/* Desktop Remove Button */}
                 <button
                   type="button"
                   aria-label="Remove line item"
                   disabled={items.length <= 1}
                   onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}
-                  className="btn btn-quiet mt-0.5 !h-8 !min-h-8 !w-8 !px-0 text-[#a53b47]"
+                  className="hidden md:inline-flex btn btn-quiet mt-0.5 !h-8 !min-h-8 !w-8 !px-0 text-[#a53b47]"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -2813,7 +2876,7 @@ function DocumentForm({
             );
           })}
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200/60 bg-white/50 px-3 py-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 bg-neutral-50 px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -2843,7 +2906,7 @@ function DocumentForm({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           ['Discount %', 'discount'],
           ['GETFund %', 'getfund'],
@@ -2879,9 +2942,9 @@ function DocumentForm({
         />
       </div>
 
-      {/* Live Ghanaian Tax Preview Box */}
-      <div className="glass-subcard p-4 text-[12px]">
-        <div className="grid gap-1.5 sm:grid-cols-2">
+      {/* Flattened Ghanaian Tax Preview Section (Divided with spacing, no card-in-card) */}
+      <div className="border-t border-neutral-200 pt-4 text-[12px]">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="text-[11px] text-neutral-500">
             <div className="font-semibold uppercase tracking-wider text-neutral-800">
               Statutory Ghana Tax Breakdown
@@ -2890,7 +2953,7 @@ function DocumentForm({
               Line total = Qty × {durationUnit === 'months' ? 'Months' : 'Days'} × Unit Price (or Qty × Unit Price when {durationUnit} is 0). GETFund (2.5%), NHIL (2.5%) & VAT (15%) applied on taxable subtotal.
             </div>
           </div>
-          <div className="space-y-1 text-[11px]">
+          <div className="space-y-1 text-[11.5px]">
             <div className="flex justify-between">
               <span className="text-neutral-500">Subtotal:</span>
               <span className="mono text-neutral-900">{fmt(Number(livePricing.subtotal))}</span>
@@ -2915,7 +2978,7 @@ function DocumentForm({
               <span className="text-neutral-500">VAT ({rates.vat}%):</span>
               <span className="mono text-neutral-900">{fmt(Number(livePricing.vatAmount))}</span>
             </div>
-            <div className="flex justify-between border-t border-neutral-200/70 pt-1 text-[13px] font-semibold text-neutral-950">
+            <div className="flex justify-between border-t border-neutral-200 pt-1.5 text-[13px] font-semibold text-neutral-950">
               <span>Total Payment Due:</span>
               <span className="mono text-[#c61c2e]">
                 {fmt(Number(livePricing.total))}

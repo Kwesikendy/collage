@@ -116,36 +116,35 @@ export function RoleSwitcher({ currentRole, currentEmail, onRoleChange }: RoleSw
   }
 
   return (
-    <div className="relative inline-block text-left" ref={containerRef}>
+    <div className="relative inline-block text-left shrink-0" ref={containerRef}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        title="Interactive Demo Role Switcher"
-        className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white/70 px-3 text-[11.5px] font-medium text-[#1D1D1B] backdrop-blur-md shadow-[0_1px_2px_rgba(15,23,42,0.03),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:border-neutral-300 hover:bg-white/95 cursor-pointer"
+        title="Switch Portal / Marketer Account"
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 sm:px-3 text-[11.5px] font-medium text-[#1D1D1B] transition-colors hover:border-neutral-300 hover:bg-neutral-50 cursor-pointer"
         aria-haspopup="true"
         aria-expanded={open}
       >
-        <span className="flex h-1.5 w-1.5 rounded-full bg-[#E02B20]" />
-        <span className="text-neutral-500 font-mono text-[10.5px]">Role:</span>
-        <span className="font-semibold text-neutral-900">
+        <span className="hidden sm:inline text-neutral-500 font-mono text-[10.5px]">Role:</span>
+        <span className="font-semibold text-neutral-900 truncate max-w-[110px] sm:max-w-none">
           {activeOption.role === 'marketer'
             ? `${activeOption.label} (${activeOption.name.split(' ')[0]})`
             : activeOption.label}
         </span>
         <ChevronDown
           size={12}
-          className={`text-neutral-400 transition-transform duration-150 ${
+          className={`text-neutral-400 shrink-0 transition-transform duration-150 ${
             open ? 'rotate-180' : ''
           }`}
         />
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-72 origin-top-right rounded-2xl border border-white/85 bg-white/85 p-1.5 backdrop-blur-2xl shadow-[0_20px_48px_-12px_rgba(15,23,42,0.14),0_0_0_1px_rgba(15,23,42,0.06)] focus:outline-none">
-          <div className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-400">
+        <div className="absolute right-0 z-50 mt-2 w-64 sm:w-72 origin-top-right rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl focus:outline-none">
+          <div className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-neutral-400">
             Switch Portal / Marketer Account
           </div>
-          <div className="space-y-1">
+          <div className="divide-y divide-neutral-100">
             {PERSONA_OPTIONS.map((persona) => {
               const isSelected = persona.email === activeOption.email;
               const Icon = persona.icon;
@@ -154,22 +153,17 @@ export function RoleSwitcher({ currentRole, currentEmail, onRoleChange }: RoleSw
                   key={persona.email}
                   type="button"
                   onClick={() => handleSelectPersona(persona.email)}
-                  className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs transition-all cursor-pointer ${
+                  className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-neutral-900/[0.06] font-medium text-neutral-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]'
-                      : 'text-neutral-600 hover:bg-white/70 hover:text-neutral-900'
+                      ? 'bg-neutral-100 font-medium text-neutral-950'
+                      : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div
-                      className={`grid h-6 w-6 place-items-center rounded-lg transition-colors ${
-                        isSelected
-                          ? 'bg-[#141413] text-white shadow-xs'
-                          : 'bg-neutral-100/80 text-neutral-500'
-                      }`}
-                    >
-                      <Icon size={12} />
-                    </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Icon
+                      size={13}
+                      className={isSelected ? 'text-[#E02B20] shrink-0' : 'text-neutral-400 shrink-0'}
+                    />
                     <div className="min-w-0">
                       <div className="truncate font-semibold text-neutral-900">
                         {persona.label} ({persona.name})
@@ -185,9 +179,6 @@ export function RoleSwitcher({ currentRole, currentEmail, onRoleChange }: RoleSw
                 </button>
               );
             })}
-          </div>
-          <div className="mt-1 border-t border-neutral-200/50 pt-1.5 px-2 text-[10px] text-neutral-400 text-center">
-            Each Marketer sees only their own clients
           </div>
         </div>
       )}
