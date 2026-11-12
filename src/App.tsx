@@ -1307,15 +1307,6 @@ function ClientList() {
         }
       />
 
-      {isMarketer && (
-        <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] backdrop-blur-md px-4 py-3 text-xs text-emerald-950 shadow-2xs">
-          <ShieldCheck size={16} className="text-emerald-700 shrink-0" />
-          <div>
-            <strong>Strict Client Isolation Active:</strong> To prevent client encroachment between marketers, you only see clients that you brought in or that Admin has delegated to <strong>{user?.fullName}</strong>.
-          </div>
-        </div>
-      )}
-
       <div className="panel overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-neutral-200/60 px-4 py-4 lg:flex-row lg:items-center lg:justify-between md:px-5">
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">

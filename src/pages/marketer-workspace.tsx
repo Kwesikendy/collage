@@ -572,23 +572,6 @@ export function MarketerDashboardHub() {
         </div>
       </div>
 
-      {/* Strict Client Isolation Notice Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-50/60 backdrop-blur-md px-4 py-3 text-xs text-emerald-950 shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <ShieldCheck size={17} className="text-emerald-700 shrink-0" />
-          <div>
-            <span className="font-bold">Protected Client Ownership Isolation Active:</span>{' '}
-            You have access <span className="font-bold underline">ONLY</span> to clients you have brought in or that Admin has delegated to you ({myClients.length} {myClients.length === 1 ? 'client' : 'clients'} assigned to {authUser.fullName}). Other marketers&apos; clients are hidden to prevent account encroachment.
-          </div>
-        </div>
-        <Link
-          href="/clients"
-          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 hover:underline shrink-0 no-underline"
-        >
-          Manage My Clients <ArrowUpRight size={13} />
-        </Link>
-      </div>
-
       {/* Marketer Annual / Monthly / Weekly Monetary Targets Banner */}
       <MarketerMonetaryTargetsBanner
         marketerUser={{
@@ -644,7 +627,7 @@ export function MarketerDashboardHub() {
         </div>
       </div>
 
-      {/* Main Grid: My Clients & Invoices + Leads Queue */}
+      {/* Main Grid: My Clients & Invoices + Recent Invoices & Corridors */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* My Assigned Clients & Quick Invoice Generation */}
@@ -750,66 +733,6 @@ export function MarketerDashboardHub() {
                 </table>
               </div>
             )}
-          </div>
-
-          {/* Active Campaigns Progress Table */}
-          <div className="panel bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-neutral-900">
-                  Campaign Budget & Spend Tracker
-                </h3>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Live budget utilization across Ghana media channels.
-                </p>
-              </div>
-              <Link
-                href="/campaigns"
-                className="text-xs text-[#C61C2E] hover:underline font-medium no-underline"
-              >
-                Manage Campaigns →
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {campaigns.map((camp) => {
-                const metrics = calculateCampaignMetrics(camp);
-                return (
-                  <div key={camp.id} className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-3.5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-xs font-bold text-neutral-900">{camp.name}</div>
-                        <div className="text-[10.5px] text-neutral-400 font-mono mt-0.5">
-                          {SERVICE_LABELS[camp.targetService] || camp.targetService} · {camp.startDate} to {camp.endDate}
-                        </div>
-                      </div>
-                      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-neutral-200/80 text-neutral-800 font-mono">
-                        {camp.status}
-                      </span>
-                    </div>
-
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-[11px] text-neutral-600 mb-1">
-                        <span>Spend: {formatGhs(camp.spent)} of {formatGhs(camp.budget)}</span>
-                        <span className="font-mono font-semibold">{metrics.spendPercentage}%</span>
-                      </div>
-                      <div className="h-1.5 w-full rounded-full bg-neutral-200 overflow-hidden">
-                        <div
-                          className="h-full bg-[#C61C2E] rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(metrics.spendPercentage, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-2.5 flex items-center justify-between text-[10.5px] text-neutral-500 pt-2 border-t border-neutral-200/60">
-                      <span>Leads: {camp.leadsGenerated}</span>
-                      <span>Conversions: {camp.conversions}</span>
-                      <span>CPL: {formatGhs(metrics.costPerLead)}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
 
