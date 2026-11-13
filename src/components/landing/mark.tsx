@@ -14,7 +14,11 @@ export function LandingMark() {
   }, [reduce]);
 
   return (
-    <figure className="landing-mark">
+    <figure
+      className="landing-mark cursor-pointer"
+      onClick={() => setCycle((value) => value + 1)}
+      title="Click to replay Collage logo assembly"
+    >
       <div className="landing-mark__frame">
         <span className="landing-mark__crop landing-mark__crop--tl" />
         <span className="landing-mark__crop landing-mark__crop--tr" />
