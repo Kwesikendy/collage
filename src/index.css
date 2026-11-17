@@ -327,15 +327,21 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   .print-paper {
     display: flex !important;
     flex-direction: column !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 282mm !important;
+    height: 286mm !important;
+    min-height: 286mm !important;
+    max-height: 286mm !important;
+    overflow: hidden !important;
     margin: 0 !important;
     padding: 0 2mm !important;
     box-shadow: none !important;
     border: 0 !important;
     border-radius: 0 !important;
     background: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
     -webkit-print-color-adjust: exact !important;

@@ -204,7 +204,7 @@ function HeroInteractiveVisual() {
 }
 
 /* ============================================================================
-   SECTION 2: "HOW CAN WE HELP YOU?" — 6-CARD SERVICES GRID (SEOBAY LAYOUT)
+   SECTION 2: "HOW CAN WE HELP YOU?" - 6-CARD SERVICES GRID (SEOBAY LAYOUT)
    ============================================================================ */
 
 const SEOBAY_STYLE_SERVICES = [
@@ -349,7 +349,7 @@ function HowCanWeHelpSection() {
 }
 
 /* ============================================================================
-   SECTION 3: "PORTFOLIO" — 4-COLUMN VISUAL SHOWCASE + EXPLORE MORE CTA
+   SECTION 3: "PORTFOLIO" - 4-COLUMN VISUAL SHOWCASE + EXPLORE MORE CTA
    ============================================================================ */
 
 const PORTFOLIO_SHOWCASE_ITEMS = [
@@ -430,7 +430,7 @@ function PortfolioSection() {
                   {!hasFailed ? (
                     <img
                       src={item.image}
-                      alt={`${item.title} — ${item.client}`}
+                      alt={`${item.title} - ${item.client}`}
                       referrerPolicy="no-referrer"
                       loading="lazy"
                       onError={() =>
@@ -479,7 +479,7 @@ function PortfolioSection() {
 }
 
 /* ============================================================================
-   SECTION 4: "OUR CUSTOMERS" — 4-COLUMN CLIENT TRUST STRIP (SEOBAY LAYOUT)
+   SECTION 4: "OUR CUSTOMERS" - 4-COLUMN CLIENT TRUST STRIP (SEOBAY LAYOUT)
    ============================================================================ */
 
 const CORPORATE_CUSTOMERS = [
@@ -661,7 +661,7 @@ function TestimonialSpotlightSection() {
 }
 
 /* ============================================================================
-   SECTION 6: "MEET OUR LEADERSHIP" — 3-COLUMN TEAM GRID (SEOBAY LAYOUT)
+   SECTION 6: "MEET OUR LEADERSHIP" - 3-COLUMN TEAM GRID (SEOBAY LAYOUT)
    ============================================================================ */
 
 const LEADERSHIP_TEAM = [
@@ -1631,7 +1631,7 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
 
             <FadeIn delay={0.34} y={8}>
               <p className="landing-lede text-[#C9C2B9]">
-                We deliver outdoor billboard skins, telescopic flagpole rentals, corporate event staging, and large-format printing across Ghana—backed by one live operations and GRA tax billing desk.
+                We deliver outdoor billboard skins, telescopic flagpole rentals, corporate event staging, and large-format printing across Ghana-backed by one live operations and GRA tax billing desk.
               </p>
             </FadeIn>
 
@@ -1687,19 +1687,19 @@ export function Welcome({ hasClerk }: { hasClerk: boolean }) {
           <HeroInteractiveVisual />
         </section>
 
-        {/* SECTION 2: "HOW CAN WE HELP YOU?" — 6-Card Services Grid */}
+        {/* SECTION 2: "HOW CAN WE HELP YOU?" - 6-Card Services Grid */}
         <HowCanWeHelpSection />
 
-        {/* SECTION 3: "PORTFOLIO" — 4-Column Visual Grid + EXPLORE MORE */}
+        {/* SECTION 3: "PORTFOLIO" - 4-Column Visual Grid + EXPLORE MORE */}
         <PortfolioSection />
 
-        {/* SECTION 4: "OUR CUSTOMERS" — 4-Column Institutional Trust Strip */}
+        {/* SECTION 4: "OUR CUSTOMERS" - 4-Column Institutional Trust Strip */}
         <OurCustomersSection />
 
         {/* SECTION 5: CUSTOMER TESTIMONIAL SPOTLIGHT */}
         <TestimonialSpotlightSection />
 
-        {/* SECTION 6: "MEET OUR LEADERSHIP" — 3-Column Executive Team */}
+        {/* SECTION 6: "MEET OUR LEADERSHIP" - 3-Column Executive Team */}
         <MeetOurLeadershipSection />
 
         {/* SECTION 7: LIVE WORKSPACE LEDGER PREVIEW */}

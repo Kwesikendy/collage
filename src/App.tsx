@@ -3566,24 +3566,46 @@ function DocumentDetail() {
         </div>
       )}
 
-      <article className="print-paper panel mx-auto flex min-h-[1060px] max-w-[850px] flex-col bg-white px-6 pt-3 pb-6 md:px-12 md:pt-4 md:pb-8 shadow-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+      <article className="print-paper panel mx-auto flex min-h-[1060px] md:h-[1060px] md:max-h-[1060px] max-w-[850px] flex-col justify-between overflow-hidden bg-white px-6 pt-3 pb-5 md:px-12 md:pt-4 md:pb-6 shadow-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
         {/* Top Content Wrapper */}
-        <div>
+        <div className="flex flex-1 min-h-0 flex-col">
           {/* Centered Collage Logo - moved up closer to top edge */}
-          <div className="text-center pt-0 pb-3 print:pt-0 print:pb-2">
+          <div
+            className={`shrink-0 text-center pt-0 ${
+              (doc.items || []).length >= 5
+                ? 'pb-1.5 print:pb-1'
+                : 'pb-3 print:pb-2'
+            }`}
+          >
             <img
               src={collageLogo}
               alt="Collage · Creating Results"
-              className="mx-auto h-14 md:h-16 print:h-13 w-auto object-contain"
+              className={`mx-auto w-auto object-contain ${
+                (doc.items || []).length >= 5
+                  ? 'h-12 md:h-13 print:h-11'
+                  : 'h-14 md:h-16 print:h-13'
+              }`}
             />
           </div>
 
           {/* Left-Aligned Document Title, Date & Invoice Reference */}
-          <div className="mt-2 print:mt-1.5 text-left border-b border-[#ece6de] pb-3 print:pb-2">
-            <h1 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-[#c61c2e] m-0">
+          <div
+            className={`shrink-0 text-left border-b border-[#ece6de] ${
+              (doc.items || []).length >= 5
+                ? 'mt-1 print:mt-1 pb-2 print:pb-1.5'
+                : 'mt-2 print:mt-1.5 pb-3 print:pb-2'
+            }`}
+          >
+            <h1
+              className={`${
+                (doc.items || []).length >= 5
+                  ? 'text-xl md:text-2xl'
+                  : 'text-2xl md:text-3xl'
+              } font-extrabold uppercase tracking-tight text-[#c61c2e] m-0`}
+            >
               {doc.kind === 'quotation' ? 'QUOTATION' : 'INVOICE'}
             </h1>
-            <div className="mt-2 print:mt-1 text-[12px] leading-relaxed text-[#2d2c31]">
+            <div className="mt-1 print:mt-0.5 text-[11.5px] leading-snug text-[#2d2c31]">
               <div className="font-medium text-[#2d2c31]">
                 {doc.issueDate && !isNaN(Date.parse(doc.issueDate))
                   ? new Date(doc.issueDate).toLocaleDateString('en-GB', {
@@ -3607,8 +3629,12 @@ function DocumentDetail() {
           </div>
 
           {/* Client Info - strictly left-aligned without badge */}
-          <div className="mt-4 print:mt-2.5 text-left">
-            <div className="text-[12px] leading-snug text-[#2f2e34]">
+          <div
+            className={`shrink-0 text-left ${
+              (doc.items || []).length >= 5 ? 'mt-2 print:mt-1.5' : 'mt-4 print:mt-2.5'
+            }`}
+          >
+            <div className="text-[11.5px] leading-snug text-[#2f2e34]">
               <div className="font-semibold text-[#1e1f23]">
                 Attn: {clientRecord?.contactName || doc.clientName}
               </div>
@@ -3622,25 +3648,69 @@ function DocumentDetail() {
             </div>
           </div>
 
-          {/* Black Banner: Subject / Project Title (70% width, 2x font size) */}
-          <div className="mt-4 print:mt-3 mb-1.5 w-full sm:w-[70%] print:w-[70%] bg-[#0d0d0e] px-4 py-3 print:py-2.5 text-[22px] sm:text-[26px] print:text-[22px] leading-tight font-extrabold uppercase tracking-tight text-white text-left [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+          {/* Black Banner: Subject / Project Title (70% width) */}
+          <div
+            className={`shrink-0 w-full sm:w-[70%] print:w-[70%] bg-[#0d0d0e] px-4 leading-tight font-extrabold uppercase tracking-tight text-white text-left [print-color-adjust:exact] [-webkit-print-color-adjust:exact] ${
+              (doc.items || []).length >= 5
+                ? 'mt-2 print:mt-1.5 mb-1 py-2 print:py-1.5 text-[18px] sm:text-[21px] print:text-[18px]'
+                : 'mt-4 print:mt-3 mb-1.5 py-3 print:py-2.5 text-[22px] sm:text-[26px] print:text-[22px]'
+            }`}
+          >
             {doc.subject}
           </div>
 
-          {/* Line Items Table */}
-          <div className="overflow-x-auto print:overflow-visible mb-4 print:mb-2.5 mt-0">
+          {/* Line Items Table - constrained & adaptive so 7+ items never push payment/bank details off the bottom */}
+          <div className="min-h-0 flex-shrink overflow-x-auto overflow-y-auto print:overflow-visible mb-2.5 print:mb-1.5 mt-0">
             <table className="w-full min-w-[560px] print:min-w-0 text-left border-collapse">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-[#a81a29] text-white text-[9px] font-bold uppercase tracking-[.08em] [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
-                  <th className="px-4 py-2.5 print:py-2">Item Description</th>
-                  <th className="px-3 py-2.5 print:py-2 text-center">Qty</th>
-                  <th className="px-3 py-2.5 print:py-2 text-center">
+                  <th
+                    className={`px-4 ${
+                      (doc.items || []).length >= 5
+                        ? 'py-1.5 print:py-1'
+                        : 'py-2.5 print:py-2'
+                    }`}
+                  >
+                    Item Description
+                  </th>
+                  <th
+                    className={`px-3 text-center ${
+                      (doc.items || []).length >= 5
+                        ? 'py-1.5 print:py-1'
+                        : 'py-2.5 print:py-2'
+                    }`}
+                  >
+                    Qty
+                  </th>
+                  <th
+                    className={`px-3 text-center ${
+                      (doc.items || []).length >= 5
+                        ? 'py-1.5 print:py-1'
+                        : 'py-2.5 print:py-2'
+                    }`}
+                  >
                     {(doc.items || []).some((it) => it.durationUnit === 'months')
                       ? 'Months'
                       : 'Days'}
                   </th>
-                  <th className="px-3 py-2.5 print:py-2 text-right">Unit Price GHS</th>
-                  <th className="px-4 py-2.5 print:py-2 text-right">Total Amount GHS</th>
+                  <th
+                    className={`px-3 text-right ${
+                      (doc.items || []).length >= 5
+                        ? 'py-1.5 print:py-1'
+                        : 'py-2.5 print:py-2'
+                    }`}
+                  >
+                    Unit Price GHS
+                  </th>
+                  <th
+                    className={`px-4 text-right ${
+                      (doc.items || []).length >= 5
+                        ? 'py-1.5 print:py-1'
+                        : 'py-2.5 print:py-2'
+                    }`}
+                  >
+                    Total Amount GHS
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -3650,24 +3720,31 @@ function DocumentDetail() {
                     Number(item.total) > 0
                       ? Number(item.total)
                       : Number(item.quantity || 0) * effDur * Number(item.unitPrice || 0);
+                  const count = (doc.items || []).length;
+                  const cellPad =
+                    count >= 8
+                      ? 'py-1 print:py-0.5 text-[10px]'
+                      : count >= 5
+                        ? 'py-1.5 print:py-1 text-[10.5px]'
+                        : 'py-2.5 print:py-1.5 text-[11px]';
                   return (
                     <tr
                       key={`${item.description}-${i}`}
-                      className="border-b border-[#ece6de] text-[11px] even:bg-[#faf7f2] [print-color-adjust:exact] [-webkit-print-color-adjust:exact]"
+                      className={`border-b border-[#ece6de] ${cellPad} even:bg-[#faf7f2] [print-color-adjust:exact] [-webkit-print-color-adjust:exact]`}
                     >
-                      <td className="px-4 py-2.5 print:py-1.5 font-medium text-[#2e2d33]">
+                      <td className={`px-4 ${cellPad} font-medium text-[#2e2d33]`}>
                         {item.description}
                       </td>
-                      <td className="mono px-3 py-2.5 print:py-1.5 text-center text-[#555]">
+                      <td className={`mono px-3 ${cellPad} text-center text-[#555]`}>
                         {item.quantity}
                       </td>
-                      <td className="mono px-3 py-2.5 print:py-1.5 text-center text-[#555]">
+                      <td className={`mono px-3 ${cellPad} text-center text-[#555]`}>
                         {item.days}
                       </td>
-                      <td className="mono px-3 py-2.5 print:py-1.5 text-right text-[#555]">
+                      <td className={`mono px-3 ${cellPad} text-right text-[#555]`}>
                         {fmt(item.unitPrice)}
                       </td>
-                      <td className="mono px-4 py-2.5 print:py-1.5 text-right font-semibold text-[#1e1f23]">
+                      <td className={`mono px-4 ${cellPad} text-right font-semibold text-[#1e1f23]`}>
                         {fmt(lineTotal)}
                       </td>
                     </tr>
@@ -3677,54 +3754,65 @@ function DocumentDetail() {
             </table>
           </div>
 
-          {/* Tax & Total Calculation */}
-          <div className="ml-auto max-w-[340px] space-y-1.5 print:space-y-1 border-t border-[#ece6de] pt-3 print:pt-2 text-[11px] break-inside-avoid">
-            <MoneyRow label="Subtotal" value={doc.subtotal} />
-            <div className="flex justify-between text-[#77726c] bg-[#fbe9e7]/60 px-1.5 py-0.5 rounded-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
-              <span>Less: Discount ({doc.discountPercent}%)</span>
-              <span className="mono">
-                {doc.discountAmount > 0 ? `-${fmt(doc.discountAmount)}` : '-'}
-              </span>
+          {/* Side-by-Side Summary Row: Payment Terms on Left, Tax & Total Calculation on Right */}
+          <div className="shrink-0 flex flex-col sm:flex-row print:flex-row sm:items-end print:items-end justify-between gap-4 border-t border-[#ece6de] pt-2 print:pt-1.5 break-inside-avoid">
+            {/* Payment Terms & Validity on Left */}
+            <div className="space-y-0.5 text-[11px] text-left order-2 sm:order-1 print:order-1">
+              <div className="font-semibold text-[#222] italic">
+                {doc.paymentTerms || '100% Down Payment'}
+              </div>
+              <div className="text-[#666] italic">
+                Quotation is valid for {doc.validityDays} days after Invoice Date
+              </div>
             </div>
-            <MoneyRow
-              label="(i) Subtotal Before Tax"
-              value={doc.subtotal - doc.discountAmount}
-            />
-            <MoneyRow label={`(ii) ${doc.getfundRate}% GETFund`} value={doc.getfundAmount} />
-            <MoneyRow label={`(iii) ${doc.nhilRate}% NHIL`} value={doc.nhilAmount} />
-            <MoneyRow label={`Add ${doc.vatRate}% VAT`} value={doc.vatAmount} />
-          </div>
 
-          {/* Solid Black Banner: Total Payment Due */}
-          <div className="ml-auto max-w-[340px] mt-3 print:mt-2 bg-[#1f2024] text-white px-4 py-2.5 print:py-2 flex items-center justify-between text-[12px] font-bold rounded-sm break-inside-avoid [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
-            <span className="uppercase tracking-wider">Total Payment Due GHS</span>
-            <span className="mono text-[16px]">
-              {fmt(doc.total).replace('GHS ', '')}
-            </span>
-          </div>
+            {/* Tax & Total Calculation on Right */}
+            <div className="w-full sm:w-[340px] print:w-[320px] ml-auto order-1 sm:order-2 print:order-2">
+              <div
+                className={`${
+                  (doc.items || []).length >= 5
+                    ? 'space-y-0.5 print:space-y-0.5'
+                    : 'space-y-1 print:space-y-0.5'
+                } text-[11px]`}
+              >
+                <MoneyRow label="Subtotal" value={doc.subtotal} />
+                <div className="flex justify-between text-[#77726c] bg-[#fbe9e7]/60 px-1.5 py-0.5 rounded-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+                  <span>Less: Discount ({doc.discountPercent}%)</span>
+                  <span className="mono">
+                    {doc.discountAmount > 0 ? `-${fmt(doc.discountAmount)}` : '-'}
+                  </span>
+                </div>
+                <MoneyRow
+                  label="(i) Subtotal Before Tax"
+                  value={doc.subtotal - doc.discountAmount}
+                />
+                <MoneyRow label={`(ii) ${doc.getfundRate}% GETFund`} value={doc.getfundAmount} />
+                <MoneyRow label={`(iii) ${doc.nhilRate}% NHIL`} value={doc.nhilAmount} />
+                <MoneyRow label={`Add ${doc.vatRate}% VAT`} value={doc.vatAmount} />
+              </div>
 
-          {doc.kind === 'invoice' && (
-            <div className="ml-auto max-w-[340px] space-y-1.5 print:space-y-1 border-t border-dashed border-[#e5ded6] mt-3 print:mt-2 pt-2 print:pt-1.5 text-[11px] break-inside-avoid">
-              <MoneyRow label="Paid to date" value={doc.amountPaid} />
-              <MoneyRow label="Balance due" value={doc.balance} strong />
-            </div>
-          )}
+              {/* Solid Black Banner: Total Payment Due */}
+              <div className="mt-2 print:mt-1.5 bg-[#1f2024] text-white px-4 py-2 print:py-1.5 flex items-center justify-between text-[12px] font-bold rounded-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+                <span className="uppercase tracking-wider">Total Payment Due GHS</span>
+                <span className="mono text-[15px]">
+                  {fmt(doc.total).replace('GHS ', '')}
+                </span>
+              </div>
 
-          {/* Payment Terms & Validity */}
-          <div className="mt-8 print:mt-4 space-y-1 text-[11px] break-inside-avoid">
-            <div className="font-semibold text-[#222] italic">
-              {doc.paymentTerms || '100% Down Payment'}
-            </div>
-            <div className="text-[#666] italic">
-              Quotation is valid for {doc.validityDays} days after Invoice Date
+              {doc.kind === 'invoice' && (
+                <div className="space-y-0.5 border-t border-dashed border-[#e5ded6] mt-1.5 print:mt-1 pt-1 text-[11px]">
+                  <MoneyRow label="Paid to date" value={doc.amountPaid} />
+                  <MoneyRow label="Balance due" value={doc.balance} strong />
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Authentic Collage Footer: Dropped to bottom of page (mt-auto), Payment Details at bottom-left, Contact Info at bottom-right */}
-        <div className="mt-auto pt-5 print:pt-3 flex flex-col sm:flex-row print:flex-row sm:items-end print:items-end justify-between gap-6 border-t border-[#e2dcce] text-[10px] break-inside-avoid">
+        {/* Authentic Collage Footer: Locked at bottom of invoice (mt-auto), Payment Details at bottom-left, Contact Info at bottom-right */}
+        <div className="shrink-0 mt-auto pt-3 print:pt-2 flex flex-col sm:flex-row print:flex-row sm:items-end print:items-end justify-between gap-6 border-t border-[#e2dcce] text-[10px] break-inside-avoid">
           {/* Bottom-Left: MoMo Details (single line) & Bank Details (2 banks) */}
-          <div className="text-left space-y-2.5 print:space-y-1.5 max-w-[480px]">
+          <div className="text-left space-y-1.5 print:space-y-1 max-w-[480px]">
             {/* Single-line MoMo Details */}
             <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight">
               <span className="font-bold text-[#d81e27]">MoMo Details:</span>
@@ -3737,11 +3825,11 @@ function DocumentDetail() {
             </div>
 
             {/* Bank Details (Red heading, no background, 2 banks side-by-side) */}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <div className="font-bold text-[#d81e27] leading-tight">
                 Bank Details:
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-x-6 gap-y-2 leading-[1.35]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-x-6 gap-y-1.5 leading-[1.3]">
                 {COLLAGE_BANK_ACCOUNTS.map((acct) => (
                   <div key={acct.accountNumber} className="space-y-0.5">
                     <div>
@@ -4259,7 +4347,7 @@ function OperationsView() {
             <div className="rounded-lg border border-[#e6dfd6] bg-[#f7f3ed] px-3.5 py-2.5 flex items-center justify-between text-xs">
               <span className="text-[#68666a]">
                 {rentalForm.days === 0
-                  ? `0 days selected — Total calculated as Quantity (${rentalForm.quantity}) × Unit Rate (${fmt(rentalForm.unitRate)})`
+                  ? `0 days selected - Total calculated as Quantity (${rentalForm.quantity}) × Unit Rate (${fmt(rentalForm.unitRate)})`
                   : `Total calculated as Quantity (${rentalForm.quantity}) × Days (${rentalForm.days}) × Unit Rate (${fmt(rentalForm.unitRate)})`}
               </span>
               <span className="mono font-bold text-[#1e1f23]">
