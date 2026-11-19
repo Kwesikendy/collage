@@ -3566,11 +3566,11 @@ function DocumentDetail() {
         </div>
       )}
 
-      <article className="print-paper panel mx-auto flex min-h-[1060px] max-w-[850px] flex-col justify-between bg-white px-6 pt-3 pb-6 md:px-12 md:pt-4 md:pb-8 shadow-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+      <article className="print-paper panel mx-auto flex min-h-[1060px] print:min-h-0 max-w-[850px] flex-col justify-between print:block bg-white px-6 pt-5 pb-6 md:px-12 md:pt-8 md:pb-8 shadow-sm [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
         {/* Top Content Wrapper */}
-        <div className="flex flex-col">
+        <div className="flex flex-col print:block">
           {/* Centered Collage Logo */}
-          <div className="text-center pt-0 pb-3 print:pt-0 print:pb-2">
+          <div className="text-center pt-1 pb-3 print:pt-1 print:pb-2">
             <img
               src={collageLogo}
               alt="Collage · Creating Results"
@@ -3727,7 +3727,7 @@ function DocumentDetail() {
         </div>
 
         {/* Authentic Collage Footer: Payment Details at bottom-left, Contact Info at bottom-right; moves cleanly to next page if needed */}
-        <div className="mt-auto pt-5 print:pt-4 flex flex-col sm:flex-row print:flex-row sm:items-end print:items-end justify-between gap-6 border-t border-[#e2dcce] text-[10px] break-inside-avoid">
+        <div className="mt-auto print:mt-6 pt-5 print:pt-4 flex flex-col sm:flex-row print:flex-row sm:items-end print:items-end justify-between gap-6 border-t border-[#e2dcce] text-[10px] break-inside-avoid">
           {/* Bottom-Left: MoMo Details (single line) & Bank Details (2 banks) */}
           <div className="text-left space-y-1.5 print:space-y-1 max-w-[480px]">
             {/* Single-line MoMo Details */}

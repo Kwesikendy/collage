@@ -287,7 +287,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 /* ─── PRINT ──────────────────────────────────────────────── */
 @page {
   size: A4 portrait;
-  margin: 4mm 12mm 5mm 12mm;
+  margin: 14mm 14mm 14mm 14mm;
 }
 
 @media print {
@@ -305,6 +305,9 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -318,27 +321,41 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
     display: none !important;
   }
 
-  .app-shell {
+  .app-shell,
+  .app-shell > main {
     display: block !important;
     background: #ffffff !important;
     min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .print-paper {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 282mm !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
     margin: 0 !important;
-    padding: 0 2mm !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: 0 !important;
     border-radius: 0 !important;
     background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .print-paper thead {
+    display: table-header-group;
+  }
+
+  .print-paper tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 
